@@ -18,10 +18,13 @@
   },
   "dependencies": {
     "@opennextjs/cloudflare": "1.19.9",
+    "@react-three/drei": "10.7.7",
+    "@react-three/fiber": "9.6.1",
     "next": "^15.1.6",
     "next-intl": "^3.26.3",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "three": "0.179.1"
   },
   "devDependencies": {
     "@eslint/compat": "^2.0.5",
@@ -30,6 +33,7 @@
     "@types/node": "^22.10.7",
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
+    "@types/three": "0.179.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-jsx-a11y": "^6.10.2",

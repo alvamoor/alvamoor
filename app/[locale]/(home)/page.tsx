@@ -17,7 +17,15 @@ export default async function Page({
     <main className={styles.main}>
       <h1 className={styles.name}>{t("name")}</h1>
       <hr className={styles.rule} aria-hidden="true" />
-      <p className={styles.tagline}>{t("tagline")}</p>
+      <p className={styles.tagline}>
+        {t.rich("tagline", {
+          link: (chunks) => (
+            <a href="/gallery" className={styles.taglineLink}>
+              {chunks}
+            </a>
+          ),
+        })}
+      </p>
     </main>
   );
 }
