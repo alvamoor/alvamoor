@@ -1,0 +1,21 @@
+{
+  "Landing": {
+    "status": "In Arbeit",
+    "name": "alva moor",
+    "tagline": "Nur Geduld, ein Portfolio ist in Arbeit.",
+    "subtext": "Neue Arbeiten, bald.",
+    "follow": "Auf Instagram folgen",
+    "year": "© {year}"
+  },
+  "LocaleSwitcher": {
+    "label": "Sprache",
+    "en": "EN",
+    "de": "DE"
+  },
+  "ThemeSwitcher": {
+    "label": "Farbschema",
+    "classic": "Klassisch",
+    "pop": "Pop",
+    "natural": "Natürlich"
+  }
+}
