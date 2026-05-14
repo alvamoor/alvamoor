@@ -11,11 +11,5 @@
     "label": "Sprache",
     "en": "EN",
     "de": "DE"
-  },
-  "ThemeSwitcher": {
-    "label": "Farbschema",
-    "classic": "Klassisch",
-    "pop": "Pop",
-    "natural": "Natürlich"
   }
 }

@@ -11,11 +11,5 @@
     "label": "Language",
     "en": "EN",
     "de": "DE"
-  },
-  "ThemeSwitcher": {
-    "label": "Theme",
-    "classic": "Classic",
-    "pop": "Pop",
-    "natural": "Natural"
   }
 }

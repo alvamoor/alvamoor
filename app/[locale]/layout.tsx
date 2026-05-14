@@ -5,24 +5,16 @@ import {
   getTranslations,
   setRequestLocale,
 } from "next-intl/server";
-import { Fraunces, Inter } from "next/font/google";
+import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 import { notFound } from "next/navigation";
 
-import { ThemeScript } from "@/app/components/ThemeScript";
-import { ThemeSwitcher } from "@/app/components/ThemeSwitcher";
+import { ScrollSpacer } from "@/app/components/ScrollSpacer";
 import { Link } from "@/i18n/navigation";
 import { type Locale, isLocale, routing } from "@/i18n/routing";
 
 import "../globals.css";
 import styles from "./layout.module.css";
-
-const serif = Fraunces({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-serif",
-  axes: ["SOFT", "opsz"],
-});
 
 const sans = Inter({
   subsets: ["latin"],
@@ -30,14 +22,6 @@ const sans = Inter({
   variable: "--font-sans",
 });
 
-// Display face used by the "pop" theme — Betamorph, a custom unusual display face.
-const display = localFont({
-  src: "../fonts/Betamorph-qZBl.ttf",
-  display: "swap",
-  variable: "--font-display",
-});
-
-// Backdrop face used by the "natural" theme for the giant ghost wordmark.
 const backdrop = localFont({
   src: "../fonts/Direction-R9e63.otf",
   display: "swap",
@@ -45,10 +29,7 @@ const backdrop = localFont({
 });
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f3efe7" },
-    { media: "(prefers-color-scheme: dark)", color: "#14110d" },
-  ],
+  themeColor: "#4a3829",
 };
 
 export async function generateMetadata({
@@ -86,16 +67,10 @@ export default async function LocaleLayout({
   const year = new Date().getFullYear();
 
   return (
-    <html
-      lang={locale}
-      className={`${serif.variable} ${sans.variable} ${display.variable} ${backdrop.variable}`}
-      suppressHydrationWarning
-    >
-      <head>
-        <ThemeScript />
-      </head>
+    <html lang={locale} className={`${sans.variable} ${backdrop.variable}`}>
       <body>
         <NextIntlClientProvider messages={messages}>
+          <ScrollSpacer />
           <div className={styles.shell}>
             <header className={styles.top}>
               <span className={styles.status} aria-live="polite">
@@ -130,7 +105,6 @@ export default async function LocaleLayout({
 
             <footer className={styles.bottom}>
               <span className={styles.year}>{t("year", { year })}</span>
-              <ThemeSwitcher />
               <a
                 href="https://instagram.com/alva.moor"
                 target="_blank"
