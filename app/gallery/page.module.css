@@ -1,0 +1,112 @@
+.dirt {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: multiply;
+  opacity: 0.55;
+  background-color: transparent;
+  background-image:
+    radial-gradient(
+      ellipse 35vw 28vh at 18% 28%,
+      rgba(0, 0, 0, 0.55) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 28vw 35vh at 82% 72%,
+      rgba(0, 0, 0, 0.45) 0%,
+      transparent 65%
+    ),
+    radial-gradient(
+      ellipse 40vw 22vh at 60% 12%,
+      rgba(0, 0, 0, 0.4) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      circle 22vw at 30% 88%,
+      rgba(0, 0, 0, 0.5) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 25vw 30vh at 8% 60%,
+      rgba(0, 0, 0, 0.35) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 18vw 22vh at 92% 22%,
+      rgba(0, 0, 0, 0.4) 0%,
+      transparent 70%
+    );
+}
+
+.back {
+  position: fixed;
+  top: var(--pad-y);
+  left: var(--pad-x);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #14110d;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 2;
+  transition:
+    background 180ms ease,
+    color 180ms ease;
+}
+
+.back:hover {
+  background: rgba(255, 255, 255, 1);
+}
+
+.arrow {
+  display: inline-block;
+  transition: transform 220ms ease;
+}
+
+.back:hover .arrow {
+  transform: translateX(-3px);
+}
+
+.dots {
+  position: fixed;
+  bottom: 1.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 2;
+}
+
+.dot {
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 0;
+  cursor: pointer;
+  transition:
+    transform 200ms ease,
+    border-color 200ms ease;
+}
+
+.dot:hover {
+  transform: scale(1.35);
+  border-color: rgba(255, 255, 255, 0.9);
+}
+
+.dot:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}

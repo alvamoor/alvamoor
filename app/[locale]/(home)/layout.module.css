@@ -79,14 +79,16 @@
   font-variant-numeric: tabular-nums;
 }
 
-.instagram {
+.instagram,
+.gallery {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   transition: color 180ms ease;
 }
 
-.instagram:hover {
+.instagram:hover,
+.gallery:hover {
   color: var(--fg);
 }
 
@@ -97,6 +99,10 @@
 
 .instagram:hover .arrow {
   transform: translate(2px, -2px);
+}
+
+.gallery:hover .arrow {
+  transform: translateX(3px);
 }
 
 @media (max-width: 30rem) {
