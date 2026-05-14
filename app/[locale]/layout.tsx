@@ -9,6 +9,7 @@ import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 import { notFound } from "next/navigation";
 
+import { InfiniteScroll } from "@/app/components/InfiniteScroll";
 import { ScrollSpacer } from "@/app/components/ScrollSpacer";
 import { StructuredData } from "@/app/components/StructuredData";
 import { Link } from "@/i18n/navigation";
@@ -113,6 +114,7 @@ export default async function LocaleLayout({
       <body>
         <StructuredData locale={locale} />
         <NextIntlClientProvider messages={messages}>
+          <InfiniteScroll />
           <ScrollSpacer />
           <div className={styles.shell}>
             <header className={styles.top}>
