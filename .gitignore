@@ -6,3 +6,6 @@ out
 *.tsbuildinfo
 next-env.d.ts
 .claude
+.open-next
+.wrangler
+cloudflare-env.d.ts
