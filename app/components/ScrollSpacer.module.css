@@ -6,7 +6,3 @@
   height: 900vh;
   pointer-events: none;
 }
-
-.cell {
-  scroll-snap-align: start;
-}
