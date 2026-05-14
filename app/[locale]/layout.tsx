@@ -152,6 +152,12 @@ export default async function LocaleLayout({
 
             <footer className={styles.bottom}>
               <span className={styles.year}>{t("year", { year })}</span>
+              <Link href="/gallery" className={styles.gallery}>
+                {t("gallery")}
+                <span className={styles.arrow} aria-hidden="true">
+                  →
+                </span>
+              </Link>
               <a
                 href="https://instagram.com/alva.moor"
                 target="_blank"
