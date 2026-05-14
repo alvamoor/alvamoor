@@ -13,7 +13,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const gitignorePath = path.resolve(__dirname, ".gitignore");
 
-/** @type {import('eslint').Linter.Config[]} */
 export default [
   includeIgnoreFile(gitignorePath),
   { ignores: ["next-env.d.ts"] },
@@ -54,9 +53,6 @@ export default [
   ...tseslint.configs.recommended,
   jsxA11y.flatConfigs.recommended,
 
-  // i18n: force locale-aware navigation primitives.
-  // Bypassing these silently drops the locale on navigation.
-  // The wrappers themselves live in i18n/ and are exempt.
   {
     files: ["**/*.{js,jsx,mjs,ts,tsx}"],
     ignores: ["i18n/**", "eslint.config.js"],
@@ -84,7 +80,6 @@ export default [
     },
   },
 
-  // Style bans inherited from bts: no React.FC, no React.FunctionComponent.
   {
     files: ["**/*.{js,jsx,mjs,ts,tsx}"],
     rules: {
@@ -114,6 +109,5 @@ export default [
     },
   },
 
-  // Must come last.
   prettierRecommended,
 ];
