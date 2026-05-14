@@ -19,13 +19,7 @@ export function ScrollSpacer() {
   for (let row = 0; row < TILES; row++) {
     for (let col = 0; col < TILES; col++) {
       const color = COLORS[(row % 3) * 3 + (col % 3)];
-      cells.push(
-        <div
-          key={`${row}-${col}`}
-          className={styles.cell}
-          style={{ background: color }}
-        />,
-      );
+      cells.push(<div key={`${row}-${col}`} style={{ background: color }} />);
     }
   }
   return (
