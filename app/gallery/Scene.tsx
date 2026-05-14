@@ -12,13 +12,11 @@ import {
 } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
-  CanvasTexture,
   Color,
   DoubleSide,
   Euler,
   type Mesh,
   type Object3D,
-  RepeatWrapping,
   type SpotLight,
   Vector3,
 } from "three";
@@ -41,25 +39,25 @@ const ARTWORKS: {
   color: string;
   position: [number, number, number];
   rotationY: number;
-}[] = ARTWORK_COLORS.map((color, i) => ({
+}[] = ARTWORK_COLORS.map((color, index) => ({
   color,
   position: [
-    Math.sin(artworkAngle(i)) * RING_RADIUS,
+    Math.sin(artworkAngle(index)) * RING_RADIUS,
     RING_HEIGHT,
-    Math.cos(artworkAngle(i)) * RING_RADIUS,
+    Math.cos(artworkAngle(index)) * RING_RADIUS,
   ],
-  rotationY: artworkAngle(i) + Math.PI,
+  rotationY: artworkAngle(index) + Math.PI,
 }));
 
 function useTouchDevice() {
   const [isTouch, setIsTouch] = useState(false);
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const mq = window.matchMedia("(hover: none) and (pointer: coarse)");
-    setIsTouch(mq.matches);
-    const handler = () => setIsTouch(mq.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
+    const mediaQuery = window.matchMedia("(hover: none) and (pointer: coarse)");
+    setIsTouch(mediaQuery.matches);
+    const handler = () => setIsTouch(mediaQuery.matches);
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
   }, []);
   return isTouch;
 }
@@ -73,38 +71,38 @@ function DragLook() {
     euler.setFromQuaternion(camera.quaternion);
 
     let dragging = false;
-    let started = false;
+    let dragStarted = false;
     let lastX = 0;
     let lastY = 0;
     let downX = 0;
     let downY = 0;
-    let pid: number | null = null;
+    let activePointerId: number | null = null;
 
-    const onDown = (e: PointerEvent) => {
+    const onDown = (event: PointerEvent) => {
       dragging = true;
-      started = false;
-      downX = lastX = e.clientX;
-      downY = lastY = e.clientY;
-      pid = e.pointerId;
+      dragStarted = false;
+      downX = lastX = event.clientX;
+      downY = lastY = event.clientY;
+      activePointerId = event.pointerId;
       try {
-        canvas.setPointerCapture(e.pointerId);
+        canvas.setPointerCapture(event.pointerId);
       } catch {
         // ignore
       }
     };
 
-    const onMove = (e: PointerEvent) => {
+    const onMove = (event: PointerEvent) => {
       if (!dragging) return;
-      const tdx = e.clientX - downX;
-      const tdy = e.clientY - downY;
-      if (!started && Math.hypot(tdx, tdy) < 5) return;
-      started = true;
-      const dx = e.clientX - lastX;
-      const dy = e.clientY - lastY;
-      lastX = e.clientX;
-      lastY = e.clientY;
-      euler.y -= dx * 0.005;
-      euler.x -= dy * 0.005;
+      const totalDeltaX = event.clientX - downX;
+      const totalDeltaY = event.clientY - downY;
+      if (!dragStarted && Math.hypot(totalDeltaX, totalDeltaY) < 5) return;
+      dragStarted = true;
+      const deltaX = event.clientX - lastX;
+      const deltaY = event.clientY - lastY;
+      lastX = event.clientX;
+      lastY = event.clientY;
+      euler.y -= deltaX * 0.005;
+      euler.x -= deltaY * 0.005;
       euler.x = Math.max(
         -Math.PI / 2 + 0.05,
         Math.min(Math.PI / 2 - 0.05, euler.x),
@@ -114,13 +112,13 @@ function DragLook() {
 
     const onUp = () => {
       dragging = false;
-      if (pid !== null) {
+      if (activePointerId !== null) {
         try {
-          canvas.releasePointerCapture(pid);
+          canvas.releasePointerCapture(activePointerId);
         } catch {
           // ignore
         }
-        pid = null;
+        activePointerId = null;
       }
     };
 
@@ -141,34 +139,35 @@ function DragLook() {
 }
 
 function NavSpot({ index }: { index: number }) {
-  const ref = useRef<Mesh>(null);
+  const meshRef = useRef<Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const angle = artworkAngle(index);
-  const r = RING_RADIUS - 1.8;
-  const x = Math.sin(angle) * r;
-  const z = Math.cos(angle) * r;
+  const spotRadius = RING_RADIUS - 1.8;
+  const x = Math.sin(angle) * spotRadius;
+  const z = Math.cos(angle) * spotRadius;
   const color = ARTWORK_COLORS[index];
 
   useFrame((state) => {
-    if (ref.current) {
-      const s = 1 + Math.sin(state.clock.elapsedTime * 1.4 + index) * 0.12;
-      ref.current.scale.set(s, s, s);
+    if (meshRef.current) {
+      const pulseScale =
+        1 + Math.sin(state.clock.elapsedTime * 1.4 + index) * 0.12;
+      meshRef.current.scale.set(pulseScale, pulseScale, pulseScale);
     }
   });
 
   return (
     <mesh
-      ref={ref}
+      ref={meshRef}
       position={[x, 0.06, z]}
       rotation={[-Math.PI / 2, 0, 0]}
-      onClick={(e) => {
-        e.stopPropagation();
-        e.nativeEvent.stopImmediatePropagation();
+      onClick={(event) => {
+        event.stopPropagation();
+        event.nativeEvent.stopImmediatePropagation();
         if (document.pointerLockElement) document.exitPointerLock();
         navTarget.current = index;
       }}
-      onPointerOver={(e) => {
-        e.stopPropagation();
+      onPointerOver={(event) => {
+        event.stopPropagation();
         setHovered(true);
         document.body.style.cursor = "pointer";
       }}
@@ -217,15 +216,15 @@ function Wordmark() {
 }
 
 function NightFloor() {
-  const ref = useRef<Mesh>(null);
+  const meshRef = useRef<Mesh>(null);
   useFrame(({ camera }) => {
-    if (ref.current) {
-      ref.current.position.x = camera.position.x;
-      ref.current.position.z = camera.position.z;
+    if (meshRef.current) {
+      meshRef.current.position.x = camera.position.x;
+      meshRef.current.position.z = camera.position.z;
     }
   });
   return (
-    <mesh ref={ref} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
+    <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
       <planeGeometry args={[400, 400, 1, 1]} />
       <meshStandardMaterial color="#0e1428" roughness={0.9} />
     </mesh>
@@ -250,28 +249,6 @@ function FloatingArt({
     [color],
   );
 
-  const noiseTexture = useMemo(() => {
-    const c = document.createElement("canvas");
-    c.width = 256;
-    c.height = 256;
-    const ctx = c.getContext("2d");
-    if (!ctx) return null;
-    const id = ctx.createImageData(256, 256);
-    for (let i = 0; i < id.data.length; i += 4) {
-      const v = Math.floor(80 + Math.random() * 175);
-      id.data[i] = v;
-      id.data[i + 1] = v;
-      id.data[i + 2] = v;
-      id.data[i + 3] = 255;
-    }
-    ctx.putImageData(id, 0, 0);
-    const tex = new CanvasTexture(c);
-    tex.wrapS = RepeatWrapping;
-    tex.wrapT = RepeatWrapping;
-    tex.repeat.set(2, 3);
-    return tex;
-  }, []);
-
   useEffect(() => {
     if (spotRef.current && targetRef.current) {
       spotRef.current.target = targetRef.current;
@@ -295,8 +272,6 @@ function FloatingArt({
           emissiveIntensity={0.08}
           roughness={1}
           metalness={0}
-          bumpMap={noiseTexture}
-          bumpScale={0.05}
           side={DoubleSide}
         />
       </mesh>
@@ -317,23 +292,27 @@ function FloatingArt({
 
 function Player() {
   const { camera } = useThree();
-  const [, get] = useKeyboardControls<KeyName>();
+  const [, getKeys] = useKeyboardControls<KeyName>();
   const forward = useMemo(() => new Vector3(), []);
   const right = useMemo(() => new Vector3(), []);
   const move = useMemo(() => new Vector3(), []);
 
   useFrame((_, delta) => {
     if (navTarget.current !== null) {
-      const i = navTarget.current;
-      const view = viewPosition(i);
-      const art = artworkPosition(i);
-      camera.position.set(view[0], view[1], view[2]);
-      camera.lookAt(art[0], art[1], art[2]);
+      const targetIndex = navTarget.current;
+      const standingPosition = viewPosition(targetIndex);
+      const lookAtPosition = artworkPosition(targetIndex);
+      camera.position.set(
+        standingPosition[0],
+        standingPosition[1],
+        standingPosition[2],
+      );
+      camera.lookAt(lookAtPosition[0], lookAtPosition[1], lookAtPosition[2]);
       navTarget.current = null;
       return;
     }
 
-    const keys = get();
+    const keys = getKeys();
 
     camera.getWorldDirection(forward);
     forward.y = 0;
@@ -390,16 +369,16 @@ export default function Scene() {
         />
         <NightFloor />
         <Wordmark />
-        {ARTWORKS.map((art, i) => (
+        {ARTWORKS.map((artwork, index) => (
           <FloatingArt
-            key={i}
-            color={art.color}
-            position={art.position}
-            rotationY={art.rotationY}
+            key={index}
+            color={artwork.color}
+            position={artwork.position}
+            rotationY={artwork.rotationY}
           />
         ))}
-        {ARTWORKS.map((_, i) => (
-          <NavSpot key={`spot-${i}`} index={i} />
+        {ARTWORKS.map((_, index) => (
+          <NavSpot key={`spot-${index}`} index={index} />
         ))}
         <Player />
         {isTouch ? <DragLook /> : <PointerLockControls />}

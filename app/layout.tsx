@@ -1,0 +1,36 @@
+import type { Viewport } from "next";
+import { Inter } from "next/font/google";
+import localFont from "next/font/local";
+import { cookies } from "next/headers";
+
+import "./globals.css";
+
+const sans = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-sans",
+});
+
+const backdrop = localFont({
+  src: "./fonts/Direction-R9e63.otf",
+  display: "swap",
+  variable: "--font-backdrop",
+});
+
+export const viewport: Viewport = {
+  themeColor: "#4a3829",
+};
+
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const cookieStore = await cookies();
+  const locale = cookieStore.get("NEXT_LOCALE")?.value || "en";
+  return (
+    <html lang={locale} className={`${sans.variable} ${backdrop.variable}`}>
+      <body>{children}</body>
+    </html>
+  );
+}

@@ -37,20 +37,20 @@ export default async function HomeLayout({
             aria-label={tSwitcher("label")}
             className={styles.localeSwitcher}
           >
-            {routing.locales.map((l, i) => (
-              <span key={l}>
-                {i > 0 && (
+            {routing.locales.map((localeOption, index) => (
+              <span key={localeOption}>
+                {index > 0 && (
                   <span className={styles.sep} aria-hidden="true">
                     /
                   </span>
                 )}
                 <Link
                   href="/"
-                  locale={l}
-                  className={`${styles.localeLink} ${l === locale ? styles.localeActive : ""}`}
-                  aria-current={l === locale ? "page" : undefined}
+                  locale={localeOption}
+                  className={`${styles.localeLink} ${localeOption === locale ? styles.localeActive : ""}`}
+                  aria-current={localeOption === locale ? "page" : undefined}
                 >
-                  {tSwitcher(l)}
+                  {tSwitcher(localeOption)}
                 </Link>
               </span>
             ))}
@@ -61,12 +61,6 @@ export default async function HomeLayout({
 
         <footer className={styles.bottom}>
           <span className={styles.year}>{t("year", { year })}</span>
-          <Link href="/gallery" className={styles.gallery}>
-            {t("gallery")}
-            <span className={styles.arrow} aria-hidden="true">
-              →
-            </span>
-          </Link>
           <a
             href="https://instagram.com/alva.moor"
             target="_blank"
