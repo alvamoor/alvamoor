@@ -1,0 +1,21 @@
+{
+  "Landing": {
+    "status": "In progress",
+    "name": "alva moor",
+    "tagline": "Patience, a portfolio is in the making.",
+    "subtext": "New work, soon.",
+    "follow": "Follow on Instagram",
+    "year": "© {year}"
+  },
+  "LocaleSwitcher": {
+    "label": "Language",
+    "en": "EN",
+    "de": "DE"
+  },
+  "ThemeSwitcher": {
+    "label": "Theme",
+    "classic": "Classic",
+    "pop": "Pop",
+    "natural": "Natural"
+  }
+}

@@ -1,0 +1,119 @@
+import { includeIgnoreFile } from "@eslint/compat";
+import nextPlugin from "@next/eslint-plugin-next";
+import jsxA11y from "eslint-plugin-jsx-a11y";
+import prettierRecommended from "eslint-plugin-prettier/recommended";
+import reactPlugin from "eslint-plugin-react";
+import reactHooks from "eslint-plugin-react-hooks";
+import globals from "globals";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import tseslint from "typescript-eslint";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const gitignorePath = path.resolve(__dirname, ".gitignore");
+
+/** @type {import('eslint').Linter.Config[]} */
+export default [
+  includeIgnoreFile(gitignorePath),
+  { ignores: ["next-env.d.ts"] },
+
+  {
+    files: ["**/*.{js,jsx,mjs,ts,tsx}"],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        ecmaVersion: "latest",
+        sourceType: "module",
+        ecmaFeatures: { jsx: true },
+      },
+      globals: { ...globals.browser, ...globals.node },
+    },
+    plugins: {
+      "@typescript-eslint": tseslint.plugin,
+      react: reactPlugin,
+      "react-hooks": reactHooks,
+      "@next/next": nextPlugin,
+    },
+    settings: {
+      react: { version: "detect" },
+    },
+    rules: {
+      ...reactPlugin.configs.recommended.rules,
+      ...reactPlugin.configs["jsx-runtime"].rules,
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs["core-web-vitals"].rules,
+      "@next/next/no-html-link-for-pages": "off",
+      "@typescript-eslint/consistent-type-imports": "error",
+      "no-console": "warn",
+    },
+  },
+
+  ...tseslint.configs.recommended,
+  jsxA11y.flatConfigs.recommended,
+
+  // i18n: force locale-aware navigation primitives.
+  // Bypassing these silently drops the locale on navigation.
+  // The wrappers themselves live in i18n/ and are exempt.
+  {
+    files: ["**/*.{js,jsx,mjs,ts,tsx}"],
+    ignores: ["i18n/**", "eslint.config.js"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "next/link",
+              message:
+                "Import Link from '@/i18n/navigation' to preserve locale on navigation.",
+            },
+          ],
+          patterns: [
+            {
+              group: ["next/navigation"],
+              importNames: ["redirect", "usePathname", "useRouter"],
+              message:
+                "Import redirect/usePathname/useRouter from '@/i18n/navigation' to preserve locale.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  // Style bans inherited from bts: no React.FC, no React.FunctionComponent.
+  {
+    files: ["**/*.{js,jsx,mjs,ts,tsx}"],
+    rules: {
+      "no-restricted-syntax": [
+        "warn",
+        {
+          selector: "TSTypeReference > Identifier[name='FC']",
+          message: "Do not use React.FC. Use typed props instead.",
+        },
+        {
+          selector: "TSTypeReference > Identifier[name='FunctionComponent']",
+          message:
+            "Do not use React.FunctionComponent. Use typed props instead.",
+        },
+        {
+          selector:
+            "TSTypeReference > TSQualifiedName[left.name='React'][right.name='FC']",
+          message: "Do not use React.FC. Use typed props instead.",
+        },
+        {
+          selector:
+            "TSTypeReference > TSQualifiedName[left.name='React'][right.name='FunctionComponent']",
+          message:
+            "Do not use React.FunctionComponent. Use typed props instead.",
+        },
+      ],
+    },
+  },
+
+  // Must come last.
+  prettierRecommended,
+];
