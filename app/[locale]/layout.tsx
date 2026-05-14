@@ -1,36 +1,16 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import {
   getMessages,
   getTranslations,
   setRequestLocale,
 } from "next-intl/server";
-import { Inter } from "next/font/google";
-import localFont from "next/font/local";
 import { notFound } from "next/navigation";
 
 import { StructuredData } from "@/app/components/StructuredData";
 import { type Locale, isLocale, routing } from "@/i18n/routing";
 
-import "../globals.css";
-
-const sans = Inter({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-sans",
-});
-
-const backdrop = localFont({
-  src: "../fonts/Direction-R9e63.otf",
-  display: "swap",
-  variable: "--font-backdrop",
-});
-
 const SITE_URL = "https://alvamoor.com";
-
-export const viewport: Viewport = {
-  themeColor: "#4a3829",
-};
 
 export async function generateMetadata({
   params,
@@ -102,13 +82,9 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={`${sans.variable} ${backdrop.variable}`}>
-      <body>
-        <StructuredData locale={locale} />
-        <NextIntlClientProvider messages={messages}>
-          {children}
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      <StructuredData locale={locale} />
+      {children}
+    </NextIntlClientProvider>
   );
 }

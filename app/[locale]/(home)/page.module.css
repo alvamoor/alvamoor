@@ -56,3 +56,13 @@
   max-width: 32ch;
   font-weight: 500;
 }
+
+.taglineLink {
+  color: inherit;
+  border-bottom: 1px solid currentColor;
+  transition: opacity 200ms ease;
+}
+
+.taglineLink:hover {
+  opacity: 0.65;
+}
