@@ -18,7 +18,6 @@ export default async function Page({
       <h1 className={styles.name}>{t("name")}</h1>
       <hr className={styles.rule} aria-hidden="true" />
       <p className={styles.tagline}>{t("tagline")}</p>
-      <p className={styles.subtext}>{t("subtext")}</p>
     </main>
   );
 }
