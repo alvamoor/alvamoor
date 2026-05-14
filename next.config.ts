@@ -6,7 +6,7 @@ import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const nextConfig: NextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false,
 };
 
 initOpenNextCloudflareForDev();
