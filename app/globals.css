@@ -28,7 +28,7 @@ html {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  scroll-snap-type: both proximity;
+  scroll-snap-type: y proximity;
   scrollbar-width: none;
 }
 
