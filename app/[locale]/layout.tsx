@@ -10,6 +10,7 @@ import localFont from "next/font/local";
 import { notFound } from "next/navigation";
 
 import { InfiniteScroll } from "@/app/components/InfiniteScroll";
+import { ScrollOverlay } from "@/app/components/ScrollOverlay";
 import { ScrollSpacer } from "@/app/components/ScrollSpacer";
 import { StructuredData } from "@/app/components/StructuredData";
 import { Link } from "@/i18n/navigation";
@@ -116,6 +117,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider messages={messages}>
           <InfiniteScroll />
           <ScrollSpacer />
+          <ScrollOverlay />
           <div className={styles.shell}>
             <header className={styles.top}>
               <span className={styles.status} aria-live="polite">
