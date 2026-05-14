@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 const CYCLE = 3;
-const CENTER = 4;
+const CENTER = 3;
 const EDGE_LOW = 1;
 const EDGE_HIGH = 7;
 
