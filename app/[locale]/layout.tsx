@@ -10,6 +10,7 @@ import localFont from "next/font/local";
 import { notFound } from "next/navigation";
 
 import { ScrollSpacer } from "@/app/components/ScrollSpacer";
+import { StructuredData } from "@/app/components/StructuredData";
 import { Link } from "@/i18n/navigation";
 import { type Locale, isLocale, routing } from "@/i18n/routing";
 
@@ -32,6 +33,8 @@ export const viewport: Viewport = {
   themeColor: "#4a3829",
 };
 
+const SITE_URL = "https://alvamoor.com";
+
 export async function generateMetadata({
   params,
 }: {
@@ -39,9 +42,48 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "Landing" });
+  const path = locale === routing.defaultLocale ? "/" : `/${locale}`;
+  const languages = Object.fromEntries(
+    routing.locales.map((l) => [
+      l,
+      l === routing.defaultLocale ? "/" : `/${l}`,
+    ]),
+  );
+
   return {
+    metadataBase: new URL(SITE_URL),
     title: t("name"),
-    description: t("tagline"),
+    description: t("description"),
+    applicationName: "alvamoor",
+    authors: [{ name: "alva moor" }],
+    creator: "alva moor",
+    openGraph: {
+      type: "website",
+      siteName: "alvamoor",
+      url: path,
+      title: t("name"),
+      description: t("description"),
+      locale: locale === "de" ? "de_DE" : "en_US",
+      alternateLocale: locale === "de" ? "en_US" : "de_DE",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t("name"),
+      description: t("description"),
+    },
+    alternates: {
+      canonical: path,
+      languages: { ...languages, "x-default": "/" },
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+    icons: {
+      icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+      apple: [{ url: "/icon.svg", type: "image/svg+xml" }],
+      shortcut: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    },
   };
 }
 
@@ -69,6 +111,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} className={`${sans.variable} ${backdrop.variable}`}>
       <body>
+        <StructuredData locale={locale} />
         <NextIntlClientProvider messages={messages}>
           <ScrollSpacer />
           <div className={styles.shell}>
