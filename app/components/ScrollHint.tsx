@@ -5,23 +5,9 @@ import { useEffect, useState } from "react";
 
 import styles from "./ScrollHint.module.css";
 
-const VISITED_KEY = "alvamoor-visited";
-
 export function ScrollHint() {
   const t = useTranslations("Landing");
   const [dismissed, setDismissed] = useState(false);
-
-  useEffect(() => {
-    try {
-      if (localStorage.getItem(VISITED_KEY)) {
-        setDismissed(true);
-      } else {
-        localStorage.setItem(VISITED_KEY, "1");
-      }
-    } catch {
-      // localStorage unavailable — show hint by default
-    }
-  }, []);
 
   useEffect(() => {
     const dismiss = () => setDismissed(true);
