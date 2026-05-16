@@ -24,28 +24,28 @@ export function InfiniteScroll() {
     let frame = 0;
     const wrap = () => {
       frame = 0;
-      const W = window.innerWidth;
-      const H = window.innerHeight;
-      let { scrollX: x, scrollY: y } = window;
+      const windowInnerWidth = window.innerWidth;
+      const windowInnerHeight = window.innerHeight;
+      let { scrollX, scrollY } = window;
       let changed = false;
 
-      if (x < EDGE_LOW * W) {
-        x += CYCLE * W;
+      if (scrollX < EDGE_LOW * windowInnerWidth) {
+        scrollX += CYCLE * windowInnerWidth;
         changed = true;
-      } else if (x > EDGE_HIGH * W) {
-        x -= CYCLE * W;
+      } else if (scrollX > EDGE_HIGH * windowInnerWidth) {
+        scrollX -= CYCLE * windowInnerWidth;
         changed = true;
       }
-      if (y < EDGE_LOW * H) {
-        y += CYCLE * H;
+      if (scrollY < EDGE_LOW * windowInnerHeight) {
+        scrollY += CYCLE * windowInnerHeight;
         changed = true;
-      } else if (y > EDGE_HIGH * H) {
-        y -= CYCLE * H;
+      } else if (scrollY > EDGE_HIGH * windowInnerHeight) {
+        scrollY -= CYCLE * windowInnerHeight;
         changed = true;
       }
 
       if (changed) {
-        window.scrollTo({ left: x, top: y, behavior: "instant" });
+        window.scrollTo({ left: scrollX, top: scrollY, behavior: "instant" });
       }
     };
 
@@ -54,13 +54,32 @@ export function InfiniteScroll() {
       frame = requestAnimationFrame(wrap);
     };
 
+    const isMobileViewport =
+      window.matchMedia("(max-width: 48rem)").matches ||
+      window.matchMedia("(pointer: coarse)").matches;
+
+    let lastWidth = window.innerWidth;
+    const onResize = () => {
+      if (!isMobileViewport) {
+        center();
+        return;
+      }
+
+      const nextWidth = window.innerWidth;
+      if (Math.abs(nextWidth - lastWidth) < 2) {
+        return;
+      }
+      lastWidth = nextWidth;
+      center();
+    };
+
     center();
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", center, { passive: true });
+    window.addEventListener("resize", onResize, { passive: true });
 
     return () => {
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", center);
+      window.removeEventListener("resize", onResize);
       if (frame) cancelAnimationFrame(frame);
     };
   }, []);
