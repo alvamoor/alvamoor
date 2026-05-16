@@ -6,3 +6,10 @@
   height: 900vh;
   pointer-events: none;
 }
+
+@media (max-width: 48rem), (pointer: coarse) {
+  .spacer {
+    grid-template-rows: repeat(9, 100svh);
+    height: 900svh;
+  }
+}

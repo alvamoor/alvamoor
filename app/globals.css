@@ -49,6 +49,12 @@ body {
   line-height: 1.5;
 }
 
+@media (max-width: 48rem), (pointer: coarse) {
+  body {
+    min-height: 100svh;
+  }
+}
+
 a {
   color: inherit;
   text-decoration: none;
