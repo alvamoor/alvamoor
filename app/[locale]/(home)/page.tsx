@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import type { Locale } from "@/i18n/routing";
 
+import GalleryLink from "./GalleryLink";
 import styles from "./page.module.css";
 
 export default async function Page({
@@ -19,11 +20,7 @@ export default async function Page({
       <hr className={styles.rule} aria-hidden="true" />
       <p className={styles.tagline}>
         {t.rich("tagline", {
-          link: (chunks) => (
-            <a href="/gallery" className={styles.taglineLink}>
-              {chunks}
-            </a>
-          ),
+          link: (chunks) => <GalleryLink>{chunks}</GalleryLink>,
         })}
       </p>
     </main>
