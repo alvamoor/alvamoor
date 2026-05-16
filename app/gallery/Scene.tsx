@@ -86,6 +86,7 @@ function DragLook() {
       if (!dragging) return;
       const totalDeltaX = event.clientX - downX;
       const totalDeltaY = event.clientY - downY;
+      // Ignore tiny pointer jitter so taps do not immediately become camera drags.
       if (!dragStarted && Math.hypot(totalDeltaX, totalDeltaY) < 5) return;
       dragStarted = true;
       const deltaX = event.clientX - lastX;
@@ -229,42 +230,65 @@ function NightFloor() {
 }
 
 function FloatingArt({
+  index,
   texturePath,
   position,
   rotationY,
 }: {
+  index: number;
   texturePath: string;
   position: [number, number, number];
   rotationY: number;
 }) {
-  const targetRef = useRef<Object3D>(null);
+  const spotlightTargetRef = useRef<Object3D>(null);
   const spotRef = useRef<SpotLight>(null);
-  const matRef = useRef<MeshStandardMaterial>(null);
+  const artworkRef = useRef<MeshStandardMaterial>(null);
+  const lastTouchTapRef = useRef(0);
   const texture = useTexture(texturePath);
 
   useEffect(() => {
     texture.colorSpace = SRGBColorSpace;
 
-    if (spotRef.current && targetRef.current) {
-      spotRef.current.target = targetRef.current;
+    if (spotRef.current && spotlightTargetRef.current) {
+      spotRef.current.target = spotlightTargetRef.current;
     }
   }, [texture]);
 
   useFrame((_, delta) => {
-    if (matRef.current && matRef.current.opacity < 1) {
-      matRef.current.opacity = Math.min(
+    if (artworkRef.current && artworkRef.current.opacity < 1) {
+      // Fade artworks in once their texture is ready instead of popping them in.
+      artworkRef.current.opacity = Math.min(
         1,
-        matRef.current.opacity + delta * 1.2,
+        artworkRef.current.opacity + delta * 1.2,
       );
     }
   });
 
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
-      <mesh position={[0, 0, 0]}>
+      <mesh
+        position={[0, 0, 0]}
+        onPointerDown={(event) => {
+          if (event.pointerType !== "touch") return;
+          const now = event.timeStamp;
+          const elapsed = now - lastTouchTapRef.current;
+          lastTouchTapRef.current = now;
+          // Treat two taps within 320ms as a mobile double-tap to focus the artwork.
+          if (elapsed < 320) {
+            event.stopPropagation();
+            event.nativeEvent.stopImmediatePropagation();
+            navTarget.current = index;
+          }
+        }}
+        onDoubleClick={(event) => {
+          event.stopPropagation();
+          event.nativeEvent.stopImmediatePropagation();
+          navTarget.current = index;
+        }}
+      >
         <planeGeometry args={[2.4, 3.2]} />
         <meshStandardMaterial
-          ref={matRef}
+          ref={artworkRef}
           map={texture}
           color="#ffffff"
           emissive="#ffffff"
@@ -276,7 +300,7 @@ function FloatingArt({
           opacity={0}
         />
       </mesh>
-      <object3D ref={targetRef} position={[0, 0, 0]} />
+      <object3D ref={spotlightTargetRef} position={[0, 0, 0]} />
       <spotLight
         ref={spotRef}
         position={[0, 1.2, 4]}
@@ -371,6 +395,7 @@ export default function Scene() {
         {ARTWORKS.map((artwork, index) => (
           <FloatingArt
             key={index}
+            index={index}
             texturePath={artwork.texturePath}
             position={artwork.position}
             rotationY={artwork.rotationY}
