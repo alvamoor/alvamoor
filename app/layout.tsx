@@ -8,12 +8,14 @@ import "./globals.css";
 const sans = Inter({
   subsets: ["latin"],
   display: "swap",
+  preload: true,
   variable: "--font-sans",
 });
 
 const backdrop = localFont({
   src: "./fonts/Direction-R9e63.otf",
-  display: "swap",
+  preload: true,
+  display: "block",
   variable: "--font-backdrop",
 });
 
