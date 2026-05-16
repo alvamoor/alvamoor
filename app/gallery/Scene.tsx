@@ -5,7 +5,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Center,
   KeyboardControls,
-  PointerLockControls,
   Stars,
   Text3D,
   useKeyboardControls,
@@ -48,19 +47,6 @@ const ARTWORKS: {
   ],
   rotationY: artworkAngle(index) + Math.PI,
 }));
-
-function useTouchDevice() {
-  const [isTouch, setIsTouch] = useState(false);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const mediaQuery = window.matchMedia("(hover: none) and (pointer: coarse)");
-    setIsTouch(mediaQuery.matches);
-    const handler = () => setIsTouch(mediaQuery.matches);
-    mediaQuery.addEventListener("change", handler);
-    return () => mediaQuery.removeEventListener("change", handler);
-  }, []);
-  return isTouch;
-}
 
 function DragLook() {
   const { camera, gl } = useThree();
@@ -163,7 +149,6 @@ function NavSpot({ index }: { index: number }) {
       onClick={(event) => {
         event.stopPropagation();
         event.nativeEvent.stopImmediatePropagation();
-        if (document.pointerLockElement) document.exitPointerLock();
         navTarget.current = index;
       }}
       onPointerOver={(event) => {
@@ -337,8 +322,6 @@ function Player() {
 }
 
 export default function Scene() {
-  const isTouch = useTouchDevice();
-
   return (
     <KeyboardControls map={KEY_MAP}>
       <Canvas
@@ -381,7 +364,7 @@ export default function Scene() {
           <NavSpot key={`spot-${index}`} index={index} />
         ))}
         <Player />
-        {isTouch ? <DragLook /> : <PointerLockControls />}
+        <DragLook />
       </Canvas>
     </KeyboardControls>
   );
