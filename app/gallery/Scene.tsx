@@ -8,18 +8,21 @@ import {
   Stars,
   Text3D,
   useKeyboardControls,
+  useTexture,
 } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
-  Color,
   DoubleSide,
   Euler,
   type Mesh,
+  type MeshStandardMaterial,
   type Object3D,
+  SRGBColorSpace,
   type SpotLight,
   Vector3,
 } from "three";
 
+import { ARTWORK_IMAGES } from "./artworks";
 import {
   ARTWORK_COLORS,
   EYE_HEIGHT,
@@ -36,10 +39,12 @@ import { navTarget } from "./nav";
 
 const ARTWORKS: {
   color: string;
+  texturePath: string;
   position: [number, number, number];
   rotationY: number;
-}[] = ARTWORK_COLORS.map((color, index) => ({
-  color,
+}[] = ARTWORK_IMAGES.map((artwork, index) => ({
+  color: ARTWORK_COLORS[index],
+  texturePath: artwork.texture,
   position: [
     Math.sin(artworkAngle(index)) * RING_RADIUS,
     RING_HEIGHT,
@@ -108,16 +113,23 @@ function DragLook() {
       }
     };
 
+    const blockContextMenu = (event: Event) => event.preventDefault();
+    const blockDragStart = (event: Event) => event.preventDefault();
+
     canvas.addEventListener("pointerdown", onDown);
     canvas.addEventListener("pointermove", onMove);
     canvas.addEventListener("pointerup", onUp);
     canvas.addEventListener("pointercancel", onUp);
+    canvas.addEventListener("contextmenu", blockContextMenu);
+    canvas.addEventListener("dragstart", blockDragStart);
 
     return () => {
       canvas.removeEventListener("pointerdown", onDown);
       canvas.removeEventListener("pointermove", onMove);
       canvas.removeEventListener("pointerup", onUp);
       canvas.removeEventListener("pointercancel", onUp);
+      canvas.removeEventListener("contextmenu", blockContextMenu);
+      canvas.removeEventListener("dragstart", blockDragStart);
     };
   }, [camera, gl]);
 
@@ -217,47 +229,51 @@ function NightFloor() {
 }
 
 function FloatingArt({
-  color,
+  texturePath,
   position,
   rotationY,
 }: {
-  color: string;
+  texturePath: string;
   position: [number, number, number];
   rotationY: number;
 }) {
-  const artRef = useRef<Mesh>(null);
   const targetRef = useRef<Object3D>(null);
   const spotRef = useRef<SpotLight>(null);
-
-  const washedColor = useMemo(
-    () => new Color(color).lerp(new Color("#d4c8b0"), 0.32).getStyle(),
-    [color],
-  );
+  const matRef = useRef<MeshStandardMaterial>(null);
+  const texture = useTexture(texturePath);
 
   useEffect(() => {
+    texture.colorSpace = SRGBColorSpace;
+
     if (spotRef.current && targetRef.current) {
       spotRef.current.target = targetRef.current;
     }
-  }, []);
+  }, [texture]);
 
-  useFrame((state) => {
-    if (artRef.current) {
-      artRef.current.position.y =
-        Math.sin(state.clock.elapsedTime * 0.5 + position[0] * 0.3) * 0.15;
+  useFrame((_, delta) => {
+    if (matRef.current && matRef.current.opacity < 1) {
+      matRef.current.opacity = Math.min(
+        1,
+        matRef.current.opacity + delta * 1.2,
+      );
     }
   });
 
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
-      <mesh ref={artRef} position={[0, 0, 0]}>
+      <mesh position={[0, 0, 0]}>
         <planeGeometry args={[2.4, 3.2]} />
         <meshStandardMaterial
-          color={washedColor}
-          emissive={washedColor}
-          emissiveIntensity={0.08}
+          ref={matRef}
+          map={texture}
+          color="#ffffff"
+          emissive="#ffffff"
+          emissiveIntensity={0.02}
           roughness={1}
           metalness={0}
           side={DoubleSide}
+          transparent
+          opacity={0}
         />
       </mesh>
       <object3D ref={targetRef} position={[0, 0, 0]} />
@@ -355,7 +371,7 @@ export default function Scene() {
         {ARTWORKS.map((artwork, index) => (
           <FloatingArt
             key={index}
-            color={artwork.color}
+            texturePath={artwork.texturePath}
             position={artwork.position}
             rotationY={artwork.rotationY}
           />

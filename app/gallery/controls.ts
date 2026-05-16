@@ -22,9 +22,6 @@ export const ARTWORK_COLORS = [
   "#1f2a4d",
   "#8c4a1c",
   "#4a1f3a",
-  "#7a2818",
-  "#1c4a52",
-  "#36536b",
 ];
 
 export const RING_RADIUS = 13;
