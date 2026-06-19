@@ -1,20 +1,20 @@
-import styles from "./ScrollSpacer.module.css";
+import styles from "./TileField.module.css";
 
 const COLORS = [
-  "#4a3829",
-  "#8c4a1c",
-  "#a8421e",
-  "#7a2818",
-  "#6b1f3e",
-  "#4a1f3a",
-  "#2d5234",
-  "#1c4a52",
-  "#1f2a4d",
+  "#2d4d52",
+  "#293149",
+  "#3b503f",
+  "#8b7565",
+  "#a4887d",
+  "#6d4e5a",
+  "#45372d",
+  "#75554e",
+  "#47273b",
 ];
 
 const TILES = 9;
 
-export function ScrollSpacer() {
+export function TileField() {
   const cells = [];
   for (let row = 0; row < TILES; row++) {
     for (let col = 0; col < TILES; col++) {
@@ -23,7 +23,7 @@ export function ScrollSpacer() {
     }
   }
   return (
-    <div className={styles.spacer} aria-hidden>
+    <div className={styles.field} aria-hidden>
       {cells}
     </div>
   );

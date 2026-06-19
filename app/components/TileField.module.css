@@ -1,15 +1,19 @@
-.spacer {
+.field {
   display: grid;
   grid-template-columns: repeat(9, 100vw);
   grid-template-rows: repeat(9, 100vh);
   width: 900vw;
   height: 900vh;
   pointer-events: none;
+  transform: translate(-33.33vw, -25vh);
+  position: relative;
+  z-index: -1;
 }
 
 @media (max-width: 48rem), (pointer: coarse) {
-  .spacer {
+  .field {
     grid-template-rows: repeat(9, 100svh);
     height: 900svh;
+    transform: translate(-33.33vw, -25svh);
   }
 }

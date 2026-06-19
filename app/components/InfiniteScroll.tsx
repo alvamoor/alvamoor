@@ -2,6 +2,10 @@
 
 import { useEffect } from "react";
 
+// CYCLE must match the colour period of TileField's tile pattern (3×3).
+// CENTER must be a multiple of CYCLE so the centred view is identical to the
+// first paint (scroll 0) — the seam offset lives in the spacer's CSS transform,
+// so there is no visible jump when this runs.
 const CYCLE = 3;
 const CENTER = 3;
 const EDGE_LOW = 1;

@@ -20,7 +20,7 @@ const backdrop = localFont({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#4a3829",
+  themeColor: "#293149",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
