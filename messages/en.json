@@ -1,18 +1,29 @@
 {
   "Landing": {
-    "status": "Still cooking",
     "name": "alva moor",
-    "tagline": "Give me just a few years. During that time <link>Space out</link>.",
     "description": "Abstract paintings exploring memory, landscape, and fragmentation. Atmospheric, layered, and intuitive — by alva moor.",
     "jobTitle": "Visual Artist",
     "about": "I am an abstract artist working through painting, layering, and reduction. My work moves between atmosphere, memory, and fragmentation. Through processes of covering, erasing, and leaving forms unresolved, the paintings exist between abstraction and the suggestion of landscape or bodily presence. My recent work explores quiet spaces, psychological depth, and fragile image structures. Texture, light, materiality, and the tension between control and dissolution are central to the process. The paintings develop intuitively through slow layers, traces, and partially obscured marks. Influenced by Nordic landscapes, contemporary abstract painting, and emotional states, the work aims to create a restrained and open visual language. Each piece intentionally remains unresolved, inviting personal interpretation and reflection. Original abstract paintings and current works are available online.",
     "follow": "Follow on Instagram",
-    "explore": "I know you like scrolling",
     "year": "© {year}"
   },
   "LocaleSwitcher": {
     "label": "Language",
     "en": "EN",
     "de": "DE"
+  },
+  "Gallery": {
+    "paper": "Paper",
+    "canvas": "Canvas",
+    "sections": "Sections",
+    "follow": "Instagram",
+    "zoom": "click to zoom",
+    "available": "Available",
+    "sold": "Sold",
+    "close": "Close",
+    "virtualGallery": "Virtual gallery"
+  },
+  "Home": {
+    "intro": "Stay here and enjoy scrolling, or <link>explore my work</link>."
   }
 }
