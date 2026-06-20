@@ -105,6 +105,27 @@
   border-bottom-color: var(--v2-fg);
 }
 
+/* Desktop: lift the section nav into the top header row (centred between the
+   wordmark and the locale switcher) so the works scroller takes the full height
+   below — bigger images. */
+@media (min-width: 768px) {
+  .mediumNav {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 3;
+    padding: var(--pad-y) var(--pad-x);
+    /* let clicks through to the wordmark / locale switcher beneath */
+    pointer-events: none;
+  }
+
+  .mediumNavLink {
+    pointer-events: auto;
+    font-size: 1.0625rem;
+  }
+}
+
 /* ── Medium listing ─────────────────────────────────────────────── */
 
 /* Wrapper that positions the scroll arrows over the horizontal scroller. */
