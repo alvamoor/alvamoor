@@ -12,3 +12,9 @@ cloudflare-env.d.ts
 
 # kept local, out of git
 docs/
+
+# kept local, out of git
+content/
+scripts/
+canvas-originals
+image-variants
