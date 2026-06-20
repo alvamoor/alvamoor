@@ -17,7 +17,7 @@ export default async function MediumPage({
   if (!isMedium(medium)) notFound();
 
   const t = await getTranslations("Gallery");
-  const works = getByMedium(medium);
+  const works = await getByMedium(medium);
 
   return (
     <>
