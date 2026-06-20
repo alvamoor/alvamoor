@@ -57,7 +57,7 @@ export default async function Landing({
           <p className={styles.tagline}>
             {tHome.rich("intro", {
               link: (chunks) => (
-                <Link href="/canvas" className={styles.taglineLink}>
+                <Link href="/paper" className={styles.taglineLink}>
                   {chunks}
                 </Link>
               ),
