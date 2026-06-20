@@ -8,6 +8,15 @@
     "binding": "ASSETS",
     "directory": ".open-next/assets",
   },
+  // R2 bucket the /admin routes write to (images + manifests).
+  "r2_buckets": [{ "binding": "IMAGES_BUCKET", "bucket_name": "images" }],
+  // Cloudflare Access settings for /admin auth. Fill after creating the Access
+  // application (see docs/r2-image-migration.md). Left empty until then: in
+  // production the admin API fails closed (401) when CF_ACCESS_AUD is empty.
+  "vars": {
+    "CF_ACCESS_TEAM_DOMAIN": "",
+    "CF_ACCESS_AUD": "",
+  },
   "observability": {
     "enabled": true,
   },

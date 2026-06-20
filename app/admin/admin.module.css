@@ -1,0 +1,190 @@
+.root {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 6rem;
+  font-family: system-ui, sans-serif;
+  color: #16140f;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  z-index: 2;
+}
+
+.h1 {
+  font-size: 1.25rem;
+  margin: 0;
+  margin-right: auto;
+}
+
+.h2 {
+  font-size: 1rem;
+  margin: 0 0 0.75rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.tab {
+  text-transform: capitalize;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: #fff;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.tabActive {
+  background: #16140f;
+  color: #fff;
+  border-color: #16140f;
+}
+
+.save {
+  padding: 0.5rem 1.1rem;
+  border: 0;
+  border-radius: 6px;
+  background: #16140f;
+  color: #fff;
+  cursor: pointer;
+}
+
+.save:disabled {
+  background: #bbb;
+  cursor: default;
+}
+
+.add {
+  margin-top: 0.75rem;
+  padding: 0.45rem 1rem;
+  border: 0;
+  border-radius: 6px;
+  background: #2a6;
+  color: #fff;
+  cursor: pointer;
+}
+
+.ok {
+  color: #1a7f37;
+}
+
+.err {
+  color: #c0392b;
+}
+
+.card {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+  background: #fff;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.thumb {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #f0f0f0;
+  flex: none;
+}
+
+.rowMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.rowControls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: none;
+}
+
+.rowControls button {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: #fff;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.rowControls button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.del {
+  color: #c0392b;
+  border-color: rgba(192, 57, 43, 0.4) !important;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #888;
+}
+
+.pair {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pair input {
+  flex: 1;
+  min-width: 0;
+}
+
+.nums {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.nums .field {
+  width: 7rem;
+}
+
+.fields input,
+.fields select {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 5px;
+  font: inherit;
+}

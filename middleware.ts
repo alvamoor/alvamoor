@@ -16,6 +16,6 @@ export default function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|_next|_vercel|icon|apple-icon|favicon|opengraph-image|twitter-image|robots|sitemap|manifest|gallery|.*\\..*).*)",
+    "/((?!api|_next|_vercel|icon|apple-icon|favicon|opengraph-image|twitter-image|robots|sitemap|manifest|gallery|admin|.*\\..*).*)",
   ],
 };
