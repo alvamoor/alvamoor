@@ -17,13 +17,15 @@
     "canvas": "Canvas",
     "sections": "Sections",
     "follow": "Instagram",
-    "zoom": "click to zoom",
     "available": "Available",
     "sold": "Sold",
     "close": "Close",
+    "moreInfo": "More information",
+    "prev": "Previous work",
+    "next": "Next work",
     "virtualGallery": "Virtual gallery"
   },
   "Home": {
-    "intro": "Stay here and enjoy scrolling, or <link>explore my work</link>."
+    "intro": "<link>works</link>."
   }
 }
