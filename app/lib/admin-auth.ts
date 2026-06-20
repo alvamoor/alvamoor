@@ -28,8 +28,29 @@ function jwksFor(teamDomain: string) {
   return jwks;
 }
 
+// CSRF defense: Access auth rides on a cookie, so the browser would attach it
+// to cross-site requests too. Require state-changing requests to be same-origin.
+// (multipart uploads are "simple" requests with no CORS preflight, so this is
+// the guard that stops a malicious page from POSTing as the logged-in artist.)
+function isSameOrigin(req: Request): boolean {
+  const site = req.headers.get("sec-fetch-site");
+  if (site) return site === "same-origin";
+  // Fallback for clients without Fetch Metadata: compare Origin to Host.
+  const origin = req.headers.get("origin");
+  if (!origin) return false;
+  try {
+    return new URL(origin).host === req.headers.get("host");
+  } catch {
+    return false;
+  }
+}
+
 /** True if the request is an authenticated Cloudflare Access request. */
 export async function isAuthorized(req: Request): Promise<boolean> {
+  // Block cross-site state-changing requests (CSRF).
+  const method = req.method.toUpperCase();
+  if (method !== "GET" && method !== "HEAD" && !isSameOrigin(req)) return false;
+
   const { env } = await getCloudflareContext({ async: true });
   const aud = (env.CF_ACCESS_AUD as string) || "";
   const teamDomain = (env.CF_ACCESS_TEAM_DOMAIN as string) || "";

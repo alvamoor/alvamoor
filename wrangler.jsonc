@@ -2,6 +2,10 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "alvamoor",
   "main": ".open-next/worker.js",
+  // Serve only via the custom domain (Access-protected). Disabling the
+  // *.workers.dev URL prevents reaching the Worker — and /admin — off-domain,
+  // bypassing Cloudflare Access.
+  "workers_dev": false,
   "compatibility_date": "2025-01-15",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
