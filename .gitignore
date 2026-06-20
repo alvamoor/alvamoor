@@ -8,7 +8,6 @@ next-env.d.ts
 .claude
 .open-next
 .wrangler
-cloudflare-env.d.ts
 
 # kept local, out of git
 docs/
