@@ -104,7 +104,8 @@
 }
 
 .aboutExpanded {
-  -webkit-line-clamp: unset;
+  display: block;
+  -webkit-line-clamp: none;
   overflow: visible;
 }
 
