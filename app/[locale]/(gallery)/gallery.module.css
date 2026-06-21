@@ -142,7 +142,6 @@
   display: flex;
 }
 
-/* Left/right scroll-direction arrows, floated over the scroller. */
 .navArrow {
   position: absolute;
   top: 50%;
@@ -151,26 +150,32 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border: 1px solid var(--v2-line);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--v2-bg) 80%, transparent);
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  appearance: none;
+  border: 0;
+  background: none;
   color: var(--v2-fg);
-  font-size: 1.5rem;
+  font-size: 2.25rem;
+  font-weight: 200;
   line-height: 1;
+  opacity: 0.55;
   cursor: pointer;
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
-  transition:
-    border-color 180ms ease,
-    background 180ms ease,
-    opacity 180ms ease;
+  transition: opacity 180ms ease;
 }
 
 .navArrow:hover {
-  border-color: var(--v2-fg);
-  background: var(--v2-bg);
+  opacity: 1;
+}
+
+@media (min-width: 768px) {
+  .navArrow {
+    width: 1rem;
+    height: 1rem;
+    font-size: 2rem;
+    font-weight: 50;
+  }
 }
 
 .navArrowLeft {
@@ -193,11 +198,11 @@
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: none;
 }
 
 .works::-webkit-scrollbar {
-  display: none; /* Safari / Chrome */
+  display: none;
 }
 
 .work {
@@ -206,18 +211,21 @@
   height: 100%;
   scroll-snap-align: center;
   scroll-snap-stop: always;
-  /* centre the work within the slide */
   display: flex;
   align-items: stretch;
   justify-content: center;
   padding: clamp(1.5rem, 5vw, 4rem);
-  /* it's a <button> (opens the work in the dialog) — strip the chrome */
   appearance: none;
   border: 0;
   background: none;
   font: inherit;
   color: inherit;
   cursor: pointer;
+}
+
+.works[data-medium="canvas"] .work {
+  padding-top: clamp(0.5rem, 1.5vw, 1rem);
+  padding-bottom: clamp(0.5rem, 1.5vw, 1rem);
 }
 
 /* Fills the slide and centres the image. */

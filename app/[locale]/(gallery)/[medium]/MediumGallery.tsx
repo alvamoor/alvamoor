@@ -20,12 +20,18 @@ type Props = {
   works: Artwork[];
   locale: Locale;
   labels: Labels;
+  medium: string;
 };
 
 // The works listing. Tiles show the image only; clicking a work opens it in a
 // modal with its title and description. The size/year/availability stay hidden
 // behind a "more information" toggle. No page navigation.
-export default function MediumGallery({ works, locale, labels }: Props) {
+export default function MediumGallery({
+  works,
+  locale,
+  labels,
+  medium,
+}: Props) {
   const [open, setOpen] = useState<Artwork | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -71,7 +77,7 @@ export default function MediumGallery({ works, locale, labels }: Props) {
           </button>
         )}
 
-        <div className={styles.works} ref={scrollerRef}>
+        <div className={styles.works} data-medium={medium} ref={scrollerRef}>
           {works.map((a) => (
             <button
               key={a.id}

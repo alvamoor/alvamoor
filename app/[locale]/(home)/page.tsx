@@ -6,6 +6,7 @@ import { TileField } from "@/app/components/TileField";
 import { Link } from "@/i18n/navigation";
 import { type Locale } from "@/i18n/routing";
 
+import { NameReveal } from "./NameReveal";
 import styles from "./landing.module.css";
 
 export default async function Landing({
@@ -33,7 +34,7 @@ export default async function Landing({
         </header>
 
         <main className={styles.center}>
-          <h1 className={styles.name}>{t("name")}</h1>
+          <NameReveal name={t("name")} about={t("about")} />
           <p className={styles.tagline}>
             {tHome.rich("intro", {
               link: (chunks) => (

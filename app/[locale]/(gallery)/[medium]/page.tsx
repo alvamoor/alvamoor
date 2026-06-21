@@ -26,6 +26,7 @@ export default async function MediumPage({
       <MediumGallery
         works={works}
         locale={locale}
+        medium={medium}
         labels={{
           sold: t("sold"),
           available: t("available"),

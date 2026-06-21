@@ -48,6 +48,10 @@
   gap: clamp(1rem, 2.5vw, 1.75rem);
 }
 
+.reveal {
+  position: relative;
+}
+
 .name {
   font-family: var(--font-backdrop), Impact, sans-serif;
   font-weight: 400;
@@ -60,6 +64,50 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
+.nameInner {
+  display: inline-block;
+}
+
+.line {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.65);
+  transform: scaleX(0);
+  transform-origin: center;
+  opacity: 0;
+}
+
+.about {
+  appearance: none;
+  border: 0;
+  background: none;
+  text-align: left;
+  width: 100%;
+  margin: 0.85em 0 0;
+  max-width: 60ch;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: clamp(0.9rem, 3.6vw, 1.05rem);
+  line-height: 1.55;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 16px rgba(0, 0, 0, 0.4);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.aboutExpanded {
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
 .tagline {
   font-family: var(--font-sans), system-ui, sans-serif;
   font-size: clamp(1.25rem, 2.4vw, 1.625rem);
@@ -70,12 +118,87 @@
   font-weight: 500;
   text-shadow: 0 1px 20px rgba(0, 0, 0, 0.25);
   color: rgba(255, 255, 255, 0.7);
+  transition: opacity 300ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .reveal {
+    pointer-events: auto;
+  }
+
+  .name {
+    overflow: hidden;
+  }
+
+  .nameInner {
+    transition: transform 550ms cubic-bezier(0.5, 0, 0.2, 1);
+  }
+
+  .reveal:hover .nameInner,
+  .reveal:focus-within .nameInner {
+    transform: translateY(-110%);
+  }
+
+  .line {
+    display: block;
+    transition:
+      transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1) 80ms,
+      opacity 250ms ease 80ms;
+  }
+
+  .reveal:hover .line,
+  .reveal:focus-within .line {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+
+  /* overlay the statement and reveal it on hover (no teaser/clamp) */
+  .about {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-width: 58ch;
+    margin-top: 0.6em;
+    font-size: clamp(0.85rem, 1.15vw, 1.05rem);
+    display: block;
+    overflow: visible;
+    opacity: 0;
+    clip-path: inset(0 0 100% 0);
+    pointer-events: none;
+    cursor: default;
+    transition:
+      clip-path 650ms cubic-bezier(0.2, 0.8, 0.2, 1) 220ms,
+      opacity 350ms ease 220ms;
+  }
+
+  .reveal:hover .about,
+  .reveal:focus-within .about {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+    /* stays pointer-events:none (set above) so clicks pass through and never
+       focus/pin it — the reveal is purely hover-driven on desktop. */
+  }
+
+  /* step the tagline aside while the statement is showing */
+  .reveal:hover + .tagline,
+  .reveal:focus-within + .tagline {
+    opacity: 0;
+  }
 }
 
 @media (min-width: 48rem) {
   .tagline {
     max-width: none;
     white-space: nowrap;
+  }
+}
+
+/* Touch (teaser + "more" toggle shown): push the works link further below the
+   toggle so they aren't crowded. */
+@media (hover: none) {
+  .tagline {
+    margin-top: clamp(1.25rem, 6vw, 2.5rem);
   }
 }
 
