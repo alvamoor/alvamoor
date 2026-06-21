@@ -1,0 +1,46 @@
+// Admin image upload. Receives the browser-resized webp variants for one work
+// and stores them in R2 under <medium>/<base>-<width>.webp. Behind Cloudflare
+// Access + JWT verification.
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+
+import { isAuthorized, unauthorized } from "@/app/lib/admin-auth";
+import { WIDTHS, isMedium } from "@/app/lib/artworks";
+
+export const dynamic = "force-dynamic";
+
+export async function POST(req: Request) {
+  if (!(await isAuthorized(req))) return unauthorized();
+
+  const form = await req.formData();
+  const medium = form.get("medium");
+  const base = form.get("base");
+
+  if (typeof medium !== "string" || !isMedium(medium))
+    return Response.json({ error: "invalid medium" }, { status: 400 });
+  if (typeof base !== "string" || !/^[a-zA-Z0-9_-]+$/.test(base))
+    return Response.json({ error: "invalid base" }, { status: 400 });
+
+  const { env } = await getCloudflareContext({ async: true });
+
+  let stored = 0;
+  for (const w of WIDTHS) {
+    const file = form.get(`file-${w}`);
+    if (!(file instanceof File)) continue;
+    await env.IMAGES_BUCKET.put(
+      `${medium}/${base}-${w}.webp`,
+      await file.arrayBuffer(),
+      {
+        httpMetadata: {
+          contentType: "image/webp",
+          cacheControl: "public, max-age=31536000, immutable",
+        },
+      },
+    );
+    stored++;
+  }
+
+  if (stored === 0)
+    return Response.json({ error: "no image files" }, { status: 400 });
+
+  return Response.json({ ok: true, base, stored });
+}

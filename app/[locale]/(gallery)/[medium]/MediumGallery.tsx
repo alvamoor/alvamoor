@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { type Artwork, MAX_WIDTH_CM, type Medium } from "@/app/lib/artworks";
+import { type Artwork } from "@/app/lib/artworks";
 import type { Locale } from "@/i18n/routing";
 
 import styles from "../gallery.module.css";
@@ -10,32 +10,34 @@ import styles from "../gallery.module.css";
 type Labels = {
   sold: string;
   available: string;
-  zoom: string;
   close: string;
+  moreInfo: string;
+  prev: string;
+  next: string;
 };
 
 type Props = {
   works: Artwork[];
-  medium: Medium;
   locale: Locale;
   labels: Labels;
 };
 
-// The works listing. Clicking a work opens it in a small modal window (image
-// fit to the window + caption); a ＋ button magnifies it to full detail,
-// scrollable inside the same window. No page navigation.
-export default function MediumGallery({
-  works,
-  medium,
-  locale,
-  labels,
-}: Props) {
+// The works listing. Tiles show the image only; clicking a work opens it in a
+// modal with its title and description. The size/year/availability stay hidden
+// behind a "more information" toggle. No page navigation.
+export default function MediumGallery({ works, locale, labels }: Props) {
   const [open, setOpen] = useState<Artwork | null>(null);
-  const [magnified, setMagnified] = useState(false);
-  const isPaper = medium === "paper";
+  const [showDetails, setShowDetails] = useState(false);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+
+  // Scroll one slide (one viewport width) left or right.
+  function scrollByDir(dir: 1 | -1) {
+    const el = scrollerRef.current;
+    if (el) el.scrollBy({ left: dir * el.clientWidth, behavior: "smooth" });
+  }
 
   function show(a: Artwork) {
-    setMagnified(false);
+    setShowDetails(false);
     setOpen(a);
   }
 
@@ -53,44 +55,56 @@ export default function MediumGallery({
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  const many = works.length > 1;
+
   return (
     <>
-      <div className={styles.works}>
-        {works.map((a) => (
+      <div className={styles.scrollerWrap}>
+        {many && (
           <button
-            key={a.id}
             type="button"
-            className={styles.work}
-            onClick={() => show(a)}
-            style={
-              { "--ratio": a.widthCm / MAX_WIDTH_CM } as React.CSSProperties
-            }
+            className={`${styles.navArrow} ${styles.navArrowLeft}`}
+            onClick={() => scrollByDir(-1)}
+            aria-label={labels.prev}
           >
-            <span
-              className={`${styles.frame} ${isPaper ? styles.framePaper : ""}`}
-            >
-              {/* White placeholder — keeps the work's real proportions. */}
-              <span
-                className={styles.image}
-                style={{ aspectRatio: `${a.widthCm} / ${a.heightCm}` }}
-                role="img"
-                aria-label={a.title[locale]}
-              />
-            </span>
-            <span className={styles.meta}>
-              <span className={styles.metaTitle}>{a.title[locale]}</span>
-              <span className={styles.metaSpec}>
-                {a.mediumLabel[locale]} · {a.widthCm} × {a.heightCm} cm ·{" "}
-                {a.year}
-              </span>
-              {a.status === "sold" && (
-                <span className={`${styles.metaSpec} ${styles.sold}`}>
-                  {labels.sold}
-                </span>
-              )}
-            </span>
+            ‹
           </button>
-        ))}
+        )}
+
+        <div className={styles.works} ref={scrollerRef}>
+          {works.map((a) => (
+            <button
+              key={a.id}
+              type="button"
+              className={styles.work}
+              onClick={() => show(a)}
+            >
+              <span className={styles.frame}>
+                {/* Shown whole and as large as the slide allows. */}
+                <img
+                  className={styles.image}
+                  src={a.src}
+                  srcSet={a.webpSrcSet}
+                  sizes="100vw"
+                  alt={a.title[locale]}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {many && (
+          <button
+            type="button"
+            className={`${styles.navArrow} ${styles.navArrowRight}`}
+            onClick={() => scrollByDir(1)}
+            aria-label={labels.next}
+          >
+            ›
+          </button>
+        )}
       </div>
 
       {open && (
@@ -116,40 +130,49 @@ export default function MediumGallery({
               ×
             </button>
 
-            <div
-              className={`${styles.modalImageWrap} ${magnified ? styles.modalImageWrapZoom : ""}`}
-            >
-              <button
-                type="button"
-                className={styles.modalImageButton}
-                onClick={() => setMagnified((m) => !m)}
-                aria-label={labels.zoom}
-                aria-pressed={magnified}
-              >
-                {/* White placeholder — keeps the work's real proportions. */}
-                <span
-                  className={`${styles.modalImage} ${magnified ? styles.modalImageZoom : ""}`}
-                  style={
-                    {
-                      "--ar": open.widthCm / open.heightCm,
-                      aspectRatio: `${open.widthCm} / ${open.heightCm}`,
-                    } as React.CSSProperties
-                  }
-                  role="img"
-                  aria-label={open.title[locale]}
-                />
-              </button>
+            <div className={styles.modalImageWrap}>
+              {/* Box keeps the work's real (cm) proportions; the photo fills it. */}
+              <img
+                className={styles.modalImage}
+                src={open.src}
+                srcSet={open.webpSrcSet}
+                sizes="1200px"
+                style={
+                  {
+                    "--ar": open.widthCm / open.heightCm,
+                    aspectRatio: `${open.widthCm} / ${open.heightCm}`,
+                  } as React.CSSProperties
+                }
+                alt={open.title[locale]}
+                decoding="async"
+              />
             </div>
 
             <figcaption className={styles.modalMeta}>
               <span className={styles.modalTitle}>{open.title[locale]}</span>
-              <span className={styles.detailSpec}>
-                {open.mediumLabel[locale]} · {open.widthCm} × {open.heightCm} cm
-                · {open.year}
-              </span>
-              <span className={styles.detailSpec}>
-                {open.status === "sold" ? labels.sold : labels.available}
-              </span>
+              {/* Title + description show by default. */}
+              {open.description?.[locale] && (
+                <span className={styles.detailDescription}>
+                  {open.description[locale]}
+                </span>
+              )}
+
+              {/* Medium / size / year / availability stay behind "more information". */}
+              {showDetails ? (
+                <span className={styles.detailSpec}>
+                  {open.mediumLabel[locale]} · {open.widthCm} × {open.heightCm}{" "}
+                  cm · {open.year} ·{" "}
+                  {open.status === "sold" ? labels.sold : labels.available}
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.moreInfo}
+                  onClick={() => setShowDetails(true)}
+                >
+                  {labels.moreInfo}
+                </button>
+              )}
             </figcaption>
           </div>
         </div>

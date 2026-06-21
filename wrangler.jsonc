@@ -2,11 +2,24 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "alvamoor",
   "main": ".open-next/worker.js",
+  // Serve only via the custom domain (Access-protected). Disabling the
+  // *.workers.dev URL prevents reaching the Worker — and /admin — off-domain,
+  // bypassing Cloudflare Access.
+  "workers_dev": false,
   "compatibility_date": "2025-01-15",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
     "binding": "ASSETS",
     "directory": ".open-next/assets",
+  },
+  // R2 bucket the /admin routes write to (images + manifests).
+  "r2_buckets": [{ "binding": "IMAGES_BUCKET", "bucket_name": "images" }],
+  // Cloudflare Access settings for /admin auth. Fill after creating the Access
+  // application (see docs/r2-image-migration.md). Left empty until then: in
+  // production the admin API fails closed (401) when CF_ACCESS_AUD is empty.
+  "vars": {
+    "CF_ACCESS_TEAM_DOMAIN": "",
+    "CF_ACCESS_AUD": "",
   },
   "observability": {
     "enabled": true,

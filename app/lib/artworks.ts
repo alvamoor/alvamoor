@@ -1,161 +1,74 @@
-// Placeholder artwork data for the landing-redesign prototype.
-// Real titles / dimensions / mediums to be filled in later — the shapes and
-// the paper-vs-canvas split are what we're testing here.
+// Artwork data is stored as JSON manifests in Cloudflare R2, one per medium:
+//   <IMAGE_BASE>/paper/index.json, <IMAGE_BASE>/canvas/index.json
+// Each manifest is an array of ManifestEntry. Images live alongside in the same
+// folder as <base>-<width>.webp. Adding a work = upload its image variants +
+// add a manifest entry + run scripts/sync-manifest.mjs — no code change.
+// See docs/r2-image-migration.md.
 
 export type Medium = "paper" | "canvas";
 
 type LocalizedText = { en: string; de: string };
 
-export type Artwork = {
-  id: string;
+// One entry in a <medium>/index.json manifest. `medium` is implied by the file.
+export type ManifestEntry = {
+  /** R2 object-key stem within the medium folder; variants are `<base>-<w>.webp`. */
+  base: string;
   title: LocalizedText;
-  medium: Medium;
+  /** Optional free-text description shown in the dialog. */
+  description?: LocalizedText;
   /** Human-readable medium line, e.g. "Oil on canvas". */
   mediumLabel: LocalizedText;
   year: number;
-  /** Real-world size in centimetres — drives the to-scale rendering. */
+  /** Real-world size in centimetres. */
   widthCm: number;
   heightCm: number;
   status: "available" | "sold";
-  /** Capped preview image (the only image we have today). */
+};
+
+export type Artwork = ManifestEntry & {
+  id: string;
+  medium: Medium;
+  /** Fallback image URL (for browsers ignoring srcSet). */
   src: string;
+  /** Responsive `srcSet` across the widths uploaded to R2. */
   webpSrcSet: string;
 };
 
-const PREVIEW_WIDTH = 1200;
+// Images live in Cloudflare R2, served via a public custom domain. Override the
+// host with NEXT_PUBLIC_IMAGE_BASE_URL for local testing against a different URL.
+const IMAGE_BASE =
+  process.env.NEXT_PUBLIC_IMAGE_BASE_URL ?? "https://img.alvamoor.com";
 
-function srcFor(baseName: string) {
-  const src = `/artworks/${baseName}-${PREVIEW_WIDTH}.webp`;
-  return { src, webpSrcSet: `${src} ${PREVIEW_WIDTH}w` };
+// Widths present in R2. Keep in sync with WIDTHS in gen-image-variants.mjs and
+// the admin upload/resize. Exported for the admin API.
+export const WIDTHS = [640, 1024, 1200];
+const FALLBACK_WIDTH = 1024;
+
+// How long (seconds) a fetched manifest is cached before re-fetching. New works
+// appear within this window without an app redeploy.
+const REVALIDATE = 60;
+
+function srcFor(medium: Medium, base: string) {
+  const url = (w: number) => `${IMAGE_BASE}/${medium}/${base}-${w}.webp`;
+  return {
+    src: url(FALLBACK_WIDTH),
+    webpSrcSet: WIDTHS.map((w) => `${url(w)} ${w}w`).join(", "),
+  };
 }
 
-const OIL: LocalizedText = { en: "Oil on canvas", de: "Öl auf Leinwand" };
-const PAPER_MEDIUM: LocalizedText = {
-  en: "Mixed media on paper",
-  de: "Mischtechnik auf Papier",
-};
+export async function getByMedium(medium: Medium): Promise<Artwork[]> {
+  const res = await fetch(`${IMAGE_BASE}/${medium}/index.json`, {
+    next: { revalidate: REVALIDATE },
+  });
+  if (!res.ok) return [];
 
-// Roman-numeral "Untitled" placeholders so nothing reads as final copy.
-function untitled(n: string): LocalizedText {
-  return { en: `Untitled ${n}`, de: `Ohne Titel ${n}` };
-}
-
-type Seed = Omit<Artwork, "src" | "webpSrcSet"> & { base: string };
-
-const SEEDS: Seed[] = [
-  // ── Canvas ─────────────────────────────────────────────
-  {
-    id: "c1",
-    base: "IMG_3190",
-    title: untitled("I"),
-    medium: "canvas",
-    mediumLabel: OIL,
-    year: 2025,
-    widthCm: 130,
-    heightCm: 100,
-    status: "available",
-  },
-  {
-    id: "c2",
-    base: "IMG_3191",
-    title: untitled("II"),
-    medium: "canvas",
-    mediumLabel: OIL,
-    year: 2025,
-    widthCm: 90,
-    heightCm: 120,
-    status: "available",
-  },
-  {
-    id: "c3",
-    base: "IMG_3192",
-    title: untitled("III"),
-    medium: "canvas",
-    mediumLabel: OIL,
-    year: 2024,
-    widthCm: 150,
-    heightCm: 110,
-    status: "sold",
-  },
-  {
-    id: "c4",
-    base: "IMG_3193",
-    title: untitled("IV"),
-    medium: "canvas",
-    mediumLabel: OIL,
-    year: 2024,
-    widthCm: 60,
-    heightCm: 80,
-    status: "available",
-  },
-  {
-    id: "c5",
-    base: "IMG_3194",
-    title: untitled("V"),
-    medium: "canvas",
-    mediumLabel: OIL,
-    year: 2023,
-    widthCm: 100,
-    heightCm: 100,
-    status: "available",
-  },
-  // ── Paper ──────────────────────────────────────────────
-  {
-    id: "p1",
-    base: "IMG_3195",
-    title: untitled("VI"),
-    medium: "paper",
-    mediumLabel: PAPER_MEDIUM,
-    year: 2025,
-    widthCm: 42,
-    heightCm: 30,
-    status: "available",
-  },
-  {
-    id: "p2",
-    base: "IMG_3196",
-    title: untitled("VII"),
-    medium: "paper",
-    mediumLabel: PAPER_MEDIUM,
-    year: 2025,
-    widthCm: 30,
-    heightCm: 40,
-    status: "available",
-  },
-  {
-    id: "p3",
-    base: "IMG_3197",
-    title: untitled("VIII"),
-    medium: "paper",
-    mediumLabel: PAPER_MEDIUM,
-    year: 2024,
-    widthCm: 56,
-    heightCm: 38,
-    status: "sold",
-  },
-  {
-    id: "p4",
-    base: "IMG_3198",
-    title: untitled("IX"),
-    medium: "paper",
-    mediumLabel: PAPER_MEDIUM,
-    year: 2024,
-    widthCm: 40,
-    heightCm: 40,
-    status: "available",
-  },
-];
-
-const ARTWORKS: Artwork[] = SEEDS.map(({ base, ...rest }) => ({
-  ...rest,
-  ...srcFor(base),
-}));
-
-/** Largest real width across all works — the reference for to-scale rendering. */
-export const MAX_WIDTH_CM = Math.max(...ARTWORKS.map((a) => a.widthCm));
-
-export function getByMedium(medium: Medium): Artwork[] {
-  return ARTWORKS.filter((a) => a.medium === medium);
+  const entries = (await res.json()) as ManifestEntry[];
+  return entries.map((entry) => ({
+    ...entry,
+    id: entry.base,
+    medium,
+    ...srcFor(medium, entry.base),
+  }));
 }
 
 export function isMedium(value: string | undefined): value is Medium {

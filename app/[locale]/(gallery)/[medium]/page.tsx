@@ -17,7 +17,7 @@ export default async function MediumPage({
   if (!isMedium(medium)) notFound();
 
   const t = await getTranslations("Gallery");
-  const works = getByMedium(medium);
+  const works = await getByMedium(medium);
 
   return (
     <>
@@ -25,13 +25,14 @@ export default async function MediumPage({
 
       <MediumGallery
         works={works}
-        medium={medium}
         locale={locale}
         labels={{
           sold: t("sold"),
           available: t("available"),
-          zoom: t("zoom"),
           close: t("close"),
+          moreInfo: t("moreInfo"),
+          prev: t("prev"),
+          next: t("next"),
         }}
       />
     </>

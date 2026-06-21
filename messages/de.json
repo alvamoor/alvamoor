@@ -17,13 +17,15 @@
     "canvas": "Leinwand",
     "sections": "Bereiche",
     "follow": "Instagram",
-    "zoom": "zum Vergrößern klicken",
     "available": "Verfügbar",
     "sold": "Verkauft",
     "close": "Schließen",
+    "moreInfo": "Mehr Informationen",
+    "prev": "Vorheriges Werk",
+    "next": "Nächstes Werk",
     "virtualGallery": "Virtuelle Galerie"
   },
   "Home": {
-    "intro": "Bleib hier und genieß das Scrollen, oder <link>entdecke meine Arbeiten</link>."
+    "intro": "<link>arbeiten</link>."
   }
 }
