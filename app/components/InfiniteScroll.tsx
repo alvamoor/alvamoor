@@ -1,26 +1,32 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+
+import styles from "./TileField.module.css";
 
 // CYCLE must match the colour period of TileField's tile pattern (3×3).
 // CENTER must be a multiple of CYCLE so the centred view is identical to the
 // first paint (scroll 0) — the seam offset lives in the spacer's CSS transform,
-// so there is no visible jump when this runs.
 const CYCLE = 3;
 const CENTER = 3;
 const EDGE_LOW = 1;
 const EDGE_HIGH = 7;
 
-export function InfiniteScroll() {
+export function InfiniteScroll({ children }: { children: React.ReactNode }) {
+  const scrollerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+
     if ("scrollRestoration" in history) {
       history.scrollRestoration = "manual";
     }
 
     const center = () => {
-      window.scrollTo({
-        left: CENTER * window.innerWidth,
-        top: CENTER * window.innerHeight,
+      el.scrollTo({
+        left: CENTER * el.clientWidth,
+        top: CENTER * el.clientHeight,
         behavior: "instant",
       });
     };
@@ -28,28 +34,29 @@ export function InfiniteScroll() {
     let frame = 0;
     const wrap = () => {
       frame = 0;
-      const windowInnerWidth = window.innerWidth;
-      const windowInnerHeight = window.innerHeight;
-      let { scrollX, scrollY } = window;
+      const tileWidth = el.clientWidth;
+      const tileHeight = el.clientHeight;
+      let scrollX = el.scrollLeft;
+      let scrollY = el.scrollTop;
       let changed = false;
 
-      if (scrollX < EDGE_LOW * windowInnerWidth) {
-        scrollX += CYCLE * windowInnerWidth;
+      if (scrollX < EDGE_LOW * tileWidth) {
+        scrollX += CYCLE * tileWidth;
         changed = true;
-      } else if (scrollX > EDGE_HIGH * windowInnerWidth) {
-        scrollX -= CYCLE * windowInnerWidth;
+      } else if (scrollX > EDGE_HIGH * tileWidth) {
+        scrollX -= CYCLE * tileWidth;
         changed = true;
       }
-      if (scrollY < EDGE_LOW * windowInnerHeight) {
-        scrollY += CYCLE * windowInnerHeight;
+      if (scrollY < EDGE_LOW * tileHeight) {
+        scrollY += CYCLE * tileHeight;
         changed = true;
-      } else if (scrollY > EDGE_HIGH * windowInnerHeight) {
-        scrollY -= CYCLE * windowInnerHeight;
+      } else if (scrollY > EDGE_HIGH * tileHeight) {
+        scrollY -= CYCLE * tileHeight;
         changed = true;
       }
 
       if (changed) {
-        window.scrollTo({ left: scrollX, top: scrollY, behavior: "instant" });
+        el.scrollTo({ left: scrollX, top: scrollY, behavior: "instant" });
       }
     };
 
@@ -78,15 +85,19 @@ export function InfiniteScroll() {
     };
 
     center();
-    window.addEventListener("scroll", onScroll, { passive: true });
+    el.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onResize, { passive: true });
 
     return () => {
-      window.removeEventListener("scroll", onScroll);
+      el.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
       if (frame) cancelAnimationFrame(frame);
     };
   }, []);
 
-  return null;
+  return (
+    <div ref={scrollerRef} className={styles.fieldScroller}>
+      {children}
+    </div>
+  );
 }

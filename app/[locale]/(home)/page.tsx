@@ -22,8 +22,9 @@ export default async function Landing({
 
   return (
     <>
-      <InfiniteScroll />
-      <TileField />
+      <InfiniteScroll>
+        <TileField />
+      </InfiniteScroll>
 
       <div className={styles.shell}>
         <header className={styles.top}>

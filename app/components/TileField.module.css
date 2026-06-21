@@ -1,3 +1,17 @@
+.fieldScroller {
+  position: fixed;
+  inset: 0;
+  overflow: auto;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+  z-index: -1;
+  scrollbar-width: none;
+}
+
+.fieldScroller::-webkit-scrollbar {
+  display: none;
+}
+
 .field {
   display: grid;
   grid-template-columns: repeat(9, 100vw);
@@ -6,8 +20,6 @@
   height: 900vh;
   pointer-events: none;
   transform: translate(-33.33vw, -25vh);
-  position: relative;
-  z-index: -1;
 }
 
 @media (max-width: 48rem), (pointer: coarse) {
