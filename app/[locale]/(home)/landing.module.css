@@ -228,7 +228,15 @@
 
   /* mobile description hidden; the full statement reveals on hover instead */
   .description {
-    display: none;
+    display: block;
+    pointer-events: none;
+    cursor: default;
+    transition: opacity 300ms ease;
+  }
+
+  .reveal:hover .description,
+  .reveal:focus-within .description {
+    opacity: 0;
   }
 
   /* overlay the statement and reveal it on hover */

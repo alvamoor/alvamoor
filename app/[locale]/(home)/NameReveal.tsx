@@ -35,7 +35,6 @@ export function NameReveal({
 
       <p className={styles.about}>{about}</p>
 
-      {/* mobile: short description; tap to open the full statement */}
       <button
         type="button"
         className={styles.description}
