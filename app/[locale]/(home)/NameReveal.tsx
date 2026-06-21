@@ -16,11 +16,15 @@ export function NameReveal({ name, about }: { name: string; about: string }) {
       <span className={styles.line} aria-hidden="true" />
       <button
         type="button"
-        className={`${styles.about} ${expanded ? styles.aboutExpanded : ""}`}
+        className={styles.about}
         aria-expanded={expanded}
         onClick={toggle}
       >
-        {about}
+        <span
+          className={`${styles.aboutText} ${expanded ? styles.aboutTextExpanded : ""}`}
+        >
+          {about}
+        </span>
       </button>
     </div>
   );
