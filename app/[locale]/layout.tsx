@@ -57,8 +57,12 @@ export async function generateMetadata({
       follow: true,
     },
     icons: {
-      icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
-      apple: [{ url: "/icon.svg", type: "image/svg+xml" }],
+      icon: [
+        { url: "/icon.svg", type: "image/svg+xml" },
+        { url: "/favicon-48.png", type: "image/png", sizes: "48x48" },
+      ],
+      // iOS uses a PNG apple-touch-icon (it ignores SVG here).
+      apple: [{ url: "/apple-icon.png", type: "image/png", sizes: "180x180" }],
       shortcut: [{ url: "/icon.svg", type: "image/svg+xml" }],
     },
   };
