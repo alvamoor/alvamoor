@@ -1,6 +1,12 @@
 .shell {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* small-viewport height so the footer/works link aren't hidden below the
+     mobile URL bar (inset:0 fixed sizes to the large viewport). */
+  height: 100vh;
+  height: 100svh;
   display: grid;
   grid-template-rows: auto 1fr auto;
   padding: var(--pad-y) var(--pad-x);
@@ -41,6 +47,7 @@
 /* ── Centre block (name + tagline) ── */
 .center {
   align-self: center;
+  min-height: 0; /* allow it to shrink so it can't push the footer off-screen */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -116,8 +123,8 @@
 .aboutTextExpanded {
   display: block;
   -webkit-line-clamp: none;
-  max-height: 42vh;
-  max-height: 42svh;
+  max-height: 34vh;
+  max-height: 34svh;
   overflow: hidden auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
