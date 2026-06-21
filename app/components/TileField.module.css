@@ -4,7 +4,7 @@
   overflow: auto;
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
-  z-index: -1;
+  z-index: 0;
   scrollbar-width: none;
 }
 
