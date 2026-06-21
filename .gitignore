@@ -9,3 +9,6 @@ next-env.d.ts
 .open-next
 .wrangler
 cloudflare-env.d.ts
+
+# kept local, out of git
+docs/

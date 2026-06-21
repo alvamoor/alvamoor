@@ -25,13 +25,14 @@ export default async function MediumPage({
 
       <MediumGallery
         works={works}
-        medium={medium}
         locale={locale}
         labels={{
           sold: t("sold"),
           available: t("available"),
-          zoom: t("zoom"),
           close: t("close"),
+          moreInfo: t("moreInfo"),
+          prev: t("prev"),
+          next: t("next"),
         }}
       />
     </>

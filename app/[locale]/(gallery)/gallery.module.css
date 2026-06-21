@@ -12,7 +12,9 @@
 
   position: relative;
   z-index: 1; /* paint above the global body::before watermark */
-  min-height: 100dvh;
+  /* Lock to the viewport: header / works / footer fit, only works scroll. */
+  height: 100dvh;
+  overflow: hidden;
   background: var(--v2-bg);
   color: var(--v2-fg);
   font-family: var(--font-sans), system-ui, sans-serif;
@@ -68,6 +70,7 @@
 
 .main {
   flex: 1;
+  min-height: 0; /* let the horizontal scroller take the remaining height */
   display: flex;
   flex-direction: column;
 }
@@ -102,76 +105,135 @@
   border-bottom-color: var(--v2-fg);
 }
 
+/* Desktop: lift the section nav into the top header row (centred between the
+   wordmark and the locale switcher) so the works scroller takes the full height
+   below — bigger images. */
+@media (min-width: 768px) {
+  .mediumNav {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 3;
+    padding: var(--pad-y) var(--pad-x);
+    /* let clicks through to the wordmark / locale switcher beneath */
+    pointer-events: none;
+  }
+
+  .mediumNavLink {
+    pointer-events: auto;
+    font-size: 1.0625rem;
+  }
+}
+
 /* ── Medium listing ─────────────────────────────────────────────── */
 
-.works {
+/* Wrapper that positions the scroll arrows over the horizontal scroller. */
+.scrollerWrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
   display: flex;
-  flex-direction: column;
+}
+
+/* Left/right scroll-direction arrows, floated over the scroller. */
+.navArrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
   align-items: center;
-  gap: clamp(4rem, 12vw, 9rem);
-  padding: clamp(2rem, 6vw, 5rem) var(--pad-x) clamp(5rem, 12vw, 8rem);
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--v2-line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--v2-bg) 80%, transparent);
+  color: var(--v2-fg);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    opacity 180ms ease;
+}
+
+.navArrow:hover {
+  border-color: var(--v2-fg);
+  background: var(--v2-bg);
+}
+
+.navArrowLeft {
+  left: clamp(0.5rem, 2vw, 1.5rem);
+}
+
+.navArrowRight {
+  right: clamp(0.5rem, 2vw, 1.5rem);
+}
+
+/* Horizontal, one-work-per-screen snap scroller filling the height below the
+   medium nav. Each work is a full-width slide that snaps into place. */
+.works {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+}
+
+.works::-webkit-scrollbar {
+  display: none; /* Safari / Chrome */
 }
 
 .work {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  /* centre the work within the slide */
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.25rem;
-  /* --ratio set inline (realWidth / maxWidth) drives the to-scale width */
-  width: max(140px, calc(var(--ratio) * min(62vw, 560px)));
-  /* it's a <button> now (opens the work in an overlay) — strip the chrome */
+  align-items: stretch;
+  justify-content: center;
+  padding: clamp(1.5rem, 5vw, 4rem);
+  /* it's a <button> (opens the work in the dialog) — strip the chrome */
   appearance: none;
   border: 0;
   background: none;
   font: inherit;
   color: inherit;
-  padding: 0;
   cursor: pointer;
 }
 
-/* The frame turns a flat image into an object sitting on the ground. */
+/* Fills the slide and centres the image. */
 .frame {
-  display: block;
-  width: 100%;
-  background: var(--v2-mat);
-  box-shadow: var(--v2-shadow);
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Paper works get a mat border; canvas sits edge-to-edge. */
-.framePaper {
-  padding: clamp(0.75rem, 3%, 2rem);
-}
-
+/* Shown whole (contain) and as large as the slide allows; the drop shadow
+   makes it read as an object on the wall. */
 .image {
   display: block;
-  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
   height: auto;
-}
-
-.meta {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.metaTitle {
-  font-size: 1rem;
-  font-style: italic;
-  letter-spacing: 0.01em;
-}
-
-.metaSpec {
-  font-size: 0.8125rem;
-  letter-spacing: 0.04em;
-  color: var(--v2-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.sold {
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-size: 0.6875rem;
+  object-fit: contain;
+  box-shadow: var(--v2-shadow);
 }
 
 /* ── In-place work modal (small window + ＋ magnify, no navigation) ── */
@@ -260,7 +322,7 @@
   border-color: var(--v2-fg);
 }
 
-/* Image area: fits the window by default; scrolls when magnified. */
+/* Image area: fits the window. */
 .modalImageWrap {
   display: flex;
   align-items: center;
@@ -269,37 +331,15 @@
   overflow: hidden;
 }
 
-.modalImageWrapZoom {
-  overflow: auto;
-  justify-content: flex-start;
-}
-
-.modalImageButton {
-  display: block;
-  margin: 0 auto;
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: zoom-in;
-}
-
-.modalImageWrapZoom .modalImageButton {
-  cursor: zoom-out;
-}
-
 .modalImage {
   display: block;
-  /* --ar (width/height) set inline keeps the placeholder within both the 64vh
+  /* --ar (width/height) set inline keeps the image within both the 64vh
      height cap and the available width. */
   width: min(100%, calc(64vh * var(--ar)));
+  height: auto;
+  object-fit: cover;
   background: var(--v2-mat);
   outline: 1px solid var(--v2-edge);
-}
-
-/* Magnified: show the placeholder larger, pan by scrolling. */
-.modalImageZoom {
-  width: min(1200px, 200%);
-  cursor: zoom-out;
 }
 
 .modalMeta {
@@ -318,4 +358,32 @@
   letter-spacing: 0.04em;
   color: var(--v2-muted);
   font-variant-numeric: tabular-nums;
+}
+
+.detailDescription {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--v2-fg);
+  max-width: 52ch;
+}
+
+/* "More information" reveal — a quiet text button. */
+.moreInfo {
+  align-self: flex-start;
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.875rem;
+  letter-spacing: 0.04em;
+  color: var(--v2-muted);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+  transition: color 180ms ease;
+}
+
+.moreInfo:hover {
+  color: var(--v2-fg);
 }
