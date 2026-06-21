@@ -34,7 +34,11 @@ export default async function Landing({
         </header>
 
         <main className={styles.center}>
-          <NameReveal name={t("name")} about={t("about")} />
+          <NameReveal
+            name={t("name")}
+            about={t("about")}
+            description={t("description")}
+          />
           <p className={styles.tagline}>
             {tHome.rich("intro", {
               link: (chunks) => (

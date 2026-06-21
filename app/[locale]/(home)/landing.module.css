@@ -88,46 +88,21 @@
   opacity: 0;
 }
 
-/* The clickable wrapper (a <button> styled as the text block). */
+/* The full statement is a desktop-only hover flourish (hidden on mobile). */
 .about {
-  appearance: none;
-  border: 0;
-  background: none;
-  padding: 0;
-  text-align: left;
-  width: 100%;
-  max-width: 60ch;
-  margin: 0.85em 0 0;
-  color: rgba(255, 255, 255, 0.85);
-  cursor: pointer;
-  pointer-events: auto;
-  -webkit-tap-highlight-color: transparent;
+  display: none;
 }
 
-/* The statement itself — the clamp lives here (it doesn't apply on a <button>
-   directly). Clamped to a teaser by default; expands when toggled. */
-.aboutText {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
+/* Mobile: a short description, always shown under the name. */
+.description {
+  margin: 0.85em 0 0;
+  max-width: 42ch;
   font-family: var(--font-sans), system-ui, sans-serif;
   font-size: clamp(1rem, 4vw, 1.15rem);
-  line-height: 1.55;
+  line-height: 1.5;
   font-weight: 400;
+  color: rgba(255, 255, 255, 0.85);
   text-shadow: 0 1px 16px rgba(0, 0, 0, 0.4);
-}
-
-/* Expanded: show all of it, but cap the height and let the text scroll inside
-   so it never pushes the works link off small screens. */
-.aboutTextExpanded {
-  display: block;
-  -webkit-line-clamp: none;
-  max-height: 34vh;
-  max-height: 34svh;
-  overflow: hidden auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
 }
 
 .tagline {
@@ -174,29 +149,32 @@
     opacity: 1;
   }
 
-  /* overlay the statement and reveal it on hover (no teaser/clamp) */
+  /* mobile description hidden; the full statement reveals on hover instead */
+  .description {
+    display: none;
+  }
+
+  /* overlay the statement and reveal it on hover */
   .about {
+    display: block;
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     max-width: 78ch;
     margin-top: 0.6em;
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-size: clamp(0.85rem, 1.15vw, 1.05rem);
+    line-height: 1.55;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.85);
+    text-shadow: 0 1px 16px rgba(0, 0, 0, 0.4);
     opacity: 0;
     clip-path: inset(0 0 100% 0);
     pointer-events: none;
-    cursor: default;
     transition:
       clip-path 650ms cubic-bezier(0.2, 0.8, 0.2, 1) 220ms,
       opacity 350ms ease 220ms;
-  }
-
-  /* full statement on desktop — no teaser clamp */
-  .aboutText {
-    display: block;
-    overflow: visible;
-    -webkit-line-clamp: none;
-    font-size: clamp(0.85rem, 1.15vw, 1.05rem);
   }
 
   .reveal:hover .about,

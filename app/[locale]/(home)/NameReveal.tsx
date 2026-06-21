@@ -1,31 +1,26 @@
-"use client";
-
-import { useState } from "react";
-
 import styles from "./landing.module.css";
 
-export function NameReveal({ name, about }: { name: string; about: string }) {
-  const [expanded, setExpanded] = useState(false);
-  const toggle = () => setExpanded((v) => !v);
-
+// The name + statement.
+// Desktop (hover): the name slides up behind a line and the full `about`
+// statement unrolls from it (CSS-only). Mobile: the short `description` is
+// shown statically under the name.
+export function NameReveal({
+  name,
+  about,
+  description,
+}: {
+  name: string;
+  about: string;
+  description: string;
+}) {
   return (
     <div className={styles.reveal}>
       <h1 className={styles.name}>
         <span className={styles.nameInner}>{name}</span>
       </h1>
       <span className={styles.line} aria-hidden="true" />
-      <button
-        type="button"
-        className={styles.about}
-        aria-expanded={expanded}
-        onClick={toggle}
-      >
-        <span
-          className={`${styles.aboutText} ${expanded ? styles.aboutTextExpanded : ""}`}
-        >
-          {about}
-        </span>
-      </button>
+      <p className={styles.about}>{about}</p>
+      <p className={styles.description}>{description}</p>
     </div>
   );
 }
