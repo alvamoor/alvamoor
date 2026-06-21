@@ -1,0 +1,321 @@
+/* ── Palette + base ──────────────────────────────────────────────── */
+
+.root {
+  /* clean white ground for the gallery pages */
+  --v2-bg: #ffffff;
+  --v2-fg: #16140f;
+  --v2-muted: rgba(22, 20, 15, 0.5);
+  --v2-line: rgba(22, 20, 15, 0.12);
+  --v2-mat: #ffffff;
+  --v2-shadow: 0 26px 64px -28px rgba(0, 0, 0, 0.4);
+  --v2-edge: rgba(0, 0, 0, 0.07);
+
+  position: relative;
+  z-index: 1; /* paint above the global body::before watermark */
+  min-height: 100dvh;
+  background: var(--v2-bg);
+  color: var(--v2-fg);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Shell: header / footer ─────────────────────────────────────── */
+
+.header,
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: var(--pad-y) var(--pad-x);
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--v2-muted);
+}
+
+.wordmark {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--v2-fg);
+  transition: opacity 180ms ease;
+}
+
+.wordmark:hover {
+  opacity: 0.6;
+}
+
+.follow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: color 180ms ease;
+}
+
+.follow:hover {
+  color: var(--v2-fg);
+}
+
+.arrow {
+  display: inline-block;
+  transition: transform 220ms ease;
+}
+
+.follow:hover .arrow {
+  transform: translate(2px, -2px);
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Section nav (paper / canvas) ───────────────────────────────── */
+
+.mediumNav {
+  display: flex;
+  justify-content: center;
+  gap: clamp(1.5rem, 5vw, 3rem);
+  padding: clamp(2rem, 6vw, 4rem) var(--pad-x) clamp(0.75rem, 2vw, 1.25rem);
+  text-transform: lowercase;
+}
+
+.mediumNavLink {
+  font-size: clamp(1.1rem, 2.6vw, 1.5rem);
+  letter-spacing: 0.02em;
+  color: var(--v2-muted);
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid transparent;
+  transition:
+    color 200ms ease,
+    border-color 200ms ease;
+}
+
+.mediumNavLink:hover {
+  color: var(--v2-fg);
+}
+
+.mediumNavActive {
+  color: var(--v2-fg);
+  border-bottom-color: var(--v2-fg);
+}
+
+/* ── Medium listing ─────────────────────────────────────────────── */
+
+.works {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(4rem, 12vw, 9rem);
+  padding: clamp(2rem, 6vw, 5rem) var(--pad-x) clamp(5rem, 12vw, 8rem);
+}
+
+.work {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  /* --ratio set inline (realWidth / maxWidth) drives the to-scale width */
+  width: max(140px, calc(var(--ratio) * min(62vw, 560px)));
+  /* it's a <button> now (opens the work in an overlay) — strip the chrome */
+  appearance: none;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* The frame turns a flat image into an object sitting on the ground. */
+.frame {
+  display: block;
+  width: 100%;
+  background: var(--v2-mat);
+  box-shadow: var(--v2-shadow);
+}
+
+/* Paper works get a mat border; canvas sits edge-to-edge. */
+.framePaper {
+  padding: clamp(0.75rem, 3%, 2rem);
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.meta {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.metaTitle {
+  font-size: 1rem;
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+
+.metaSpec {
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  color: var(--v2-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.sold {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.6875rem;
+}
+
+/* ── In-place work modal (small window + ＋ magnify, no navigation) ── */
+
+.modalRoot {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1rem, 4vw, 2.5rem);
+}
+
+.modalBackdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: color-mix(in srgb, #16140f 55%, transparent);
+  backdrop-filter: blur(3px);
+  cursor: pointer;
+  animation: overlayIn 200ms ease both;
+}
+
+@keyframes overlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: min(720px, 92vw);
+  max-height: 88vh;
+  padding: clamp(1rem, 3vw, 1.75rem);
+  background: var(--v2-bg);
+  color: var(--v2-fg);
+  box-shadow: var(--v2-shadow);
+  animation: modalIn 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.modalClose {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 2;
+  /* flex-centre the glyph so the × sits dead-centre in the circle */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--v2-line);
+  border-radius: 999px;
+  /* opaque chip so it stays legible over a dark, magnified image too */
+  background: var(--v2-bg);
+  color: var(--v2-fg);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+  transition:
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+.modalClose:hover {
+  border-color: var(--v2-fg);
+}
+
+/* Image area: fits the window by default; scrolls when magnified. */
+.modalImageWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.modalImageWrapZoom {
+  overflow: auto;
+  justify-content: flex-start;
+}
+
+.modalImageButton {
+  display: block;
+  margin: 0 auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+
+.modalImageWrapZoom .modalImageButton {
+  cursor: zoom-out;
+}
+
+.modalImage {
+  display: block;
+  /* --ar (width/height) set inline keeps the placeholder within both the 64vh
+     height cap and the available width. */
+  width: min(100%, calc(64vh * var(--ar)));
+  background: var(--v2-mat);
+  outline: 1px solid var(--v2-edge);
+}
+
+/* Magnified: show the placeholder larger, pan by scrolling. */
+.modalImageZoom {
+  width: min(1200px, 200%);
+  cursor: zoom-out;
+}
+
+.modalMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.modalTitle {
+  font-size: 1.125rem;
+  font-style: italic;
+}
+
+.detailSpec {
+  font-size: 0.875rem;
+  letter-spacing: 0.04em;
+  color: var(--v2-muted);
+  font-variant-numeric: tabular-nums;
+}

@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "alvamoor — a portfolio is being assembled",
     start_url: "/",
     display: "standalone",
-    background_color: "#4a3829",
-    theme_color: "#4a3829",
+    background_color: "#293149",
+    theme_color: "#293149",
     icons: [
       {
         src: "/icon.svg",

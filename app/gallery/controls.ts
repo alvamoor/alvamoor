@@ -26,7 +26,7 @@ export const ARTWORK_COLORS = [
 
 export const RING_RADIUS = 13;
 export const RING_HEIGHT = 2.5;
-export const VIEW_DISTANCE = 4.5;
+const VIEW_DISTANCE = 4.5;
 
 export function artworkAngle(i: number): number {
   return (i / ARTWORK_COLORS.length) * Math.PI * 2;
