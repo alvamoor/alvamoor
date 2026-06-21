@@ -28,27 +28,14 @@
   font-size: 0.8125rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--muted);
 }
 
-.localeSwitcher {
-  display: inline-flex;
-  align-items: center;
-  margin-left: auto;
-}
-
-.localeLink {
-  padding: 0.25rem 0.125rem;
-  transition: color 180ms ease;
-}
-
-.localeLink:hover,
-.localeActive {
+.top {
   color: var(--fg);
 }
 
-.sep {
-  opacity: 0.4;
+.bottom {
+  color: var(--muted);
 }
 
 /* ── Centre block (name + tagline) ── */
@@ -94,7 +81,6 @@
 
 .taglineLink {
   color: inherit;
-  border-bottom: 1px solid currentColor;
   transition: opacity 200ms ease;
 }
 

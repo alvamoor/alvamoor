@@ -1,0 +1,21 @@
+.nav {
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.link {
+  padding: 0.25rem 0.125rem;
+  color: inherit;
+  opacity: 0.6;
+  transition: opacity 180ms ease;
+}
+
+.link:hover,
+.link[aria-current="page"] {
+  opacity: 1;
+}
+
+.sep {
+  opacity: 0.4;
+}

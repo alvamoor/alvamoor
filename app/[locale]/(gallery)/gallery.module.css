@@ -34,6 +34,13 @@
   font-size: 0.8125rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.header {
+  color: var(--v2-fg);
+}
+
+.footer {
   color: var(--v2-muted);
 }
 
@@ -90,7 +97,6 @@
   letter-spacing: 0.02em;
   color: var(--v2-muted);
   padding-bottom: 0.3rem;
-  border-bottom: 1px solid transparent;
   transition:
     color 200ms ease,
     border-color 200ms ease;
