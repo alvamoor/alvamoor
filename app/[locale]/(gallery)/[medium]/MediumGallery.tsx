@@ -10,8 +10,6 @@ import styles from "../gallery.module.css";
 type Labels = {
   sold: string;
   available: string;
-  close: string;
-  moreInfo: string;
   prev: string;
   next: string;
 };
@@ -23,17 +21,15 @@ type Props = {
   medium: string;
 };
 
-// The works listing. Tiles show the image only; clicking a work opens it in a
-// modal with its title and description. The size/year/availability stay hidden
-// behind a "more information" toggle. No page navigation.
 export default function MediumGallery({
   works,
   locale,
   labels,
   medium,
 }: Props) {
-  const [open, setOpen] = useState<Artwork | null>(null);
-  const [showDetails, setShowDetails] = useState(false);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [box, setBox] = useState<{ w: number; h: number } | null>(null);
+  const openImgRef = useRef<HTMLImageElement | null>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   // Scroll one slide (one viewport width) left or right.
@@ -42,24 +38,30 @@ export default function MediumGallery({
     if (el) el.scrollBy({ left: dir * el.clientWidth, behavior: "smooth" });
   }
 
-  function show(a: Artwork) {
-    setShowDetails(false);
-    setOpen(a);
+  function toggle(id: string) {
+    setBox(null);
+    setOpenId((cur) => (cur === id ? null : id));
   }
 
-  function close() {
-    setOpen(null);
-  }
-
-  // Close the modal on Escape.
   useEffect(() => {
-    if (!open) return;
+    if (!openId) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
+      if (e.key === "Escape") setOpenId(null);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [openId]);
+
+  useEffect(() => {
+    if (!openId) return;
+    const measure = () => {
+      const el = openImgRef.current;
+      if (el) setBox({ w: el.offsetWidth, h: el.offsetHeight });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [openId]);
 
   const many = works.length > 1;
 
@@ -83,11 +85,14 @@ export default function MediumGallery({
               key={a.id}
               type="button"
               className={styles.work}
-              onClick={() => show(a)}
+              onClick={() => toggle(a.id)}
+              aria-pressed={openId === a.id}
             >
               <span className={styles.frame}>
                 {/* Shown whole and as large as the slide allows. */}
+                {/* eslint-disable-next-line @next/next/no-img-element -- images are pre-sized WebP variants served straight from R2; no Next optimizer. */}
                 <img
+                  ref={openId === a.id ? openImgRef : null}
                   className={styles.image}
                   src={a.src}
                   srcSet={a.webpSrcSet}
@@ -96,6 +101,30 @@ export default function MediumGallery({
                   loading="lazy"
                   decoding="async"
                 />
+                {openId === a.id && box && (
+                  <span
+                    className={styles.caption}
+                    style={{
+                      width: box.w,
+                      maxHeight: box.h,
+                      top: `calc(50% + ${box.h / 2}px)`,
+                      left: "50%",
+                    }}
+                  >
+                    <span className={styles.captionTitle}>
+                      {a.title[locale]}
+                    </span>
+                    {a.description?.[locale] && (
+                      <span className={styles.captionDescription}>
+                        {a.description[locale]}
+                      </span>
+                    )}
+                    <span className={styles.captionSpec}>
+                      {a.mediumLabel[locale]} · {a.widthCm} × {a.heightCm} cm ·{" "}
+                      {a.year}
+                    </span>
+                  </span>
+                )}
               </span>
             </button>
           ))}
@@ -112,77 +141,6 @@ export default function MediumGallery({
           </button>
         )}
       </div>
-
-      {open && (
-        <div
-          className={styles.modalRoot}
-          role="dialog"
-          aria-modal="true"
-          aria-label={open.title[locale]}
-        >
-          <button
-            type="button"
-            className={styles.modalBackdrop}
-            onClick={close}
-            aria-label={labels.close}
-          />
-          <div className={styles.modal}>
-            <button
-              type="button"
-              className={styles.modalClose}
-              onClick={close}
-              aria-label={labels.close}
-            >
-              ×
-            </button>
-
-            <div className={styles.modalImageWrap}>
-              {/* Box keeps the work's real (cm) proportions; the photo fills it. */}
-              <img
-                className={styles.modalImage}
-                src={open.src}
-                srcSet={open.webpSrcSet}
-                sizes="1200px"
-                style={
-                  {
-                    "--ar": open.widthCm / open.heightCm,
-                    aspectRatio: `${open.widthCm} / ${open.heightCm}`,
-                  } as React.CSSProperties
-                }
-                alt={open.title[locale]}
-                decoding="async"
-              />
-            </div>
-
-            <figcaption className={styles.modalMeta}>
-              <span className={styles.modalTitle}>{open.title[locale]}</span>
-              {/* Title + description show by default. */}
-              {open.description?.[locale] && (
-                <span className={styles.detailDescription}>
-                  {open.description[locale]}
-                </span>
-              )}
-
-              {/* Medium / size / year / availability stay behind "more information". */}
-              {showDetails ? (
-                <span className={styles.detailSpec}>
-                  {open.mediumLabel[locale]} · {open.widthCm} × {open.heightCm}{" "}
-                  cm · {open.year} ·{" "}
-                  {open.status === "sold" ? labels.sold : labels.available}
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  className={styles.moreInfo}
-                  onClick={() => setShowDetails(true)}
-                >
-                  {labels.moreInfo}
-                </button>
-              )}
-            </figcaption>
-          </div>
-        </div>
-      )}
     </>
   );
 }

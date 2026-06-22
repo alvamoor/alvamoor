@@ -30,8 +30,6 @@ export default async function MediumPage({
         labels={{
           sold: t("sold"),
           available: t("available"),
-          close: t("close"),
-          moreInfo: t("moreInfo"),
           prev: t("prev"),
           next: t("next"),
         }}

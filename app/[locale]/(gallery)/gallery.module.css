@@ -230,6 +230,7 @@
 
 /* Fills the slide and centres the image. */
 .frame {
+  position: relative;
   flex: 1;
   min-width: 0;
   min-height: 0;
@@ -250,154 +251,55 @@
   box-shadow: var(--v2-shadow);
 }
 
-/* ── In-place work modal (small window + ＋ magnify, no navigation) ── */
-
-.modalRoot {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(1rem, 4vw, 2.5rem);
-}
-
-.modalBackdrop {
+.caption {
   position: absolute;
-  inset: 0;
-  border: 0;
-  background: color-mix(in srgb, #16140f 55%, transparent);
-  backdrop-filter: blur(3px);
-  cursor: pointer;
-  animation: overlayIn 200ms ease both;
-}
-
-@keyframes overlayIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.modal {
-  position: relative;
-  z-index: 1;
+  transform: translate(-50%, -100%);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  width: min(720px, 92vw);
-  max-height: 88vh;
-  padding: clamp(1rem, 3vw, 1.75rem);
-  background: var(--v2-bg);
-  color: var(--v2-fg);
-  box-shadow: var(--v2-shadow);
-  animation: modalIn 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-@keyframes modalIn {
-  from {
-    opacity: 0;
-    transform: translateY(0.75rem);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-.modalClose {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  z-index: 2;
-  /* flex-centre the glyph so the × sits dead-centre in the circle */
-  display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border: 1px solid var(--v2-line);
-  border-radius: 999px;
-  /* opaque chip so it stays legible over a dark, magnified image too */
-  background: var(--v2-bg);
-  color: var(--v2-fg);
-  font-size: 1.25rem;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
-  transition:
-    border-color 180ms ease,
-    background 180ms ease;
-}
-
-.modalClose:hover {
-  border-color: var(--v2-fg);
-}
-
-/* Image area: fits the window. */
-.modalImageWrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.modalImage {
-  display: block;
-  /* --ar (width/height) set inline keeps the image within both the 64vh
-     height cap and the available width. */
-  width: min(100%, calc(64vh * var(--ar)));
-  height: auto;
-  object-fit: cover;
-  background: var(--v2-mat);
-  outline: 1px solid var(--v2-edge);
-}
-
-.modalMeta {
-  display: flex;
-  flex-direction: column;
   gap: 0.35rem;
+  padding: clamp(0.75rem, 2.5vw, 1.5rem);
+  overflow: hidden;
+  background: color-mix(in srgb, #ffffff 62%, transparent);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  color: var(--v2-fg);
+  animation: captionRise 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-.modalTitle {
+@keyframes captionRise {
+  from {
+    opacity: 0;
+    translate: 0 1.5rem;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caption {
+    animation: none;
+  }
+}
+
+.captionTitle {
   font-size: 1.125rem;
   font-style: italic;
 }
 
-.detailSpec {
+.captionDescription {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--v2-fg);
+  max-width: 42ch;
+}
+
+.captionSpec {
   font-size: 0.875rem;
   letter-spacing: 0.04em;
   color: var(--v2-muted);
   font-variant-numeric: tabular-nums;
-}
-
-.detailDescription {
-  font-size: 0.9375rem;
-  line-height: 1.5;
-  color: var(--v2-fg);
-  max-width: 52ch;
-}
-
-/* "More information" reveal — a quiet text button. */
-.moreInfo {
-  align-self: flex-start;
-  appearance: none;
-  border: 0;
-  background: none;
-  padding: 0;
-  font: inherit;
-  font-size: 0.875rem;
-  letter-spacing: 0.04em;
-  color: var(--v2-muted);
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-  cursor: pointer;
-  transition: color 180ms ease;
-}
-
-.moreInfo:hover {
-  color: var(--v2-fg);
 }
