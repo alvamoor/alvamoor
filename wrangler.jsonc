@@ -14,13 +14,11 @@
   },
   // R2 bucket the /admin routes write to (images + manifests).
   "r2_buckets": [{ "binding": "IMAGES_BUCKET", "bucket_name": "images" }],
-  // Cloudflare Access settings for /admin auth. Fill after creating the Access
-  // application (see docs/r2-image-migration.md). Left empty until then: in
-  // production the admin API fails closed (401) when CF_ACCESS_AUD is empty.
-  "vars": {
-    "CF_ACCESS_TEAM_DOMAIN": "",
-    "CF_ACCESS_AUD": "",
-  },
+  // Cloudflare Access settings for /admin auth are set as Worker secrets, not
+  // vars (see docs/r2-image-migration.md):
+  //   npx wrangler secret put CF_ACCESS_TEAM_DOMAIN   # <team>.cloudflareaccess.com
+  //   npx wrangler secret put CF_ACCESS_AUD           # Access app AUD tag
+  // Until both are set, the admin API fails closed (401) in production.
   "observability": {
     "enabled": true,
   },

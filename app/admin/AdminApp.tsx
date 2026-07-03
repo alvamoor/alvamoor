@@ -116,7 +116,9 @@ export default function AdminApp() {
       if (!entry.description?.en.trim() && !entry.description?.de.trim())
         delete entry.description;
 
-      setEntries((es) => [...es, entry]);
+      // New works go to the front — array order = display order, so this makes
+      // the just-added work the first one visitors see.
+      setEntries((es) => [entry, ...es]);
       setDirty(true);
       setDraft(emptyDraft(medium));
       setFile(null);
