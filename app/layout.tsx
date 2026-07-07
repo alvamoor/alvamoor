@@ -1,4 +1,4 @@
-import type { Viewport } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 import { cookies } from "next/headers";
@@ -18,6 +18,13 @@ const backdrop = localFont({
   display: "block",
   variable: "--font-backdrop",
 });
+
+// Root-level base URL so every route — including ones outside [locale] like
+// /gallery and 404s — resolves OpenGraph/Twitter image URLs absolutely instead
+// of falling back to http://localhost:3000. Localized routes set their own too.
+export const metadata: Metadata = {
+  metadataBase: new URL("https://alvamoor.com"),
+};
 
 export const viewport: Viewport = {
   themeColor: "#293149",
