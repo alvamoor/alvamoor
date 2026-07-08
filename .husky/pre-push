@@ -1,0 +1,3 @@
+# Runs before every `git push`. Blocks the push if typecheck, lint, or the
+# unit tests fail. Bypass in an emergency with `git push --no-verify`.
+npm run verify
