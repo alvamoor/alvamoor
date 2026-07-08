@@ -92,8 +92,9 @@ There are **two galleries**, fed differently:
   and the `BASE_NAMES` array in `app/gallery/artworks.ts`; changes require a
   redeploy.
 
-The full step-by-step for **adding an artwork** (HEIC → webp variants → R2 →
-manifest) is in **[`AGENTS.md`](AGENTS.md)**.
+**Adding an artwork** (HEIC → webp variants → R2 → manifest) is done with
+`scripts/gen-image-variants.mjs` (generate the webp sizes) and
+`scripts/sync-manifest.mjs` (publish the manifest to R2).
 
 ## Internationalization
 
