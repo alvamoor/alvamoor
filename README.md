@@ -92,9 +92,14 @@ There are **two galleries**, fed differently:
   and the `BASE_NAMES` array in `app/gallery/artworks.ts`; changes require a
   redeploy.
 
-**Adding an artwork** (HEIC → webp variants → R2 → manifest) is done with
-`scripts/gen-image-variants.mjs` (generate the webp sizes) and
-`scripts/sync-manifest.mjs` (publish the manifest to R2).
+**Adding an artwork** — two independent ways:
+
+- **`/admin` UI** (usual): resizes the image in the browser
+  (`app/admin/resize.ts`), uploads the webp variants to R2, and writes the
+  manifest — no scripts, no redeploy.
+- **Manual / bulk CLI:** `scripts/gen-image-variants.mjs` (HEIC → webp sizes),
+  then edit `content/<medium>.json` and publish with
+  `scripts/sync-manifest.mjs`.
 
 ## Internationalization
 
