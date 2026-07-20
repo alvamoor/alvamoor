@@ -1,3 +1,23 @@
-# Runs before every `git push`. Blocks the push if typecheck, lint, or the
-# unit tests fail. Bypass in an emergency with `git push --no-verify`.
+# Runs before every `git push`. Blocks the push if the author identity is
+# wrong, or if typecheck, lint, or the unit tests fail. Bypass in an
+# emergency with `git push --no-verify`.
+
+# Block pushing commits authored by an unexpected identity (see README "Git hooks").
+ALLOWED_EMAIL="58744794+loerk@users.noreply.github.com"
+while read -r _ local_sha _ remote_sha; do
+  [ "$local_sha" = "0000000000000000000000000000000000000000" ] && continue
+  if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+    range="$local_sha"
+  else
+    range="$remote_sha..$local_sha"
+  fi
+  bad=$(git log --format='%h %ae' "$range" | grep -v " $ALLOWED_EMAIL$" || true)
+  if [ -n "$bad" ]; then
+    echo "✖ push blocked — commits with unexpected author email:"
+    echo "$bad"
+    echo "  fix: git config user.email $ALLOWED_EMAIL, then amend/rebase"
+    exit 1
+  fi
+done
+
 pnpm verify

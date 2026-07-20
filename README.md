@@ -125,9 +125,10 @@ mapping) and `app/lib/admin-r2.test.ts` (`validateEntries`).
 
 ## Git hooks
 
-A **pre-push** hook (Husky) runs `pnpm verify` (typecheck + lint + tests) and
-blocks the push if anything fails. The hook installs automatically on
-`pnpm install` via the `prepare` script.
+A **pre-push** hook (Husky) blocks the push if any commit being pushed has an
+author email other than the project identity (the GitHub noreply address in
+`.husky/pre-push`), or if `pnpm verify` (typecheck + lint + tests) fails. The
+hook installs automatically on `pnpm install` via the `prepare` script.
 
 ```bash
 git push --no-verify   # bypass in an emergency
