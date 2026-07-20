@@ -13,15 +13,16 @@ The website for the artist **alva moor** — a bilingual (EN/DE) portfolio with 
 
 ## Prerequisites
 
-- **Node 20+** and npm (the repo uses the npm `package-lock.json`).
+- **Node 20+** and **pnpm** (the repo uses `pnpm-lock.yaml`; a `preinstall`
+  guard blocks npm/yarn). Enable it with `corepack enable` if you don't have it.
 - For **deploying** or touching R2: a Cloudflare account with access to this
-  project, and `wrangler` authenticated (`npx wrangler login`).
+  project, and `wrangler` authenticated (`pnpm dlx wrangler login`).
 
 ## Getting started
 
 ```bash
-npm install     # also installs the git hooks (via the "prepare" script)
-npm run dev     # http://localhost:3000
+pnpm install    # also installs the git hooks (via the "prepare" script)
+pnpm dev        # http://localhost:3000
 ```
 
 Default-locale (English) pages are unprefixed (`/paper`); German is under
@@ -50,19 +51,20 @@ Admin auth details live in `app/lib/admin-auth.ts` and
 
 ## Scripts
 
-| Command              | Does                                                   |
-| -------------------- | ------------------------------------------------------ |
-| `npm run dev`        | Next dev server                                        |
-| `npm run build`      | Next production build                                  |
-| `npm run typecheck`  | `tsc --noEmit`                                         |
-| `npm run lint`       | ESLint (`lint:fix` to auto-fix)                        |
-| `npm run format`     | Prettier write (`format:check` to check)               |
-| `npm test`           | Run the unit tests once (Vitest)                       |
-| `npm run test:watch` | Vitest in watch mode                                   |
-| `npm run verify`     | `typecheck` + `lint` + `test` — the pre-push gate      |
-| `npm run preview`    | Build + run the Cloudflare Worker locally (OpenNext)   |
-| `npm run deploy`     | Build + deploy to Cloudflare                           |
-| `npm run cf-typegen` | Regenerate `cloudflare-env.d.ts` from `wrangler.jsonc` |
+| Command           | Does                                                   |
+| ----------------- | ------------------------------------------------------ |
+| `pnpm dev`        | Next dev server                                        |
+| `pnpm build`      | Next production build                                  |
+| `pnpm typecheck`  | `tsc --noEmit`                                         |
+| `pnpm lint`       | ESLint (`lint:fix` to auto-fix)                        |
+| `pnpm format`     | Prettier write (`format:check` to check)               |
+| `pnpm test`       | Run the unit tests once (Vitest)                       |
+| `pnpm test:watch` | Vitest in watch mode                                   |
+| `pnpm verify`     | `typecheck` + `lint` + `test` — the pre-push gate      |
+| `pnpm audit`      | Report known vulnerabilities in dependencies           |
+| `pnpm preview`    | Build + run the Cloudflare Worker locally (OpenNext)   |
+| `pnpm deploy`     | Build + deploy to Cloudflare                           |
+| `pnpm cf-typegen` | Regenerate `cloudflare-env.d.ts` from `wrangler.jsonc` |
 
 ## Project structure
 
@@ -114,8 +116,8 @@ Unit tests use **Vitest** and live next to the code they cover as
 network mocked — no Next runtime or live R2 needed.
 
 ```bash
-npm test           # run once
-npm run test:watch # watch mode
+pnpm test          # run once
+pnpm test:watch    # watch mode
 ```
 
 Current coverage: `app/lib/artworks.test.ts` (medium guard + manifest → Artwork
@@ -123,9 +125,9 @@ mapping) and `app/lib/admin-r2.test.ts` (`validateEntries`).
 
 ## Git hooks
 
-A **pre-push** hook (Husky) runs `npm run verify` (typecheck + lint + tests) and
+A **pre-push** hook (Husky) runs `pnpm verify` (typecheck + lint + tests) and
 blocks the push if anything fails. The hook installs automatically on
-`npm install` via the `prepare` script.
+`pnpm install` via the `prepare` script.
 
 ```bash
 git push --no-verify   # bypass in an emergency
@@ -136,8 +138,8 @@ git push --no-verify   # bypass in an emergency
 Deploys run on Cloudflare via OpenNext:
 
 ```bash
-npm run deploy         # build + deploy (needs `wrangler login`)
-npm run preview        # build + run the Worker locally first
+pnpm deploy            # build + deploy (needs `wrangler login`)
+pnpm preview           # build + run the Worker locally first
 ```
 
 See [`docs/`](docs/) for Cloudflare Access setup, the R2 image migration, and
