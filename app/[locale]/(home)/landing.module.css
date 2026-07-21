@@ -110,6 +110,22 @@
   font-weight: 400;
   color: rgba(255, 255, 255, 0.85);
   text-shadow: 0 1px 16px rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+}
+
+/* Inline "more / mehr" trigger that opens the full statement on touch. */
+.more {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-weight: 500;
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  white-space: nowrap;
   cursor: pointer;
   pointer-events: auto;
   -webkit-tap-highlight-color: transparent;
@@ -232,6 +248,11 @@
     pointer-events: none;
     cursor: default;
     transition: opacity 300ms ease;
+  }
+
+  /* the "more" trigger is touch-only; desktop reveals the statement on hover */
+  .more {
+    display: none;
   }
 
   .reveal:hover .description,

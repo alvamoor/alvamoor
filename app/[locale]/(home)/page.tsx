@@ -38,6 +38,7 @@ export default async function Landing({
             name={t("name")}
             about={t("about")}
             description={t("description")}
+            more={t("more")}
             close={t("close")}
           />
           <p className={styles.tagline}>

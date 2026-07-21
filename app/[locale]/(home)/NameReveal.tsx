@@ -8,11 +8,13 @@ export function NameReveal({
   name,
   about,
   description,
+  more,
   close,
 }: {
   name: string;
   about: string;
   description: string;
+  more: string;
   close: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -35,14 +37,17 @@ export function NameReveal({
 
       <p className={styles.about}>{about}</p>
 
-      <button
-        type="button"
-        className={styles.description}
-        aria-expanded={open}
-        onClick={() => setOpen(true)}
-      >
-        {description}
-      </button>
+      <p className={styles.description}>
+        {description}{" "}
+        <button
+          type="button"
+          className={styles.more}
+          aria-expanded={open}
+          onClick={() => setOpen(true)}
+        >
+          {more}
+        </button>
+      </p>
 
       {open && (
         <div
