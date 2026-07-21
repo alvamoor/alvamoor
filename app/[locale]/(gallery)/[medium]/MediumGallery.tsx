@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { type Artwork } from "@/app/lib/artworks";
+import { TILE_COLORS } from "@/app/lib/palette";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
@@ -134,6 +135,7 @@ export default function MediumGallery({
               loading={i < EAGER_COUNT ? "eager" : "lazy"}
               fetchPriority={i < EAGER_COUNT ? "high" : "auto"}
               decoding="async"
+              style={{ backgroundColor: TILE_COLORS[i % TILE_COLORS.length] }}
             />
           </button>
         ))}
