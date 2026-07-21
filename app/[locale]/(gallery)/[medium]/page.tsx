@@ -2,9 +2,11 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { getByMedium, isMedium } from "@/app/lib/artworks";
+import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
 import MediumNav from "../MediumNav";
+import styles from "../gallery.module.css";
 import MediumGallery from "./MediumGallery";
 
 export default async function MediumPage({
@@ -30,7 +32,13 @@ export default async function MediumPage({
 
   return (
     <>
-      <MediumNav active={medium} />
+      {open === null ? (
+        <MediumNav active={medium} />
+      ) : (
+        <Link href={`/${medium}`} className={styles.back} scroll={false}>
+          {t("back")}
+        </Link>
+      )}
 
       <MediumGallery
         works={works}

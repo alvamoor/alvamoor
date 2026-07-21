@@ -124,6 +124,21 @@
   border-bottom-color: var(--v2-fg);
 }
 
+/* Single-work view: a plain back link stands in for the section nav. */
+.back {
+  align-self: flex-start;
+  padding: clamp(2rem, 6vw, 4rem) var(--pad-x) clamp(0.75rem, 2vw, 1.25rem);
+  font-size: clamp(1.1rem, 2.6vw, 1.5rem);
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+  color: var(--v2-muted);
+  transition: color 200ms ease;
+}
+
+.back:hover {
+  color: var(--v2-fg);
+}
+
 /* Desktop: lift the section nav into the top header row (centred between the
    wordmark and the locale switcher) so the works scroller takes the full height
    below — bigger images. */
@@ -141,6 +156,12 @@
 
   .mediumNavLink {
     pointer-events: auto;
+    font-size: 1.0625rem;
+  }
+
+  /* compact at the top-left so the work below keeps its height */
+  .back {
+    padding: var(--pad-y) var(--pad-x);
     font-size: 1.0625rem;
   }
 }
