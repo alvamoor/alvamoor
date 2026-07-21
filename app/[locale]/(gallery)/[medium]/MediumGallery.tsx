@@ -36,7 +36,14 @@ export default function MediumGallery({
   const mode = open === null ? "grid" : "scroller";
   const startIndex = open ?? 0;
 
+  // Roughly the above-the-fold grid rows (3 cols mobile, 4 desktop). These load
+  // eagerly at high priority for a fast LCP; everything below stays lazy.
+  const EAGER_COUNT = 8;
+
   const [openId, setOpenId] = useState<string | null>(null);
+  // The work currently centred in the scroller — drives which images stay
+  // loaded (this one plus its left/right neighbours) so arrowing never blanks.
+  const [current, setCurrent] = useState(startIndex);
   const [imageBox, setImageBox] = useState<{ w: number; h: number } | null>(
     null,
   );
@@ -67,7 +74,21 @@ export default function MediumGallery({
     if (mode !== "scroller") return;
     const el = scrollerRef.current;
     if (el) el.scrollLeft = startIndex * el.clientWidth;
+    setCurrent(startIndex);
   }, [mode, startIndex]);
+
+  // Track the centred work as the scroller moves so neighbours stay preloaded.
+  useEffect(() => {
+    if (mode !== "scroller") return;
+    const el = scrollerRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      if (el.clientWidth)
+        setCurrent(Math.round(el.scrollLeft / el.clientWidth));
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, [mode]);
 
   // Esc closes an open caption, else returns to the grid.
   useEffect(() => {
@@ -110,7 +131,8 @@ export default function MediumGallery({
               srcSet={a.webpSrcSet}
               sizes="(min-width: 768px) 190px, 33vw"
               alt={a.title[locale]}
-              loading="lazy"
+              loading={i < EAGER_COUNT ? "eager" : "lazy"}
+              fetchPriority={i < EAGER_COUNT ? "high" : "auto"}
               decoding="async"
             />
           </button>
@@ -135,7 +157,7 @@ export default function MediumGallery({
       )}
 
       <div className={styles.works} data-medium={medium} ref={scrollerRef}>
-        {works.map((a) => (
+        {works.map((a, i) => (
           <button
             key={a.id}
             type="button"
@@ -152,7 +174,8 @@ export default function MediumGallery({
                 srcSet={a.webpSrcSet}
                 sizes="100vw"
                 alt={a.title[locale]}
-                loading="lazy"
+                loading={Math.abs(i - current) <= 1 ? "eager" : "lazy"}
+                fetchPriority={i === current ? "high" : "auto"}
                 decoding="async"
               />
               {openId === a.id && imageBox && (
