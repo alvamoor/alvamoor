@@ -29,7 +29,7 @@ export function NameReveal({
   }, [open]);
 
   return (
-    <div className={styles.reveal}>
+    <div className={`${styles.reveal}${open ? ` ${styles.open}` : ""}`}>
       <h1 className={styles.name}>
         <span className={styles.nameInner}>{name}</span>
       </h1>
@@ -38,42 +38,56 @@ export function NameReveal({
       <p className={styles.about}>{about}</p>
 
       <p className={styles.description}>
-        {description}{" "}
+        {/* non-breaking space keeps "more" tied to the last word so it never
+            wraps onto a line of its own */}
+        {description}
+        {" "}
         <button
           type="button"
           className={styles.more}
           aria-expanded={open}
-          onClick={() => setOpen(true)}
+          onClick={() => setOpen((o) => !o)}
         >
           {more}
         </button>
       </p>
 
       {open && (
-        <div
-          className={styles.aboutOverlay}
-          role="dialog"
-          aria-modal="true"
-          aria-label={name}
-        >
+        <>
+          {/* Desktop: a click anywhere (or Esc) dismisses the inline reveal. */}
           <button
             type="button"
-            className={styles.aboutOverlayBackdrop}
+            className={styles.revealBackdrop}
             aria-label={close}
             onClick={() => setOpen(false)}
           />
-          <div className={styles.aboutPanel}>
+
+          {/* Touch: the statement opens in a full-screen overlay instead. */}
+          <div
+            className={styles.aboutOverlay}
+            role="dialog"
+            aria-modal="true"
+            aria-label={name}
+          >
             <button
               type="button"
-              className={styles.aboutClose}
+              className={styles.aboutOverlayBackdrop}
               aria-label={close}
               onClick={() => setOpen(false)}
-            >
-              ×
-            </button>
-            <p className={styles.aboutPanelText}>{about}</p>
+            />
+            <div className={styles.aboutPanel}>
+              <button
+                type="button"
+                className={styles.aboutClose}
+                aria-label={close}
+                onClick={() => setOpen(false)}
+              >
+                ×
+              </button>
+              <p className={styles.aboutPanelText}>{about}</p>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
