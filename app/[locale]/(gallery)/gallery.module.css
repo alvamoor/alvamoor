@@ -185,6 +185,9 @@
   height: auto;
   aspect-ratio: 1;
   object-fit: cover;
+  /* Landing-page brown as a placeholder so loading tiles show colour, not
+     white; the opaque webp covers it once decoded. */
+  background-color: var(--bg);
   transition:
     transform 320ms ease,
     opacity 200ms ease;
