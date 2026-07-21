@@ -103,6 +103,33 @@ There are **two galleries**, fed differently:
   then edit `content/<medium>.json` and publish with
   `scripts/sync-manifest.mjs`.
 
+### Caching
+
+Images and manifests are cached very differently on purpose, so uploads go live
+fast while images load instantly on repeat views:
+
+| Object                | `Cache-Control`                       | Why                                                                        |
+| --------------------- | ------------------------------------- | -------------------------------------------------------------------------- |
+| `<medium>/*.webp`     | `public, max-age=31536000, immutable` | Filenames are versioned, so a variant's bytes never change — cache 1 year. |
+| `<medium>/index.json` | `max-age=60`                          | Manifest edits (add/edit/reorder) must appear quickly.                     |
+
+- The long image cache is set two ways that should agree: the `/admin` upload
+  route stamps it into R2 object metadata (`app/api/admin/upload/route.ts`), and
+  a **Cloudflare Cache Rule** on the `img.alvamoor.com` zone forces it for
+  `*.webp` (covers bulk-migrated images that predate the route). The manifest is
+  deliberately **not** matched by that rule.
+- **New uploads appear within ~60s** — gated only by the manifest
+  (`revalidate: 60` in `app/lib/artworks.ts` + its `max-age=60`), never by the
+  image cache. A new work is a new filename, so nothing stale can be served.
+- **Replacing** a work's picture under the **same `base`** is the one gotcha:
+  the 1-year/immutable cache keeps serving the old bytes. Use a new `base`
+  (preferred) or purge that URL in Cloudflare.
+- Verify with a **GET** (`HEAD` always reports `DYNAMIC` and is misleading):
+  ```bash
+  curl -s -o /dev/null -D - "https://img.alvamoor.com/paper/<base>-640.webp" \
+    | grep -iE "cache-control|cf-cache-status"
+  ```
+
 ## Internationalization
 
 Locales and prefix strategy are defined in `i18n/routing.ts` (`en` default,
