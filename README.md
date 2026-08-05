@@ -3,7 +3,7 @@
 The website for the artist **alva moor** — a bilingual (EN/DE) portfolio with a
 3D landing scene and gallery views of works on paper and canvas.
 
-- **Framework:** [Next.js 15](https://nextjs.org/) (App Router, React 19)
+- **Framework:** [Next.js 16](https://nextjs.org/) (App Router, React 19, Turbopack)
 - **Hosting:** Cloudflare Workers via [OpenNext](https://opennext.js.org/cloudflare)
 - **i18n:** [next-intl](https://next-intl.dev/) (`en` default, `de`)
 - **Images/data:** Cloudflare R2 (served from `img.alvamoor.com`)
@@ -288,9 +288,14 @@ pnpm deploy            # both stages + deploy to Cloudflare (needs wrangler logi
 
 Notes:
 
-- **`pnpm build` also runs ESLint and `tsc`.** A lint _error_ (including a
-  Prettier violation, since `eslint-plugin-prettier` is enabled) fails the
-  build; warnings don't. So `pnpm format` before building saves a round trip.
+- **`pnpm build` runs `tsc` but _not_ ESLint.** Next 16 removed linting from
+  `next build`, so a Prettier/ESLint violation no longer fails the build — run
+  `pnpm verify` (or the pre-push hook) to catch those.
+- **Turbopack is the builder.** It's the default in Next 16 for both `dev` and
+  `build`; `--turbopack` is no longer needed. If a dependency ever forces a
+  webpack config, `next build --webpack` opts out.
+- **`next dev` writes to `.next/dev`**, separate from `next build`, so the two
+  can run concurrently.
 - **Stage 2 is where Cloudflare-specific breakage shows up.** Stage 1 can
   succeed while stage 2 mis-handles an asset — worth running when you add
   anything non-JS (e.g. the `.wasm` encoder in `app/admin/resize.ts`). Confirm
@@ -298,58 +303,16 @@ Notes:
   ```bash
   find .open-next/assets -name "*.wasm"
   ```
+- **Ignore the `middleware` deprecation warning — do _not_ run the
+  `middleware-to-proxy` codemod.** Next 16 renames the convention to `proxy`,
+  but `proxy` runs on the **Node.js runtime only and cannot be configured**, and
+  `@opennextjs/cloudflare` does not yet support Node middleware. Migrating would
+  break locale routing on Cloudflare. `middleware.ts` still works in 16; revisit
+  when OpenNext supports it.
 - `pnpm verify` (typecheck + lint + tests) is the faster pre-push gate and does
   **not** build.
 - Both output directories are git-ignored and safe to delete; `rm -rf .next
 .open-next` forces a clean rebuild.
-
-### Bundle size
-
-`pnpm build` prints a per-route table. The figures are **gzipped**, and
-_First Load JS_ = shared chunks + that route's own chunks:
-
-| Route              | First Load JS | Notes                                         |
-| ------------------ | ------------- | --------------------------------------------- |
-| `/[locale]`        | 128 kB        | landing                                       |
-| `/paper` `/canvas` | 113 kB        | galleries                                     |
-| `/admin`           | 106 kB        | + WebP WASM on demand (see below)             |
-| `/gallery`         | 104 kB        | **misleading** — three.js loads after (below) |
-| shared by all      | 102 kB        | baseline every route pays                     |
-
-_Snapshot: August 2026 — re-run `pnpm build` rather than trusting these._
-
-Two costs the table hides, both deliberate:
-
-- **`/gallery` three.js (~220 kB gzip).** `app/gallery/SceneWrapper.tsx` loads
-  the scene with `next/dynamic` + `ssr: false`, so it lands in a lazy chunk
-  fetched immediately _after_ first paint. Real cost of that page is ~320 kB,
-  not 104 kB.
-- **`/admin` WebP encoder (281 kB / 346 kB).** Fetched only when the browser
-  can't encode WebP natively (`app/admin/resize.ts`). Visitors never pay it;
-  Chrome/Edge/Firefox don't either.
-
-### Checking it in the browser
-
-**DevTools → Network** is the ground truth:
-
-1. Open DevTools (<kbd>⌥⌘I</kbd>), go to **Network**.
-2. Tick **Disable cache**, then hard-reload (<kbd>⇧⌘R</kbd>).
-3. Filter to **JS** (or **All** for the page total).
-4. Read the status bar at the bottom:
-   - **transferred** — actual bytes over the wire (compressed) ← the number that matters
-   - **resources** — uncompressed size after decoding
-
-Sort by the **Size** column to find the heaviest files. On `/gallery` you'll see
-the three.js chunks arrive as a second wave; on `/admin` the `.wasm` appears only
-if your browser lacks native WebP encoding.
-
-Also useful:
-
-- **Coverage** panel (<kbd>⇧⌘P</kbd> → "Show Coverage", then reload) — how much
-  of each file is actually _executed_. Good for spotting dead weight.
-- **Lighthouse** panel — flags render-blocking resources and unused JS.
-- Images dominate this site far more than JS: one gallery image is 170–420 kB,
-  so a page of works outweighs all the JavaScript. Filter to **Img** to compare.
 
 ## Deployment
 
