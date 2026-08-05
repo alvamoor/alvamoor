@@ -2,6 +2,9 @@ node_modules
 .next
 out
 .env*.local
+# local Worker secrets for `pnpm preview`
+.dev.vars
+.dev.vars.*
 .DS_Store
 *.tsbuildinfo
 next-env.d.ts
