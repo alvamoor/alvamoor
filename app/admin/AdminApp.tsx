@@ -13,11 +13,49 @@ const IMAGE_BASE =
 const MEDIA: Medium[] = ["paper", "canvas"];
 
 const DEFAULT_MEDIUM_LABEL: Record<Medium, { en: string; de: string }> = {
-  paper: { en: "Mixed media on paper", de: "Mischtechnik auf Papier" },
-  canvas: { en: "Oil on canvas", de: "Öl auf Leinwand" },
+  paper: { en: "Acrylics on paper", de: "Acryl auf Papier" },
+  canvas: { en: "Pigments on canvas", de: "Pigmente auf Leinwand" },
 };
 
 type Draft = Omit<ManifestEntry, "base">;
+
+function msgOf(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
+
+/**
+ * fetch for the admin API, with failures a non-developer can act on.
+ */
+async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
+  let res: Response;
+  try {
+    res = await fetch(url, { ...init, redirect: "manual", cache: "no-store" });
+  } catch (cause) {
+    throw new Error(
+      "Could not reach the server — check your connection and try again.",
+      { cause },
+    );
+  }
+
+  const expired =
+    "Your Cloudflare Access session has expired. Reload this page to sign in again, then retry.";
+
+  if (res.type === "opaqueredirect" || res.status === 0)
+    throw new Error(expired);
+
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as {
+      error?: string;
+    } | null;
+    // Prefer the server's reason: a 401 can mean an expired session *or* that
+    // the Worker's Access secrets are missing, which needs a very different fix.
+    if (body?.error)
+      throw new Error(`The server rejected the request: ${body.error}`);
+    if (res.status === 401) throw new Error(expired);
+    throw new Error(`Request failed (${res.status} ${res.statusText}).`);
+  }
+  return res;
+}
 
 function emptyDraft(medium: Medium): Draft {
   return {
@@ -48,14 +86,11 @@ export default function AdminApp() {
     setBusy(true);
     setMsg({ kind: "", text: "" });
     try {
-      const res = await fetch(`/api/admin/works?medium=${m}`, {
-        cache: "no-store",
-      });
-      if (!res.ok) throw new Error(`load failed (${res.status})`);
+      const res = await apiFetch(`/api/admin/works?medium=${m}`);
       setEntries(await res.json());
       setDirty(false);
     } catch (e) {
-      setMsg({ kind: "err", text: String(e) });
+      setMsg({ kind: "err", text: msgOf(e) });
     } finally {
       setBusy(false);
     }
@@ -66,6 +101,25 @@ export default function AdminApp() {
     setDraft(emptyDraft(medium));
     setFile(null);
   }, [medium, load]);
+
+  // "Add" uploads the image immediately but only "Save" writes the manifest, so
+  // leaving with unsaved changes loses the work and orphans its images in R2.
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+
+  function switchMedium(next: Medium) {
+    if (next === medium) return;
+    if (
+      dirty &&
+      !confirm("You have unsaved changes — switching discards them. Continue?")
+    )
+      return;
+    setMedium(next);
+  }
 
   function patch(i: number, next: Partial<ManifestEntry>) {
     setEntries((es) => es.map((e, j) => (j === i ? { ...e, ...next } : e)));
@@ -105,11 +159,15 @@ export default function AdminApp() {
       for (const [w, blob] of variants)
         form.set(`file-${w}`, blob, `${w}.webp`);
 
-      const res = await fetch("/api/admin/upload", {
+      const res = await apiFetch("/api/admin/upload", {
         method: "POST",
         body: form,
       });
-      if (!res.ok) throw new Error(`upload failed (${res.status})`);
+      const { stored } = (await res.json()) as { stored?: number };
+      if (stored !== variants.size)
+        throw new Error(
+          `Only ${stored ?? 0} of ${variants.size} image sizes reached storage — the work was not added. Please try again.`,
+        );
 
       const entry: ManifestEntry = { base, ...draft };
       // Drop an empty description so it isn't stored as blank.
@@ -122,9 +180,12 @@ export default function AdminApp() {
       setDirty(true);
       setDraft(emptyDraft(medium));
       setFile(null);
-      setMsg({ kind: "ok", text: "Image uploaded. Remember to Save." });
+      setMsg({
+        kind: "ok",
+        text: 'Image uploaded — now click "Save changes" to publish it.',
+      });
     } catch (e) {
-      setMsg({ kind: "err", text: String(e) });
+      setMsg({ kind: "err", text: msgOf(e) });
     } finally {
       setBusy(false);
     }
@@ -134,19 +195,15 @@ export default function AdminApp() {
     setBusy(true);
     setMsg({ kind: "", text: "" });
     try {
-      const res = await fetch("/api/admin/works", {
+      await apiFetch("/api/admin/works", {
         method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ medium, entries }),
       });
-      if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(body.error ?? `save failed (${res.status})`);
-      }
       setDirty(false);
       setMsg({ kind: "ok", text: "Saved. Live within ~1 minute." });
     } catch (e) {
-      setMsg({ kind: "err", text: String(e) });
+      setMsg({ kind: "err", text: msgOf(e) });
     } finally {
       setBusy(false);
     }
@@ -162,8 +219,8 @@ export default function AdminApp() {
               key={m}
               type="button"
               className={`${styles.tab} ${m === medium ? styles.tabActive : ""}`}
-              onClick={() => setMedium(m)}
-              disabled={busy && dirty}
+              onClick={() => switchMedium(m)}
+              disabled={busy}
             >
               {m}
             </button>
@@ -289,6 +346,48 @@ function TextPair({
   );
 }
 
+function NumberField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  // The text you typed is the source of truth for what's displayed; the number
+  // is derived from it. Deriving the display from the number instead breaks in
+  // two ways, because Number("") is 0: echoing it back makes the field
+  // impossible to clear (delete the digit and 0 reappears), while blanking 0
+  // makes a typed "0" vanish as you type it. Keeping the raw text fixes both.
+  const [text, setText] = useState(value === 0 ? "" : String(value));
+
+  // Re-sync when the value changes from outside (medium switch, reload,
+  // reorder), but leave the text alone while it still means the same number —
+  // otherwise an in-progress "0" or "05" would be rewritten under the cursor.
+  useEffect(() => {
+    setText((t) =>
+      Number(t || 0) === value ? t : value === 0 ? "" : String(value),
+    );
+  }, [value]);
+
+  return (
+    <label className={styles.field}>
+      <span className={styles.label}>{label}</span>
+      <input
+        type="number"
+        min={0}
+        value={text}
+        onChange={(e) => {
+          setText(e.target.value);
+          const n = Number(e.target.value);
+          onChange(e.target.value === "" || !Number.isFinite(n) ? 0 : n);
+        }}
+      />
+    </label>
+  );
+}
+
 function DraftFields({
   draft,
   onChange,
@@ -336,30 +435,21 @@ function Fields({
         onChange={(mediumLabel) => onChange({ mediumLabel })}
       />
       <div className={styles.nums}>
-        <label className={styles.field}>
-          <span className={styles.label}>Year</span>
-          <input
-            type="number"
-            value={entry.year}
-            onChange={(e) => onChange({ year: Number(e.target.value) })}
-          />
-        </label>
-        <label className={styles.field}>
-          <span className={styles.label}>Width cm</span>
-          <input
-            type="number"
-            value={entry.widthCm}
-            onChange={(e) => onChange({ widthCm: Number(e.target.value) })}
-          />
-        </label>
-        <label className={styles.field}>
-          <span className={styles.label}>Height cm</span>
-          <input
-            type="number"
-            value={entry.heightCm}
-            onChange={(e) => onChange({ heightCm: Number(e.target.value) })}
-          />
-        </label>
+        <NumberField
+          label="Year"
+          value={entry.year}
+          onChange={(year) => onChange({ year })}
+        />
+        <NumberField
+          label="Width cm"
+          value={entry.widthCm}
+          onChange={(widthCm) => onChange({ widthCm })}
+        />
+        <NumberField
+          label="Height cm"
+          value={entry.heightCm}
+          onChange={(heightCm) => onChange({ heightCm })}
+        />
         <label className={styles.field}>
           <span className={styles.label}>Status</span>
           <select

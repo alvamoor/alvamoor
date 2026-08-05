@@ -3,13 +3,14 @@
 // Access + JWT verification.
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-import { isAuthorized, unauthorized } from "@/app/lib/admin-auth";
+import { checkAuth, unauthorized } from "@/app/lib/admin-auth";
 import { WIDTHS, isMedium } from "@/app/lib/artworks";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
-  if (!(await isAuthorized(req))) return unauthorized();
+  const auth = await checkAuth(req);
+  if (!auth.ok) return unauthorized(auth.reason);
 
   const form = await req.formData();
   const medium = form.get("medium");
@@ -38,9 +39,6 @@ export async function POST(req: Request) {
     );
     stored++;
   }
-
-  if (stored === 0)
-    return Response.json({ error: "no image files" }, { status: 400 });
 
   return Response.json({ ok: true, base, stored });
 }

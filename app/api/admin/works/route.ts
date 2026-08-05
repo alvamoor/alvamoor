@@ -3,7 +3,7 @@
 // Access + JWT verification.
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-import { isAuthorized, unauthorized } from "@/app/lib/admin-auth";
+import { checkAuth, unauthorized } from "@/app/lib/admin-auth";
 import {
   deleteWorkImages,
   readManifest,
@@ -15,7 +15,8 @@ import { type ManifestEntry, isMedium } from "@/app/lib/artworks";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  if (!(await isAuthorized(req))) return unauthorized();
+  const auth = await checkAuth(req);
+  if (!auth.ok) return unauthorized(auth.reason);
 
   const medium = new URL(req.url).searchParams.get("medium") ?? undefined;
   if (!isMedium(medium))
@@ -26,7 +27,8 @@ export async function GET(req: Request) {
 }
 
 export async function PUT(req: Request) {
-  if (!(await isAuthorized(req))) return unauthorized();
+  const auth = await checkAuth(req);
+  if (!auth.ok) return unauthorized(auth.reason);
 
   const body = (await req.json().catch(() => null)) as {
     medium?: string;
