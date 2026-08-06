@@ -27,12 +27,9 @@ export async function generateMetadata({
   return {
     title,
     alternates: {
-      canonical: locale === routing.defaultLocale ? path : `/${locale}${path}`,
+      canonical: `/${locale}${path}`,
       languages: Object.fromEntries(
-        routing.locales.map((l) => [
-          l,
-          l === routing.defaultLocale ? path : `/${l}${path}`,
-        ]),
+        routing.locales.map((l) => [l, `/${l}${path}`]),
       ),
     },
   };

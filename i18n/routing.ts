@@ -3,7 +3,7 @@ import { defineRouting } from "next-intl/routing";
 export const routing = defineRouting({
   locales: ["en", "de"],
   defaultLocale: "en",
-  localePrefix: "as-needed",
+  localePrefix: "always",
   // next-intl v4 made the locale cookie a session cookie by default, which would
   // drop a visitor's language choice when they close the browser. Keep the v3
   // behaviour: remember it for a year. `app/gallery/page.tsx` also reads

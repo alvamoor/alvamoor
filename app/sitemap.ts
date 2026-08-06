@@ -7,9 +7,7 @@ const SITE = "https://alvamoor.com";
 const PATHS = ["", "/about", "/contact", "/works/canvas", "/works/paper"];
 
 function urlFor(locale: string, path: string) {
-  return locale === routing.defaultLocale
-    ? `${SITE}${path || "/"}`
-    : `${SITE}/${locale}${path}`;
+  return `${SITE}/${locale}${path}`;
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {

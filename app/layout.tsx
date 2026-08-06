@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import { getLocale } from "next-intl/server";
 import { Inter } from "next/font/google";
 import localFont from "next/font/local";
-import { cookies } from "next/headers";
 
 import "./globals.css";
 import { TILE_TINTS } from "./lib/palette";
@@ -42,8 +42,13 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = await cookies();
-  const locale = cookieStore.get("NEXT_LOCALE")?.value || "en";
+  // getLocale reads the locale the middleware resolved for this request, which
+  // follows the URL. The cookie this used to read is the wrong source for a lang
+  // attribute: it is missing on a first visit and dropped entirely by iOS under
+  // tracking protection, which had /de pages announcing lang="en". Routes outside
+  // [locale] (/gallery, /admin) never run the middleware and fall back to the
+  // default locale, which is correct for them — both are single-language.
+  const locale = await getLocale();
   return (
     <html lang={locale} className={`${sans.variable} ${backdrop.variable}`}>
       <body>{children}</body>

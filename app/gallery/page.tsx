@@ -12,7 +12,7 @@ export const metadata = {
 export default async function GalleryPage() {
   const cookieStore = await cookies();
   const locale = cookieStore.get("NEXT_LOCALE")?.value;
-  const backHref = locale === "de" ? "/de" : "/";
+  const backHref = locale === "de" ? "/de" : "/en";
 
   return (
     <>

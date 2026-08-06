@@ -22,13 +22,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "Landing" });
-  const path = locale === routing.defaultLocale ? "/" : `/${locale}`;
+  const path = `/${locale}`;
   const description = t("description").replace(/\s+/g, " ").trim();
   const languages = Object.fromEntries(
-    routing.locales.map((l) => [
-      l,
-      l === routing.defaultLocale ? "/" : `/${l}`,
-    ]),
+    routing.locales.map((l) => [l, `/${l}`]),
   );
 
   return {
@@ -54,6 +51,9 @@ export async function generateMetadata({
     },
     alternates: {
       canonical: path,
+      // x-default stays the bare "/" — the one unprefixed URL left, and now purely
+      // a negotiator: it redirects to /en or /de by Accept-Language, which is
+      // exactly what a crawler with no language preference should be handed.
       languages: { ...languages, "x-default": "/" },
     },
     robots: {
