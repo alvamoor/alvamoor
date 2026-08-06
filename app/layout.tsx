@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import { cookies } from "next/headers";
 
 import "./globals.css";
+import { TILE_TINTS } from "./lib/palette";
 
 const sans = Inter({
   subsets: ["latin"],
@@ -27,7 +28,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#293149",
+  // The tile the landing centres on at first paint (InfiniteScroll starts on the
+  // pattern's origin), so the browser chrome matches the page it frames.
+  themeColor: TILE_TINTS[0],
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,

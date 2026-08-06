@@ -1,112 +1,54 @@
-/* ── Palette + base ──────────────────────────────────────────────── */
+/* Works-only styles. The shell (root, header, footer, main) lives in
+   ../site.module.css; the palette custom properties it defines on .root are
+   inherited here. */
 
-.root {
-  /* clean white ground for the gallery pages */
-  --v2-bg: #ffffff;
-  --v2-fg: #16140f;
-  --v2-muted: rgba(22, 20, 15, 0.5);
-  --v2-line: rgba(22, 20, 15, 0.12);
-  --v2-mat: #ffffff;
-  --v2-shadow: 0 26px 64px -28px rgba(0, 0, 0, 0.4);
-  --v2-edge: rgba(0, 0, 0, 0.07);
+/* ── Section nav (canvas / paper) ───────────────────────────────── */
 
-  position: relative;
-  z-index: 1; /* paint above the global body::before watermark */
-  /* Lock to the viewport: header / works / footer fit, only works scroll. */
-  height: 100dvh;
-  overflow: hidden;
-  background: var(--v2-bg);
-  color: var(--v2-fg);
-  font-family: var(--font-sans), system-ui, sans-serif;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ── Shell: header / footer ─────────────────────────────────────── */
-
-.header,
-.footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: var(--pad-y) var(--pad-x);
-  font-size: 0.8125rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.header {
-  color: var(--v2-fg);
-}
-
-.footer {
-  color: var(--v2-muted);
-}
-
-.wordmark {
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: var(--v2-fg);
-  transition: opacity 180ms ease;
-}
-
-.wordmark:hover {
-  opacity: 0.6;
-}
-
-.follow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: color 180ms ease;
-}
-
-.follow:hover {
-  color: var(--v2-fg);
-}
-
-.arrow {
-  display: inline-block;
-  transition: transform 220ms ease;
-}
-
-.follow:hover .arrow {
-  transform: translate(2px, -2px);
-}
-
-.main {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: none;
-}
-
-.main::-webkit-scrollbar {
-  display: none;
-}
-
-/* Horizontal scroller view: lock to the viewport and become a flex column so
-   the one-work-per-screen scroller fills the height below the medium nav. */
-.main:has(.scrollerWrap) {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* ── Section nav (paper / canvas) ───────────────────────────────── */
-
+/* Its own row directly under the header, on every breakpoint — and it stays
+   there: sticky beneath the sticky header, pinned at the header's measured height
+   (--header-h, published by ScrollChrome; the fallback keeps it sensible before
+   hydration). Only the overview renders this nav, so no view scoping is needed —
+   the single-work view shows .back instead. */
 .mediumNav {
+  position: sticky;
+  top: var(--header-h, 0px);
+  z-index: 2; /* under the header's 3 */
   display: flex;
   justify-content: center;
   gap: clamp(1.5rem, 5vw, 3rem);
-  padding: clamp(2rem, 6vw, 4rem) var(--pad-x) clamp(0.75rem, 2vw, 1.25rem);
+  /* No bottom padding: the grid below brings its own, and --subnav-h is measured,
+     so the frosted veil ends just under this row rather than floating past it. */
+  padding: 0.25rem var(--pad-x) 0;
   text-transform: lowercase;
+  /* Coming back: as good as instant. The frosted band behind it is driven by
+     scroll *position*, so it is already there the moment you start scrolling up —
+     anything slower here reads as the labels arriving late into an empty bar.
+     Leaving is the opposite: unhurried, so it does not snap out from under you.
+     (A rule's transition governs the change *into* its state.) */
+  transition:
+    opacity 90ms ease,
+    transform 140ms ease;
 }
 
+/* Reading downward, it gets out of the way. It keeps its pinned slot (invisible
+   and click-through) rather than sliding up behind the translucent header, where
+   it would show through mid-transition. */
+html[data-scroll="down"] .mediumNav {
+  opacity: 0;
+  transform: translateY(-0.5rem);
+  pointer-events: none;
+  transition:
+    opacity 260ms ease,
+    transform 260ms ease;
+}
+
+/* No background of its own: the shell's single frosted veil covers the header and
+   this row together (see shell.module.css), which is the only way to avoid a seam
+   between two separately blurred layers. */
+
+/* A step quieter than the primary nav directly above it. */
 .mediumNavLink {
-  font-size: clamp(1.1rem, 2.6vw, 1.5rem);
+  font-size: clamp(0.9375rem, 2vw, 1rem);
   letter-spacing: 0.02em;
   color: var(--v2-muted);
   padding-bottom: 0.3rem;
@@ -127,8 +69,8 @@
 /* Single-work view: a plain back link stands in for the section nav. */
 .back {
   align-self: flex-start;
-  padding: clamp(2rem, 6vw, 4rem) var(--pad-x) clamp(0.75rem, 2vw, 1.25rem);
-  font-size: clamp(1.1rem, 2.6vw, 1.5rem);
+  padding: 0.25rem var(--pad-x) clamp(0.75rem, 2vw, 1.25rem);
+  font-size: clamp(0.9375rem, 2vw, 1rem);
   letter-spacing: 0.02em;
   text-transform: lowercase;
   color: var(--v2-muted);
@@ -139,29 +81,18 @@
   color: var(--v2-fg);
 }
 
-/* Desktop: lift the section nav into the top header row (centred between the
-   wordmark and the locale switcher) so the works scroller takes the full height
-   below — bigger images. */
+/* Desktop: lift the back link out of flow, into the slot the section nav
+   occupies on the overview (it is the single-work view's stand-in for that row),
+   so the works scroller takes the full height below — bigger images. It reads in
+   the same place it did in flow; it just no longer costs the artwork a band.
+   Restored from the gallery layout this replaced. */
 @media (min-width: 768px) {
-  .mediumNav {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 3;
-    padding: var(--pad-y) var(--pad-x);
-    /* let clicks through to the wordmark / locale switcher beneath */
-    pointer-events: none;
-  }
-
-  .mediumNavLink {
-    pointer-events: auto;
-    font-size: 1.0625rem;
-  }
-
-  /* compact at the top-left so the work below keeps its height */
   .back {
-    padding: var(--pad-y) var(--pad-x);
+    position: absolute;
+    top: var(--header-h, 0px);
+    left: 0;
+    z-index: 2;
+    padding: 0.25rem var(--pad-x) 0;
     font-size: 1.0625rem;
   }
 }
@@ -221,9 +152,11 @@
   opacity: 0.9;
 }
 
-/* ── Medium listing ─────────────────────────────────────────────── */
+/* ── Single-work scroller ───────────────────────────────────────── */
 
-/* Wrapper that positions the scroll arrows over the horizontal scroller. */
+/* Wrapper that positions the scroll arrows over the horizontal scroller.
+   Its data-view="scroller" is what tells the shell to lock to the viewport —
+   see ../site.module.css. */
 .scrollerWrap {
   position: relative;
   flex: 1;

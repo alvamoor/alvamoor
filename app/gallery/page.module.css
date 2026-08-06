@@ -1,42 +1,32 @@
-.dirt {
+/* The name across the whole viewport, big enough to be texture rather than type.
+   /gallery is the one route still standing on the dark --bg, so here the
+   watermark is the pale --fg; the localized pages draw the same shape in dark ink
+   over their light field (app/[locale]/shell.module.css). First in the DOM at
+   z-index 1, so the scene paints over it. */
+.watermark {
   position: fixed;
   inset: 0;
-  pointer-events: none;
   z-index: 1;
-  mix-blend-mode: multiply;
-  opacity: 0.55;
-  background-color: transparent;
-  background-image:
-    radial-gradient(
-      ellipse 35vw 28vh at 18% 28%,
-      rgba(0, 0, 0, 0.55) 0%,
-      transparent 70%
-    ),
-    radial-gradient(
-      ellipse 28vw 35vh at 82% 72%,
-      rgba(0, 0, 0, 0.45) 0%,
-      transparent 65%
-    ),
-    radial-gradient(
-      ellipse 40vw 22vh at 60% 12%,
-      rgba(0, 0, 0, 0.4) 0%,
-      transparent 70%
-    ),
-    radial-gradient(
-      circle 22vw at 30% 88%,
-      rgba(0, 0, 0, 0.5) 0%,
-      transparent 60%
-    ),
-    radial-gradient(
-      ellipse 25vw 30vh at 8% 60%,
-      rgba(0, 0, 0, 0.35) 0%,
-      transparent 70%
-    ),
-    radial-gradient(
-      ellipse 18vw 22vh at 92% 22%,
-      rgba(0, 0, 0, 0.4) 0%,
-      transparent 70%
-    );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: var(--font-backdrop), Impact, sans-serif;
+  font-weight: 400;
+  font-size: max(50vw, 55vh);
+  line-height: 0.82;
+  letter-spacing: -0.01em;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: pre;
+  color: var(--fg);
+  opacity: 0.12;
+  pointer-events: none;
+  user-select: none;
+}
+
+.watermark::before {
+  content: "alva\A moor";
 }
 
 .back {

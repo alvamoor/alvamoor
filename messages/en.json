@@ -1,13 +1,26 @@
 {
   "Landing": {
     "name": "alva moor",
-    "description": "Abstract paintings exploring memory, landscape, and fragmentation. Atmospheric, layered, and intuitive.",
-    "more": "more",
+    "description": "abstract paintings.\natmospheric, layered, and intuitive.",
     "jobTitle": "Visual Artist",
-    "about": "My work moves between atmosphere, memory, and fragmentation. Through processes of covering, erasing, and leaving forms unresolved, the paintings exist between abstraction and the suggestion of landscape or bodily presence. My recent work explores quiet spaces, psychological depth, and fragile image structures. Texture, light, materiality, and the tension between control and dissolution are central to the process. The paintings develop intuitively through slow layers, traces, and partially obscured marks. Influenced by nature, contemporary abstract painting, and emotional states, the work aims to create a restrained and open visual language. Each piece intentionally remains unresolved, inviting personal interpretation and reflection.",
-    "follow": "Instagram",
-    "year": "© {year}",
-    "close": "Close"
+    "year": "© {year}"
+  },
+  "Nav": {
+    "label": "Main",
+    "works": "works",
+    "about": "about",
+    "contact": "contact"
+  },
+  "About": {
+    "title": "about",
+    "statement": "In my work, I explore emotional states and attempt to make tensions and atmosphere visible. By painting over, blurring, and deliberately leaving forms open, I create visual spaces that invite viewers to interpret the surfaces through their own associations and memories. \nAt the heart of my current series is freedom in relationships—translated into fragile pictorial structures. The constant shift between control and dissolution plays a central role here. The works are shaped by an exploration of boundaries, expectations, and projections. They emerge from multilayered traces and overlays created using natural pigments."
+  },
+  "Contact": {
+    "title": "contact",
+    "intro": "For enquiries about my works, exhibitions, or studio visits.",
+    "email": "alva.moor@posteo.net",
+    "instagram": "Instagram",
+    "studio": "Leipzig, Berlin"
   },
   "LocaleSwitcher": {
     "label": "Language",
@@ -18,8 +31,8 @@
     "paper": "Paper",
     "canvas": "Canvas",
     "sections": "Sections",
+    "heading": "Works on {medium}",
     "back": "back",
-    "follow": "Instagram",
     "available": "Available",
     "sold": "Sold",
     "close": "Close",
@@ -27,8 +40,5 @@
     "prev": "Previous work",
     "next": "Next work",
     "virtualGallery": "Virtual gallery"
-  },
-  "Home": {
-    "intro": "<link>works</link>"
   }
 }

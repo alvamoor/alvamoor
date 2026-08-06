@@ -3,11 +3,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { type Artwork } from "@/app/lib/artworks";
-import { TILE_COLORS } from "@/app/lib/palette";
+import { TILE_TINTS } from "@/app/lib/palette";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
-import styles from "../gallery.module.css";
+import styles from "../works.module.css";
 
 type Labels = {
   sold: string;
@@ -135,7 +135,7 @@ export default function MediumGallery({
               loading={i < EAGER_COUNT ? "eager" : "lazy"}
               fetchPriority={i < EAGER_COUNT ? "high" : "auto"}
               decoding="async"
-              style={{ backgroundColor: TILE_COLORS[i % TILE_COLORS.length] }}
+              style={{ backgroundColor: TILE_TINTS[i % TILE_TINTS.length] }}
             />
           </button>
         ))}
@@ -143,11 +143,18 @@ export default function MediumGallery({
     );
   }
 
-  const many = works.length > 1;
+  // Each arrow is only there when it leads somewhere: none on the first work
+  // going back, none on the last going forward, and none at all for a single
+  // work. `current` follows the centred work as the scroller moves (see the
+  // scroll handler above), so they appear and disappear as you go.
+  const hasPrev = current > 0;
+  const hasNext = current < works.length - 1;
 
+  // data-view is the hook the shell watches to lock itself to the viewport for
+  // this one view — see shell.module.css.
   return (
-    <div className={styles.scrollerWrap}>
-      {many && (
+    <div className={styles.scrollerWrap} data-view="scroller">
+      {hasPrev && (
         <button
           type="button"
           className={`${styles.navArrow} ${styles.navArrowLeft}`}
@@ -207,7 +214,7 @@ export default function MediumGallery({
         ))}
       </div>
 
-      {many && (
+      {hasNext && (
         <button
           type="button"
           className={`${styles.navArrow} ${styles.navArrowRight}`}

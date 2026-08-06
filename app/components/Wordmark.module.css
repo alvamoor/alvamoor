@@ -1,0 +1,14 @@
+.mark {
+  margin: 0;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: inherit;
+  transition: opacity 180ms ease;
+}
+
+.mark:hover {
+  opacity: 0.6;
+}

@@ -1,4 +1,4 @@
-import { TILE_COLORS } from "@/app/lib/palette";
+import { TILE_TINTS } from "@/app/lib/palette";
 
 import styles from "./TileField.module.css";
 
@@ -8,7 +8,7 @@ export function TileField() {
   const cells = [];
   for (let row = 0; row < TILES; row++) {
     for (let col = 0; col < TILES; col++) {
-      const color = TILE_COLORS[(row % 3) * 3 + (col % 3)];
+      const color = TILE_TINTS[(row % 3) * 3 + (col % 3)];
       cells.push(<div key={`${row}-${col}`} style={{ background: color }} />);
     }
   }

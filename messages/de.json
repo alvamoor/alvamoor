@@ -1,13 +1,26 @@
 {
   "Landing": {
     "name": "alva moor",
-    "description": "Abstrakte Malerei zwischen Erinnerung, Landschaft und Fragment. Atmosphärisch, geschichtet, intuitiv.",
-    "more": "mehr",
+    "description": "abstrakte malerei.\natmosphärisch, geschichtet, intuitiv.",
     "jobTitle": "Bildende Künstlerin",
-    "about": "Meine Bilder bewegen sich zwischen Atmosphäre, Erinnerung und Fragment. Durch Übermalen, Verwischen und das bewusste Offenlassen von Formen entstehen Arbeiten, die zwischen Abstraktion und Andeutung von Landschaft oder Körperlichkeit stehen. Meine aktuelle Serie untersucht stille Räume, psychologische Tiefe und fragile Bildstrukturen. Im Mittelpunkt stehen Textur, Licht, Materialität und das Spannungsverhältnis zwischen Kontrolle und Auflösung. Die Arbeiten entstehen intuitiv in langsamen Prozessen aus Schichten, Spuren und Überlagerungen. Inspiriert von Natur, zeitgenössischer abstrakter Malerei und emotionalen Zuständen entwickeln die Bilder eine ruhige, offene Bildsprache. Jedes Werk bleibt bewusst unvollständig und lädt dazu ein, eigene Assoziationen und Erinnerungen hineinzulesen.",
-    "follow": "Instagram",
-    "year": "© {year}",
-    "close": "Schließen"
+    "year": "© {year}"
+  },
+  "Nav": {
+    "label": "Hauptmenü",
+    "works": "werke",
+    "about": "über",
+    "contact": "kontakt"
+  },
+  "About": {
+    "title": "über",
+    "statement": "In meinen Arbeiten verhandle ich emotionale Zustände und versuche, Spannungen und Atmosphäre sichtbar zu machen. Durch Übermalen, Verwischen und das bewusste Offenlassen von Formen erschaffe ich visuelle Freiräume, die die Betrachtenden dazu einladen, eigene Assoziationen und Erinnerungen in die Flächen hereinzulesen. \nIm Zentrum meiner aktuellen Serie steht die Freiheit in Beziehungen – übersetzt in fragile Bildstrukturen. Dabei spielt der ständige Wechsel zwischen Kontrolle und Auflösung eine zentrale Rolle. Die Auseinandersetzung mit Grenzen, Erwartungen und Projektionen prägt die Arbeiten. Die Werke erwachsen aus vielschichtigen Spuren und Überlagerungen anhand von natürlichen Pigmenten."
+  },
+  "Contact": {
+    "title": "kontakt",
+    "intro": "für anfragen zu meinen arbeiten, ausstellungen oder atelierbesuchen.",
+    "email": "alva.moor@posteo.net",
+    "instagram": "instagram",
+    "studio": "leipzig, berlin"
   },
   "LocaleSwitcher": {
     "label": "Sprache",
@@ -15,11 +28,11 @@
     "de": "DE"
   },
   "Gallery": {
-    "paper": "Papier",
-    "canvas": "Leinwand",
+    "paper": "papier",
+    "canvas": "leinwand",
     "sections": "Bereiche",
+    "heading": "Arbeiten auf {medium}",
     "back": "zurück",
-    "follow": "Instagram",
     "available": "Verfügbar",
     "sold": "Verkauft",
     "close": "Schließen",
@@ -27,8 +40,5 @@
     "prev": "Vorheriges Werk",
     "next": "Nächstes Werk",
     "virtualGallery": "Virtuelle Galerie"
-  },
-  "Home": {
-    "intro": "<link>werke</link>"
   }
 }

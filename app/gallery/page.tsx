@@ -16,8 +16,8 @@ export default async function GalleryPage() {
 
   return (
     <>
+      <div className={styles.watermark} aria-hidden="true" />
       <SceneWrapper />
-      <div className={styles.dirt} aria-hidden="true" />
       <a href={backHref} className={styles.back} aria-label="Back">
         <span className={styles.arrow} aria-hidden="true">
           ←
