@@ -1,0 +1,279 @@
+/* The one shell every route shares — same ground, same chrome, same ink, same
+   type, same watermark, on the landing as everywhere else. Two markers vary it,
+   and nothing else does:
+     [data-page="landing"]  app/[locale]/page.tsx — the tile field can be panned
+     [data-page="works"]    the works pages — they carry the subnav, so the
+                            frosted veil spans it and the header tightens under it
+   Both are attributes rather than classes because the rules reaching them live in
+   a different CSS module (see Backdrop.tsx). */
+
+/* Plain block on purpose: no position, z-index, transform, filter or opacity, so
+   it creates no stacking context and the fixed layers keep their painting order —
+   the tinted field (0) below the shell (2) and the two layers inside it. */
+.page {
+  display: block;
+}
+
+/* Off the landing the field is scenery: it must not swallow page scrolling.
+   (Scoped under .page because CSS Modules reject a bare attribute selector.) */
+.page [data-backdrop] {
+  pointer-events: none;
+}
+
+.shell {
+  /* palette — content colours (consumed by works.module.css and
+     pages.module.css too; the ground itself is the shared tinted field) */
+  --v2-fg: #16140f;
+  --v2-muted: rgba(22, 20, 15, 0.5);
+  --v2-line: rgba(22, 20, 15, 0.12);
+  --v2-mat: #ffffff;
+  --v2-shadow: 0 26px 64px -28px rgba(0, 0, 0, 0.4);
+  /* One ink for the whole site: every ground is now light, landing included. */
+  --ink: var(--v2-fg);
+  /* One size for every page's copy — the landing line, the statement, the
+     contact details. Small on purpose: the nav is the heading (the pages carry no
+     visible title), so nothing in the copy should compete with it. */
+  --text: clamp(0.875rem, 1.4vw, 0.9375rem);
+
+  position: relative;
+  z-index: 2;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  color: var(--ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.watermark {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: var(--font-backdrop), Impact, sans-serif;
+  font-weight: 400;
+  font-size: max(50vw, 55vh);
+  line-height: 0.82;
+  letter-spacing: -0.01em;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: pre;
+  color: var(--ink);
+  opacity: 0.055;
+  pointer-events: none;
+  user-select: none;
+}
+
+.watermark::before {
+  content: "alva\A moor";
+}
+
+/* ── Landing state ─────────────────────────────────────────────── */
+
+/* All that is particular to the landing now: the field can be panned there.
+   Ground, watermark, ink, type and chrome are shared with about and contact. */
+.page:has([data-page="landing"]) .shell {
+  /* let clicks through to the tile field; links opt back in below */
+  pointer-events: none;
+}
+
+.page:has([data-page="landing"]) .shell a {
+  pointer-events: auto;
+}
+
+.page:has([data-page="landing"]) [data-backdrop] {
+  pointer-events: auto;
+}
+
+/* ── Header / footer ───────────────────────────────────────────── */
+
+.header,
+.footer {
+  padding: var(--pad-y) var(--pad-x);
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Two rows: wordmark + language on the edges, primary nav centred underneath —
+   which puts it directly above the works subnav. */
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.75rem, 2.5vw, 1.5rem);
+}
+
+/* Sticky on the works overview only — the one view that can run far past a
+   screen, where the menu would otherwise be a long scroll away. Not in the
+   single-work view, which is locked to the viewport and has nothing to scroll,
+   and not on the other pages, where the header scrolls off as the footer does.
+
+   Once content passes under it, the header needs a ground of its own — the real
+   one is a fixed layer that cannot scroll along. Frosted rather than solid,
+   because that layer is a mosaic, not one colour. */
+.page:has([data-page="works"]):not(:has([data-view="scroller"])) .header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+/* On the works pages the subnav (or, in the single-work view, the back link)
+   follows immediately, and each brings its own top padding — so the header's full
+   --pad-y underneath would read as a gap between two halves of one menu. The
+   subnav keeps 0.25rem of its own, making the space between the rows about
+   0.5rem. --header-h is measured, so the veil follows without being told. */
+.page:has([data-page="works"]) .header {
+  padding-bottom: clamp(0.25rem, 0.8vw, 0.5rem);
+}
+
+/* ── The frosted surface behind the sticky chrome ───────────────── */
+
+/* One layer for the whole of it — the header, plus the works subnav pinned under
+   it. Frosting the two elements separately left a visible seam: each blurs only
+   its own backdrop, so the blur is clipped at their shared edge, and a rounded
+   header height leaves either a sliver of bare ground or a strip of doubled
+   frost. One surface cannot have a seam.
+
+   Sized from the two measured heights (ScrollChrome). Its bottom edge is masked
+   so the band does not end on a hard line, but only just — a short fade reads as
+   an edge, a long one reads as a smudge. --veil-fade is the dial: 0 for a crisp
+   line, larger for softer. */
+.veil {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  /* The three dials. They are custom properties because the frostIn keyframes
+     below have to end on exactly these values — spelling them twice is how the
+     base state and the end of the fade drift apart. */
+  --veil-tint: color-mix(in srgb, #ffffff 58%, transparent);
+  --veil-blur: 7px;
+  --veil-fade: 1px;
+
+  height: calc(var(--header-h, 0px) + var(--subnav-h, 0px));
+  background: var(--veil-tint);
+  backdrop-filter: blur(var(--veil-blur));
+  mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - var(--veil-fade)),
+    transparent
+  );
+  pointer-events: none;
+  /* Same asymmetry as the subnav it backs (works.module.css): the band must arrive
+     with the labels, or they land on unfrosted artwork for a moment. */
+  transition: transform 140ms ease;
+  /* Where they are supported, the chrome starts transparent — the grid opens as
+     one uninterrupted surface — and the frost fades in over the first 3rem of
+     scroll, once there is something underneath worth hiding. */
+  animation-name: frostIn;
+  animation-duration: auto;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+  animation-timeline: scroll(root block);
+  animation-range: 0 3rem;
+}
+
+.page:has([data-page="works"]):not(:has([data-view="scroller"])) .veil {
+  display: block;
+}
+
+/* Reading downward, the subnav steps aside, so the band shrinks back to the
+   header — by moving rather than resizing, which keeps the blur off the layout
+   path. */
+html[data-scroll="down"] .veil {
+  transform: translateY(calc(-1 * var(--subnav-h, 0px)));
+  transition: transform 260ms ease;
+}
+
+@keyframes frostIn {
+  from {
+    background: rgb(255 255 255 / 0%);
+    backdrop-filter: blur(0);
+  }
+  to {
+    background: var(--veil-tint);
+    backdrop-filter: blur(var(--veil-blur));
+  }
+}
+
+.headerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: var(--v2-muted);
+}
+
+.year {
+  font-variant-numeric: tabular-nums;
+}
+
+/* min-height: 0 is load-bearing, not tidiness: as a column flex item .main
+   defaults to min-height: auto, which refuses to shrink below its content. The
+   locked single-work view then never gets a bounded height to hand down, and the
+   artwork scales to the full width and overflows instead of fitting the slide.
+   (The gallery layout this replaced carried the same declaration.) */
+.main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The template wrapper (template.tsx), which re-mounts on every navigation so
+   the content fade replays while the chrome stays put.
+
+   It sits between .main and the page, so it has to be transparent to layout as
+   well: without the flex declarations it is a plain block that absorbs the
+   height chain, and the locked single-work view below it loses its bound — the
+   artwork then sizes to the full width and overflows the slide. Anything that
+   wraps page content here needs to pass the chain through. */
+.fade {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  animation: contentIn 260ms ease both;
+}
+
+@keyframes contentIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade {
+    animation: none;
+  }
+}
+
+/* ── Locked single-work view ───────────────────────────────────── */
+
+/* The one view that does not scroll: a one-work-per-screen horizontal snap
+   scroller needs a bounded height. Everywhere else the document scrolls and the
+   footer scrolls away with it. */
+.shell:has([data-view="scroller"]) {
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.main:has([data-view="scroller"]) {
+  min-height: 0;
+  overflow: hidden;
+}

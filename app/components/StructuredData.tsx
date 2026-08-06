@@ -4,6 +4,7 @@ const SITE_URL = "https://alvamoor.com";
 
 export async function StructuredData({ locale }: { locale: string }) {
   const t = await getTranslations({ locale, namespace: "Landing" });
+  const tAbout = await getTranslations({ locale, namespace: "About" });
 
   const data = {
     "@context": "https://schema.org",
@@ -11,7 +12,7 @@ export async function StructuredData({ locale }: { locale: string }) {
     name: "alva moor",
     url: SITE_URL,
     jobTitle: t("jobTitle"),
-    description: t("about"),
+    description: tAbout("statement"),
     image: `${SITE_URL}/opengraph-image`,
     sameAs: ["https://instagram.com/alva.moor"],
     mainEntityOfPage: {

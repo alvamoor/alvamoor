@@ -25,16 +25,19 @@ pnpm install    # also installs the git hooks (via the "prepare" script)
 pnpm dev        # http://localhost:3000
 ```
 
-Default-locale (English) pages are unprefixed (`/paper`); German is under
-`/de` (`/de/paper`). Routes worth knowing:
+Default-locale (English) pages are unprefixed (`/works/paper`); German is under
+`/de` (`/de/works/paper`). Routes worth knowing:
 
-| Route      | What it is                                              |
-| ---------- | ------------------------------------------------------- |
-| `/`        | Landing page                                            |
-| `/paper`   | Works on paper (data from R2)                           |
-| `/canvas`  | Works on canvas (data from R2)                          |
-| `/gallery` | 3D scene (static images bundled from `public/artworks`) |
-| `/admin`   | Works admin — add/edit/reorder works (see below)        |
+| Route           | What it is                                              |
+| --------------- | ------------------------------------------------------- |
+| `/`             | Landing — wordmark, menu, nothing else                  |
+| `/about`        | The artist statement                                    |
+| `/contact`      | Email, Instagram, studio line                           |
+| `/works`        | Redirects to `/works/canvas`                            |
+| `/works/canvas` | Works on canvas (data from R2)                          |
+| `/works/paper`  | Works on paper (data from R2)                           |
+| `/gallery`      | 3D scene (static images bundled from `public/artworks`) |
+| `/admin`        | Works admin — add/edit/reorder works (see below)        |
 
 ## Environment variables & secrets
 
@@ -135,7 +138,13 @@ CF_ACCESS_AUD=<aud tag>
 
 ```
 app/
-  [locale]/           localized routes (landing + /paper /canvas galleries)
+  [locale]/
+    layout.tsx        the one shell: backdrop, wordmark, nav, switcher, footer
+    template.tsx      re-mounts per navigation, so content can fade in
+    page.tsx          the landing — no content, only the state marker
+    about/ contact/ works/
+    shell.module.css  shell + both of its states; pages.module.css: text pages
+  components/         Backdrop, Wordmark, SiteNav, LocaleSwitcher, TileField
   admin/              works admin UI (client) — add/edit/reorder/tag works
   api/admin/          admin API (manifest read/write + image upload) behind Access
   gallery/            the 3D react-three-fiber scene (/gallery)
@@ -151,7 +160,7 @@ docs/                 setup + concept notes
 
 There are **two galleries**, fed differently:
 
-- **`/paper` and `/canvas`** read JSON manifests from R2 (`<medium>/index.json`)
+- **`/works/paper` and `/works/canvas`** read JSON manifests from R2 (`<medium>/index.json`)
   and images from the same bucket. Manifest changes go live within ~60s, **no
   redeploy**. Local staging copies live in `content/<medium>.json`; publish with
   `node scripts/sync-manifest.mjs <paper|canvas>`.

@@ -2,21 +2,28 @@ import { getTranslations } from "next-intl/server";
 
 import { Link } from "@/i18n/navigation";
 
-import styles from "./gallery.module.css";
+import styles from "./works.module.css";
 
-const SECTIONS = ["paper", "canvas"] as const;
+// Canvas first: /works redirects here, so it is the section a visitor lands on.
+const SECTIONS = ["canvas", "paper"] as const;
 
-type Section = "paper" | "canvas";
+type Section = (typeof SECTIONS)[number];
 
 export default async function MediumNav({ active }: { active: Section }) {
   const t = await getTranslations("Gallery");
 
   return (
-    <nav className={styles.mediumNav} aria-label={t("sections")}>
+    // data-chrome: what ScrollChrome measures for --subnav-h, so the frosted
+    // veil above can cover this row too.
+    <nav
+      className={styles.mediumNav}
+      aria-label={t("sections")}
+      data-chrome="subnav"
+    >
       {SECTIONS.map((section) => (
         <Link
           key={section}
-          href={`/${section}`}
+          href={`/works/${section}`}
           className={`${styles.mediumNavLink} ${
             section === active ? styles.mediumNavActive : ""
           }`}
@@ -25,7 +32,7 @@ export default async function MediumNav({ active }: { active: Section }) {
           {t(section)}
         </Link>
       ))}
-      {/* Third door out to the 3D virtual gallery (a different kind of route). 
+      {/* Third door out to the 3D virtual gallery (a different kind of route).
       <a href="/gallery" className={styles.mediumNavLink}>
         {t("virtualGallery")}
       </a>
