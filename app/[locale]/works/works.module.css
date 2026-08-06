@@ -46,15 +46,11 @@ html[data-scroll="down"] .mediumNav {
    this row together (see shell.module.css), which is the only way to avoid a seam
    between two separately blurred layers. */
 
-/* A step quieter than the primary nav directly above it. */
 .mediumNavLink {
   font-size: clamp(0.9375rem, 2vw, 1rem);
   letter-spacing: 0.02em;
-  color: var(--v2-muted);
+  color: color-mix(in srgb, var(--v2-fg) 70%, transparent);
   padding-bottom: 0.3rem;
-  transition:
-    color 200ms ease,
-    border-color 200ms ease;
 }
 
 .mediumNavLink:hover {
@@ -66,14 +62,15 @@ html[data-scroll="down"] .mediumNav {
   border-bottom-color: var(--v2-fg);
 }
 
-/* Single-work view: a plain back link stands in for the section nav. */
+/* Single-work view: a plain back link stands in for the section nav. Same row,
+   same size, so it takes the same tone as .mediumNavLink above. */
 .back {
   align-self: flex-start;
   padding: 0.25rem var(--pad-x) clamp(0.75rem, 2vw, 1.25rem);
   font-size: clamp(0.9375rem, 2vw, 1rem);
   letter-spacing: 0.02em;
   text-transform: lowercase;
-  color: var(--v2-muted);
+  color: color-mix(in srgb, var(--v2-fg) 90%, transparent);
   transition: color 200ms ease;
 }
 

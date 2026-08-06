@@ -166,9 +166,6 @@
   /* Same asymmetry as the subnav it backs (works.module.css): the band must arrive
      with the labels, or they land on unfrosted artwork for a moment. */
   transition: transform 140ms ease;
-  /* Where they are supported, the chrome starts transparent — the grid opens as
-     one uninterrupted surface — and the frost fades in over the first 3rem of
-     scroll, once there is something underneath worth hiding. */
   animation-name: frostIn;
   animation-duration: auto;
   animation-timing-function: linear;
@@ -245,16 +242,6 @@ html[data-scroll="down"] .veil {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  animation: contentIn 260ms ease both;
-}
-
-@keyframes contentIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
