@@ -105,15 +105,22 @@
   gap: clamp(0.75rem, 2.5vw, 1.5rem);
 }
 
-/* Sticky on the works overview only — the one view that can run far past a
-   screen, where the menu would otherwise be a long scroll away. Not in the
-   single-work view, which is locked to the viewport and has nothing to scroll,
-   and not on the other pages, where the header scrolls off as the footer does.
+/* Sticky wherever the page can scroll, which is every route but two. The works
+   overview is the view that runs furthest past a screen, but it is not the only
+   one that runs past a *small* screen: the about statement and the contact
+   details both scroll on a phone, and the menu scrolling away with them was the
+   one place the chrome behaved differently from page to page.
+
+   The two exceptions have nothing to scroll, so sticky would mean nothing:
+     [data-view="scroller"]  the single-work view, locked to the viewport
+     [data-page="landing"]   its content is absolutely positioned inside the
+                             viewport, and the tile field is panned, not scrolled
 
    Once content passes under it, the header needs a ground of its own — the real
    one is a fixed layer that cannot scroll along. Frosted rather than solid,
    because that layer is a mosaic, not one colour. */
-.page:has([data-page="works"]):not(:has([data-view="scroller"])) .header {
+.page:not(:has([data-page="landing"])):not(:has([data-view="scroller"]))
+  .header {
   position: sticky;
   top: 0;
   z-index: 3;
@@ -155,8 +162,15 @@
   --veil-fade: 1px;
 
   height: calc(var(--header-h, 0px) + var(--subnav-h, 0px));
-  background: var(--veil-tint);
-  backdrop-filter: blur(var(--veil-blur));
+  /* Clear at rest, and deliberately so: the frost belongs to scrolling, and this
+     base state is what shows whenever frostIn is not driving things. That is not
+     only the moment before hydration — a scroll timeline is *inactive* while its
+     scroller cannot scroll at all, so on a page short enough to fit (about or
+     contact on a desktop) the animation never applies and the base is the whole
+     story. Frosted here meant a band sitting over unscrolled ground with nothing
+     underneath to hide. The dials above remain the single source of the frosted
+     end; only frostIn's `to` spends them. */
+  background: transparent;
   mask-image: linear-gradient(
     to bottom,
     #000 calc(100% - var(--veil-fade)),
@@ -174,7 +188,13 @@
   animation-range: 0 3rem;
 }
 
-.page:has([data-page="works"]):not(:has([data-view="scroller"])) .veil {
+/* Wherever the header is sticky, it needs the band behind it — same scoping. On
+   the pages that carry no subnav --subnav-h is absent (ScrollChrome clears it when
+   the element is gone), so the band is exactly header-high and the translateY that
+   shrinks it on the works overview resolves to 0: nothing to shrink, no movement.
+   The frost still fades in over the first 3rem of scroll, so at rest the header
+   sits on bare ground here as it always did. */
+.page:not(:has([data-page="landing"])):not(:has([data-view="scroller"])) .veil {
   display: block;
 }
 
