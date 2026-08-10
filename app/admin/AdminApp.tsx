@@ -322,11 +322,18 @@ function TextPair({
   label,
   value,
   onChange,
+  mirror = false,
 }: {
   label: string;
   value: { en: string; de: string };
   onChange: (v: { en: string; de: string }) => void;
+  /** Copy EN into DE while DE has not been given a value of its own. */
+  mirror?: boolean;
 }) {
+  // Titles are usually identical in both languages, so DE follows EN — until DE
+  // is edited on its own.
+  const linked = mirror && (value.de === "" || value.de === value.en);
+
   return (
     <label className={styles.field}>
       <span className={styles.label}>{label}</span>
@@ -334,7 +341,12 @@ function TextPair({
         <input
           placeholder="EN"
           value={value.en}
-          onChange={(e) => onChange({ ...value, en: e.target.value })}
+          onChange={(e) =>
+            onChange({
+              en: e.target.value,
+              de: linked ? e.target.value : value.de,
+            })
+          }
         />
         <input
           placeholder="DE"
@@ -419,10 +431,13 @@ function Fields({
 }) {
   return (
     <div className={styles.fields}>
+      {/* Only the title mirrors. A German description is real prose, and the
+          medium labels differ by language ("Pigments" / "Pigmente"). */}
       <TextPair
         label="Title"
         value={entry.title}
         onChange={(title) => onChange({ title })}
+        mirror
       />
       <TextPair
         label="Description"
