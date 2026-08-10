@@ -111,7 +111,8 @@ go live within the ~60s revalidate window.
    {
      "base": "IMG_4618",
      "title": { "en": "Untitled", "de": "Ohne Titel" },
-     "mediumLabel": { "en": "Acrylic on canvas", "de": "Acryl auf Leinwand" },
+     "mediumLabel": { "en": "Pigments on canvas", "de": "Pigmente
+      auf Leinwand" },
      "year": 2026,
      "widthCm": 130,
      "heightCm": 170,
@@ -120,7 +121,7 @@ go live within the ~60s revalidate window.
    ```
 
    `base` must match the uploaded file stem. Canvas works are **always
-   "Acrylic on canvas"**, never oil. `status` is `available` | `sold`.
+   "Pigments on canvas"**. `status` is `available` | `sold`.
 
 3. **Publish the manifest** — uploads `content/<medium>.json` to
    `<medium>/index.json` in R2:
@@ -145,6 +146,43 @@ There's also a self-service **`/admin`** UI (Cloudflare Access-gated) that does
 the resize + R2 upload + manifest write in the browser — the manual flow above
 is the power-user / scripted fallback. See `docs/r2-image-migration.md` for the
 full background.
+
+## Auditing R2 (orphans and missing images)
+
+`scripts/reap-orphans.mjs` compares each manifest against what is actually in the
+bucket, in both directions:
+
+```bash
+node scripts/reap-orphans.mjs                    # check both media, delete nothing
+node scripts/reap-orphans.mjs canvas             # one medium
+node scripts/reap-orphans.mjs canvas --delete    # remove the orphans it found
+node scripts/reap-orphans.mjs --min-age-hours=1  # loosen the freshness guard
+```
+
+- **ORPHANS** — objects under `<medium>/` that no manifest entry names. Wasted
+  storage, otherwise invisible. These come from an `/admin` **Add** whose Save
+  never happened (the upload is immediate, the manifest write is not), or an
+  interrupted bulk upload. Safe to delete.
+- **MISSING** — a manifest entry names `<base>-<width>.webp` and the object is
+  not there. This is a **broken image on the live site**, and the script cannot
+  fix it: re-upload the variant (Step 1 + Step 2b above). Exits non-zero so it is
+  hard to miss.
+
+It **deletes nothing without `--delete`**, and skips orphans newer than 24h on
+purpose — between clicking Add and clicking Save, a work's images are legitimately
+unreferenced, and deleting them would throw away work in progress. Lower the bar
+with `--min-age-hours=` only when you know no session is open.
+
+It refuses to run at all if a manifest cannot be read or parsed: with no manifest
+every object looks orphaned, and `--delete` would empty the folder. For the same
+reason it reads `index.json` straight from R2 rather than through
+`img.alvamoor.com`, whose 60s cache could predate the newest upload.
+
+Listing goes through the Cloudflare REST API because `wrangler` has **no
+list-objects command**; deletes go through `wrangler r2 object delete`. Auth
+reuses your `wrangler login` session, refreshing the token itself when the
+short-lived OAuth one has expired. Set `CLOUDFLARE_API_TOKEN` (Account → R2 →
+Read) to skip that.
 
 ## Other notes
 
