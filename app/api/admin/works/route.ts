@@ -45,18 +45,37 @@ export async function PUT(req: Request) {
   const entries = body.entries!;
   const { env } = await getCloudflareContext({ async: true });
 
-  // Delete images of works that were removed in this save.
   const prev = await readManifest(env.IMAGES_BUCKET, medium);
   const kept = new Set(entries.map((e) => e.base));
   const removed = prev.filter((e) => !kept.has(e.base));
-  await Promise.all(
+
+  // The manifest is the transaction, and it goes first. Deleting the images
+  // first would mean a failed write leaves the *published* manifest listing
+  // works whose bytes are already gone — broken images on the live site until
+  // someone saves again. This order cannot do that: once the manifest is
+  // written, nothing references the old images, so the worst a failed delete
+  // leaves behind is unreferenced objects in R2.
+  await writeManifest(env.IMAGES_BUCKET, medium, entries);
+
+  // Cleanup, deliberately best-effort. A rejected delete must not fail the
+  // request: the save has already succeeded, and reporting it as an error would
+  // send the artist back to Save — where `prev` no longer lists the removed
+  // works, so the retry deletes nothing and the orphans become permanent and
+  // invisible. Counting them here is what makes them findable instead.
+  const results = await Promise.allSettled(
     removed.map((e) => deleteWorkImages(env.IMAGES_BUCKET, medium, e.base)),
   );
+  const orphaned = results.filter((r) => r.status === "rejected").length;
+  if (orphaned > 0)
+    // eslint-disable-next-line no-console
+    console.warn(
+      `manifest ${medium} saved, but ${orphaned} of ${removed.length} image deletions failed — those objects are now unreferenced in R2`,
+    );
 
-  await writeManifest(env.IMAGES_BUCKET, medium, entries);
   return Response.json({
     ok: true,
     count: entries.length,
     removed: removed.length,
+    orphaned,
   });
 }
