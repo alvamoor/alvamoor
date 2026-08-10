@@ -14,6 +14,16 @@
   },
   // R2 bucket the /admin routes write to (images + manifests).
   "r2_buckets": [{ "binding": "IMAGES_BUCKET", "bucket_name": "images" }],
+  // Backing store for OpenNext's incremental cache (see open-next.config.ts).
+  // Nothing in app/ touches this binding — the name is the one the
+  // kv-incremental-cache override looks up, so it must stay exactly this.
+  // Without it the cache falls back to "dummy", which caches nothing.
+  "kv_namespaces": [
+    {
+      "binding": "NEXT_INC_CACHE_KV",
+      "id": "e7199810cbbc4587a607e8762b13c629",
+    },
+  ],
   // Cloudflare Access settings for /admin auth are set as Worker secrets, not
   // vars (see docs/r2-image-migration.md):
   //   pnpm dlx wrangler secret put CF_ACCESS_TEAM_DOMAIN   # <team>.cloudflareaccess.com
