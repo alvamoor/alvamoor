@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { type Artwork } from "@/app/lib/artworks";
 import { TILE_TINTS } from "@/app/lib/palette";
-import { usePathname, useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
 import styles from "../works.module.css";
@@ -32,7 +32,6 @@ export default function MediumGallery({
   open,
 }: Props) {
   const router = useRouter();
-  const pathname = usePathname();
 
   const mode = open === null ? "grid" : "scroller";
   const startIndex = open ?? 0;
@@ -50,10 +49,6 @@ export default function MediumGallery({
   );
   const openImgRef = useRef<HTMLImageElement | null>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
-
-  function openScroller(index: number) {
-    router.push(`${pathname}?w=${index}`, { scroll: false });
-  }
 
   function scrollByDir(dir: 1 | -1) {
     const el = scrollerRef.current;
@@ -91,17 +86,19 @@ export default function MediumGallery({
     return () => el.removeEventListener("scroll", onScroll);
   }, [mode]);
 
-  // Esc closes an open caption, else returns to the grid.
+  // Esc closes an open caption, else returns to the grid. The grid's URL is named
+  // rather than derived: `pathname` is this work's own address now, so dropping a
+  // segment from it would be guesswork.
   useEffect(() => {
     if (mode !== "scroller") return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       if (openId) setOpenId(null);
-      else router.push(pathname, { scroll: false });
+      else router.push(`/works/${medium}`, { scroll: false });
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [mode, openId, router, pathname]);
+  }, [mode, openId, router, medium]);
 
   useEffect(() => {
     if (!openId) return;
@@ -118,12 +115,16 @@ export default function MediumGallery({
     return (
       <div className={styles.grid}>
         {works.map((a, i) => (
-          <button
+          // A real link, not a button: each work has an address, so opening one
+          // should middle-click and right-click like anything else. prefetch is
+          // off because a grid is 50-odd of these and prefetching all of them
+          // would cost more than the navigation it saves.
+          <Link
             key={a.id}
-            type="button"
+            href={`/works/${medium}/${i}`}
             className={styles.thumb}
-            onClick={() => openScroller(i)}
-            aria-label={a.title[locale]}
+            prefetch={false}
+            scroll={false}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -137,7 +138,7 @@ export default function MediumGallery({
               decoding="async"
               style={{ backgroundColor: TILE_TINTS[i % TILE_TINTS.length] }}
             />
-          </button>
+          </Link>
         ))}
       </div>
     );

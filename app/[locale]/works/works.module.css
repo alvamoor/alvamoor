@@ -116,8 +116,13 @@ html[data-scroll="down"] .mediumNav {
   }
 }
 
+/* An <a> since each work has its own URL. display: block is load-bearing: an
+   anchor is inline by default, which would leave a descender gap under the image
+   and break the square the grid lays out. (It was a <button> before, which is
+   why the reset declarations below are here.) */
 .thumb {
   position: relative;
+  display: block;
   overflow: hidden;
   appearance: none;
   border: 0;
