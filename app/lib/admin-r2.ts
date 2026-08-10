@@ -1,6 +1,11 @@
 // R2 helpers shared by the /admin API routes. The IMAGES binding is configured
 // in wrangler.jsonc and reached via getCloudflareContext().env.
-import { type ManifestEntry, type Medium, WIDTHS } from "@/app/lib/artworks";
+import {
+  type ManifestEntry,
+  type Medium,
+  WIDTHS,
+  validateEntry,
+} from "@/app/lib/artworks";
 
 const manifestKey = (medium: Medium) => `${medium}/index.json`;
 const imageKey = (medium: Medium, base: string, w: number) =>
@@ -45,32 +50,24 @@ export async function deleteWorkImages(
   );
 }
 
-const isText = (v: unknown): v is { en: string; de: string } =>
-  !!v &&
-  typeof v === "object" &&
-  typeof (v as Record<string, unknown>).en === "string" &&
-  typeof (v as Record<string, unknown>).de === "string";
-
-/** Returns an error message if the entries array is invalid, else null. */
+/**
+ * Returns an error message if the entries array is invalid, else null.
+ *
+ * Per-entry checks come from validateEntry in artworks.ts — one schema, one
+ * validator. What is added here is what only makes sense across a whole array
+ * (uniqueness) and the write path's all-or-nothing stance: a save is rejected
+ * whole on the first bad entry, rather than silently dropping works the way the
+ * read path does.
+ */
 export function validateEntries(entries: unknown): string | null {
   if (!Array.isArray(entries)) return "entries must be an array";
   const seen = new Set<string>();
   for (const [i, e] of entries.entries()) {
-    const o = e as Record<string, unknown>;
-    if (typeof o.base !== "string" || !/^[a-zA-Z0-9_-]+$/.test(o.base))
-      return `entry ${i}: invalid base`;
-    if (seen.has(o.base)) return `entry ${i}: duplicate base "${o.base}"`;
-    seen.add(o.base);
-    if (!isText(o.title)) return `entry ${i}: title must have en+de`;
-    if (!isText(o.mediumLabel))
-      return `entry ${i}: mediumLabel must have en+de`;
-    if (o.description !== undefined && !isText(o.description))
-      return `entry ${i}: description must have en+de`;
-    if (typeof o.year !== "number") return `entry ${i}: year must be a number`;
-    if (typeof o.widthCm !== "number" || typeof o.heightCm !== "number")
-      return `entry ${i}: widthCm/heightCm must be numbers`;
-    if (o.status !== "available" && o.status !== "sold")
-      return `entry ${i}: status must be available|sold`;
+    const problem = validateEntry(e);
+    if (problem) return `entry ${i}: ${problem}`;
+    const { base } = e as ManifestEntry;
+    if (seen.has(base)) return `entry ${i}: duplicate base "${base}"`;
+    seen.add(base);
   }
   return null;
 }
