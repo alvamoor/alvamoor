@@ -1,8 +1,15 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ComponentRef,
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
-import { useTexture } from "@react-three/drei";
+import { OrbitControls, useTexture } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   CanvasTexture,
@@ -86,9 +93,18 @@ const FIT_FILL = 0.7;
 const WALL_COLOR = "#e8e4dc";
 const FLOOR_BASE = "#c9bfae";
 const SKIRTING_COLOR = "#dcd6cb";
+/** A shade off the back wall, so a corner is a corner rather than a seam. */
+const SIDE_WALL_COLOR = "#ded9d0";
+const CEILING_COLOR = "#f1eee8";
 const FIGURE_COLOR = "#9d9587";
 const CHAIR_COLOR = "#8a7f6d";
 const CANVAS_EDGE = "#ddd7c9";
+
+/** Where the side walls stand: outside the default frame, found by turning. */
+const ROOM_HALF_W = 3.6;
+/** A gallery ceiling, and high enough to clear the tallest work hung at 145 to
+ *  centre (2.55 m) with room to spare. */
+const CEILING_H = 3.3;
 
 /** Board pitch. 20 cm boards are a ruler laid on the floor, not just texture. */
 const BOARD_CM = 20;
@@ -172,42 +188,118 @@ function useFloorTexture() {
  * to feel that *they* moved, or the move reads as the painting resizing, which is
  * the one misreading this route cannot afford.
  */
-/** How far the camera leans with the pointer. Small on purpose: 12 cm of sway at
- *  ~5 m changes apparent size by under 3%, so the comparison survives, while motion
- *  parallax is the strongest depth cue available to a flat screen. Leaning is also
- *  what a person actually does in front of a painting. */
-const SWAY_X = 0.12;
-const SWAY_Y = 0.06;
+// Movement limits. The room stays a room: you can walk up to a painting and step
+// back from it, and look at it from either side, but you cannot leave, get behind the
+// wall, or float. Clamped orbit is also what keeps the side walls and ceiling doing
+// their job — they come into view as you turn, which is when a flat backdrop would
+// have given itself away.
+const NEAR_LIMIT = 1.1;
+const FAR_LIMIT = 9;
+/** ±29° of turn: enough to see the canvas edge-on and the room's corner. */
+const AZIMUTH_LIMIT = 0.5;
+const POLAR_MIN = 1.02;
+const POLAR_MAX = 1.72;
 
-function CameraRig({ heightM, fit }: { heightM: number; fit: boolean }) {
-  const { camera, size, pointer } = useThree();
-  const target = useRef(new Vector3());
-  const lookAt = useRef(new Vector3(0, LOOK_AT_Y, 0));
-  const sway = useRef(new Vector3());
-  const swayed = useRef(new Vector3());
-  const placed = useRef(false);
+/** Seconds the move to a named view takes. */
+const VIEW_TWEEN = 0.55;
+
+type View = "room" | "fit";
+
+/**
+ * The camera: placed by us, then driven by you.
+ *
+ * Free movement and an honest scale are not in conflict, as long as the moving is
+ * yours. A camera that silently re-framed each painting would make every work look
+ * the same size, which is the failure this route exists to avoid — but a viewer who
+ * walks closer knows they walked closer. So orbit and dolly are unrestricted within
+ * the room, "room view" returns to the one distance that is constant across every
+ * work, and the metres are on screen the whole time so you always know where you are
+ * standing.
+ *
+ * The tween matters for the same reason it always did: a cut between two distances
+ * reads as the painting changing size. Controls are suspended while it runs so the
+ * two are never fighting for the camera.
+ */
+function CameraRig({
+  heightM,
+  view,
+  onDistance,
+}: {
+  heightM: number;
+  view: View;
+  onDistance: (metres: number) => void;
+}) {
+  const { camera, size } = useThree();
+  // Typed off the component rather than three-stdlib, which is drei's transitive
+  // dependency and not ours to import.
+  const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
+  const goal = useRef(new Vector3());
+  const goalTarget = useRef(new Vector3());
+  const tween = useRef(0);
+  const reported = useRef(-1);
 
   const aspect = size.width / size.height;
-  const distance = fit ? fitDistance(heightM) : roomDistance(aspect);
-  target.current.set(0, fit ? hangCentre(heightM) : EYE, distance);
 
-  if (!placed.current) {
-    placed.current = true;
-    camera.position.copy(target.current);
-  }
+  // Recompute on every view change — and on nothing else. Stepping to another work
+  // deliberately leaves the camera exactly where it is: an unchanged viewpoint is the
+  // whole reason two works can be compared at all.
+  useEffect(() => {
+    const distance =
+      view === "fit" ? fitDistance(heightM) : roomDistance(aspect);
+    const y = view === "fit" ? hangCentre(heightM) : EYE;
+    goal.current.set(0, y, distance);
+    goalTarget.current.set(
+      0,
+      view === "fit" ? hangCentre(heightM) : LOOK_AT_Y,
+      0,
+    );
+    tween.current = VIEW_TWEEN;
+  }, [view, heightM, aspect]);
 
   useFrame((_, delta) => {
-    // The sway is added to the target rather than the camera, so it eases with the
-    // same tween and never fights the view change.
-    swayed.current
-      .copy(target.current)
-      .add(sway.current.set(pointer.x * SWAY_X, pointer.y * SWAY_Y, 0));
-    camera.position.lerp(swayed.current, 1 - Math.exp(-6 * delta));
-    lookAt.current.set(0, fit ? hangCentre(heightM) : LOOK_AT_Y, 0);
-    camera.lookAt(lookAt.current);
+    const orbit = controls.current;
+
+    if (tween.current > 0 && orbit) {
+      tween.current = Math.max(0, tween.current - delta);
+      orbit.enabled = false;
+      const k = 1 - Math.exp(-7 * delta);
+      camera.position.lerp(goal.current, k);
+      orbit.target.lerp(goalTarget.current, k);
+      orbit.update();
+      if (tween.current === 0) orbit.enabled = true;
+    }
+
+    // Reported to the tenth of a metre, and only when it changes, so the readout does
+    // not set React state sixty times a second.
+    const metres =
+      Math.round(
+        camera.position.distanceTo(orbit?.target ?? goalTarget.current) * 10,
+      ) / 10;
+    if (metres !== reported.current) {
+      reported.current = metres;
+      onDistance(metres);
+    }
   });
 
-  return null;
+  return (
+    <OrbitControls
+      ref={controls}
+      // No panning: sliding the camera sideways would take you out of the room and
+      // break the one composition the scene is built around.
+      enablePan={false}
+      enableDamping
+      dampingFactor={0.08}
+      rotateSpeed={0.55}
+      zoomSpeed={0.7}
+      minDistance={NEAR_LIMIT}
+      maxDistance={FAR_LIMIT}
+      minAzimuthAngle={-AZIMUTH_LIMIT}
+      maxAzimuthAngle={AZIMUTH_LIMIT}
+      minPolarAngle={POLAR_MIN}
+      maxPolarAngle={POLAR_MAX}
+      target={[0, LOOK_AT_Y, 0]}
+    />
+  );
 }
 
 /**
@@ -351,12 +443,37 @@ function Room() {
 
   return (
     <>
-      {/* Both are far larger than the frame shows, so no edge of the room is ever
-          visible — an edge reads as a panel, and a panel has no size. */}
+      {/* Back wall. Larger than the frame shows, so its edges are never the thing you
+          notice — an edge reads as a panel, and a panel has no size. */}
       <mesh position={[0, 4, 0]} receiveShadow>
         <planeGeometry args={[FLOOR_W, 8]} />
         <meshStandardMaterial color={WALL_COLOR} roughness={0.95} />
       </mesh>
+
+      {/* Side walls and a ceiling, just outside the default frame. They cost two
+          planes and a third, and they are what turns a backdrop into a room the moment
+          you turn or look up: the corners give perspective two more converging lines,
+          and the ceiling closes the space so the wall stops reading as a flat card
+          standing in the open. */}
+      {[-1, 1].map((side) => (
+        <mesh
+          key={side}
+          rotation={[0, (side * -Math.PI) / 2, 0]}
+          position={[side * ROOM_HALF_W, 4, FLOOR_D / 2]}
+          receiveShadow
+        >
+          <planeGeometry args={[FLOOR_D, 8]} />
+          <meshStandardMaterial color={SIDE_WALL_COLOR} roughness={0.95} />
+        </mesh>
+      ))}
+      <mesh
+        rotation={[Math.PI / 2, 0, 0]}
+        position={[0, CEILING_H, FLOOR_D / 2]}
+      >
+        <planeGeometry args={[ROOM_HALF_W * 2, FLOOR_D]} />
+        <meshStandardMaterial color={CEILING_COLOR} roughness={1} />
+      </mesh>
+
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
         position={[0, 0, FLOOR_D / 2]}
@@ -365,8 +482,9 @@ function Room() {
         <planeGeometry args={[FLOOR_W, FLOOR_D]} />
         <meshStandardMaterial map={floor} color={FLOOR_BASE} roughness={0.75} />
       </mesh>
-      {/* Skirting. A 10 cm datum along the junction the whole composition hangs
-          from, and it turns that junction from a colour change into an edge. */}
+
+      {/* Skirting. A 10 cm datum along the junction the whole composition hangs from,
+          and it turns that junction from a colour change into an edge. */}
       <mesh position={[0, 0.05, 0.012]} receiveShadow castShadow>
         <boxGeometry args={[FLOOR_W, 0.1, 0.024]} />
         <meshStandardMaterial color={SKIRTING_COLOR} roughness={0.85} />
@@ -382,7 +500,11 @@ export default function Showroom({
   work: ShowroomWork;
   preload?: string[];
 }) {
-  const [fit, setFit] = useState(false);
+  const [view, setView] = useState<View>("room");
+  // Metres from the camera to what it is looking at, reported up from the rig. On
+  // screen the whole time: once you can move, the only thing that keeps the scale
+  // honest is knowing where you are standing.
+  const [metres, setMetres] = useState<number | null>(null);
 
   // Fetch the neighbouring works' textures now, so stepping to one swaps the painting
   // instead of showing an empty wall while an image downloads. drei keeps a cache
@@ -446,23 +568,33 @@ export default function Showroom({
         <Suspense fallback={null}>
           <Painting work={work} />
         </Suspense>
-        <CameraRig heightM={h} fit={fit} />
+        <CameraRig heightM={h} view={view} onDistance={setMetres} />
       </Canvas>
 
-      <button
-        type="button"
-        className={styles.distance}
-        onClick={() => setFit((v) => !v)}
-        // Said plainly, because the two views mean different things: one is
-        // comparable between works and one is not.
-        aria-label={
-          fit
-            ? "Return to the room view, where every work is seen from the same distance"
-            : "Move closer to fill the frame with this work"
-        }
-      >
-        {fit ? "room view" : "fit to work"}
-      </button>
+      <div className={styles.viewControls}>
+        {/* Where you are standing. Drag to look, scroll or pinch to walk in and out —
+            and this is the number that stops that freedom from quietly undoing the
+            comparison, because the room view is one fixed distance for every work. */}
+        {metres !== null && (
+          <span className={styles.metres} aria-live="off">
+            {metres.toFixed(1)} m
+          </span>
+        )}
+        <button
+          type="button"
+          className={styles.distance}
+          onClick={() => setView((v) => (v === "fit" ? "room" : "fit"))}
+          // Said plainly, because the two views mean different things: one is
+          // comparable between works and one is not.
+          aria-label={
+            view === "fit"
+              ? "Return to the room view, where every work is seen from the same distance"
+              : "Move closer to fill the frame with this work"
+          }
+        >
+          {view === "fit" ? "room view" : "fit to work"}
+        </button>
+      </div>
     </>
   );
 }

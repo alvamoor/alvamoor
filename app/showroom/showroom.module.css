@@ -88,11 +88,33 @@
   color: color-mix(in srgb, #14110d 62%, transparent);
 }
 
-/* Opposite corner from the panel, so the two never collide on a narrow screen. */
-.distance {
+/* Opposite corner from the panel, so the two never collide on a narrow screen. The
+   metre readout rides with the view toggle because they are the same subject: where
+   you are standing, and how to get back to the distance that is the same for every
+   work. */
+.viewControls {
   position: fixed;
   bottom: var(--pad-y);
   right: var(--pad-x);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 2;
+}
+
+.metres {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, #14110d 70%, transparent);
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.distance {
   font-size: 0.8125rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -104,7 +126,6 @@
   cursor: pointer;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  z-index: 2;
   transition: background 180ms ease;
 }
 
