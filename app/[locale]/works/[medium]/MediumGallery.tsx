@@ -14,6 +14,7 @@ type Labels = {
   available: string;
   prev: string;
   next: string;
+  back: string;
 };
 
 type Props = {
@@ -154,77 +155,89 @@ export default function MediumGallery({
   // data-view is the hook the shell watches to lock itself to the viewport for
   // this one view — see shell.module.css.
   return (
-    <div className={styles.scrollerWrap} data-view="scroller">
-      {hasPrev && (
-        <button
-          type="button"
-          className={`${styles.navArrow} ${styles.navArrowLeft}`}
-          onClick={() => scrollByDir(-1)}
-          aria-label={labels.prev}
-        >
-          ‹
-        </button>
-      )}
+    <>
+      {/* The single-work view's stand-in for the section nav. It lives here, not
+          in the page, because next-intl's Link reads a header when rendered on
+          the server — see MediumNav. Still a sibling of the scroller, so the
+          flex chain the locked view depends on is unchanged. */}
+      <Link href={`/works/${medium}`} className={styles.back} scroll={false}>
+        {labels.back}
+      </Link>
 
-      <div className={styles.works} data-medium={medium} ref={scrollerRef}>
-        {works.map((a, i) => (
+      <div className={styles.scrollerWrap} data-view="scroller">
+        {hasPrev && (
           <button
-            key={a.id}
             type="button"
-            className={styles.work}
-            onClick={() => toggle(a.id)}
-            aria-pressed={openId === a.id}
+            className={`${styles.navArrow} ${styles.navArrowLeft}`}
+            onClick={() => scrollByDir(-1)}
+            aria-label={labels.prev}
           >
-            <span className={styles.frame}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                ref={openId === a.id ? openImgRef : null}
-                className={styles.image}
-                src={a.src}
-                srcSet={a.webpSrcSet}
-                sizes="100vw"
-                alt={a.title[locale]}
-                loading={Math.abs(i - current) <= 1 ? "eager" : "lazy"}
-                fetchPriority={i === current ? "high" : "auto"}
-                decoding="async"
-              />
-              {openId === a.id && imageBox && (
-                <span
-                  className={styles.caption}
-                  style={{
-                    width: imageBox.w,
-                    maxHeight: imageBox.h,
-                    top: `calc(50% + ${imageBox.h / 2}px)`,
-                    left: "50%",
-                  }}
-                >
-                  <span className={styles.captionTitle}>{a.title[locale]}</span>
-                  {a.description?.[locale] && (
-                    <span className={styles.captionDescription}>
-                      {a.description[locale]}
-                    </span>
-                  )}
-                  <span className={styles.captionSpec}>
-                    {a.mediumLabel[locale]} · {a.widthCm} × {a.heightCm} cm ·{" "}
-                    {a.year}
-                  </span>
-                </span>
-              )}
-            </span>
+            ‹
           </button>
-        ))}
-      </div>
+        )}
 
-      {hasNext && (
-        <button
-          type="button"
-          className={`${styles.navArrow} ${styles.navArrowRight}`}
-          onClick={() => scrollByDir(1)}
-          aria-label={labels.next}
-        >
-          ›
-        </button>
-      )}
-    </div>
+        <div className={styles.works} data-medium={medium} ref={scrollerRef}>
+          {works.map((a, i) => (
+            <button
+              key={a.id}
+              type="button"
+              className={styles.work}
+              onClick={() => toggle(a.id)}
+              aria-pressed={openId === a.id}
+            >
+              <span className={styles.frame}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  ref={openId === a.id ? openImgRef : null}
+                  className={styles.image}
+                  src={a.src}
+                  srcSet={a.webpSrcSet}
+                  sizes="100vw"
+                  alt={a.title[locale]}
+                  loading={Math.abs(i - current) <= 1 ? "eager" : "lazy"}
+                  fetchPriority={i === current ? "high" : "auto"}
+                  decoding="async"
+                />
+                {openId === a.id && imageBox && (
+                  <span
+                    className={styles.caption}
+                    style={{
+                      width: imageBox.w,
+                      maxHeight: imageBox.h,
+                      top: `calc(50% + ${imageBox.h / 2}px)`,
+                      left: "50%",
+                    }}
+                  >
+                    <span className={styles.captionTitle}>
+                      {a.title[locale]}
+                    </span>
+                    {a.description?.[locale] && (
+                      <span className={styles.captionDescription}>
+                        {a.description[locale]}
+                      </span>
+                    )}
+                    <span className={styles.captionSpec}>
+                      {a.mediumLabel[locale]} · {a.widthCm} × {a.heightCm} cm ·{" "}
+                      {a.year}
+                    </span>
+                  </span>
+                )}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {hasNext && (
+          <button
+            type="button"
+            className={`${styles.navArrow} ${styles.navArrowRight}`}
+            onClick={() => scrollByDir(1)}
+            aria-label={labels.next}
+          >
+            ›
+          </button>
+        )}
+      </div>
+    </>
   );
 }

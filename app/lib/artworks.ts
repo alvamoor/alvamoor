@@ -5,7 +5,9 @@
 // add a manifest entry + run scripts/sync-manifest.mjs — no code change.
 // See docs/r2-image-migration.md.
 
-export type Medium = "paper" | "canvas";
+export const MEDIA = ["paper", "canvas"] as const;
+
+export type Medium = (typeof MEDIA)[number];
 
 type LocalizedText = { en: string; de: string };
 
@@ -127,5 +129,5 @@ export async function getByMedium(medium: Medium): Promise<Artwork[]> {
 }
 
 export function isMedium(value: string | undefined): value is Medium {
-  return value === "paper" || value === "canvas";
+  return MEDIA.some((m) => m === value);
 }

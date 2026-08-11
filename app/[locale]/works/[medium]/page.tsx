@@ -2,13 +2,26 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
-import { getByMedium, isMedium } from "@/app/lib/artworks";
+import { MEDIA, getByMedium, isMedium } from "@/app/lib/artworks";
 import type { Locale } from "@/i18n/routing";
 import { routing } from "@/i18n/routing";
 
 import MediumNav from "../MediumNav";
 import { WorksHeading } from "../WorksHeading";
 import MediumGallery from "./MediumGallery";
+
+// Prerendered, then revalidated every 60s. That window is what keeps "add a work,
+// no redeploy" true: the build bakes whatever R2 held at the time, and the first
+// request after a minute picks up anything added since. (If the bucket were
+// unreachable during a build the gallery would ship empty, and repair itself the
+// same way.)
+export const revalidate = 60;
+
+// The two media are compile-time constants. This runs once per locale the parent
+// layout generates, so it yields four pages.
+export function generateStaticParams() {
+  return MEDIA.map((medium) => ({ medium }));
+}
 
 export async function generateMetadata({
   params,
@@ -64,6 +77,7 @@ export default async function MediumPage({
           available: t("available"),
           prev: t("prev"),
           next: t("next"),
+          back: t("back"),
         }}
       />
     </>

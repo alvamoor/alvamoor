@@ -3,13 +3,28 @@ import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { getByMedium, isMedium } from "@/app/lib/artworks";
-import { Link, redirect } from "@/i18n/navigation";
+import { redirect } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { routing } from "@/i18n/routing";
 
 import { WorksHeading } from "../../WorksHeading";
-import styles from "../../works.module.css";
 import MediumGallery from "../MediumGallery";
+
+// Nothing is enumerated here, unlike the gallery one level up: how many works
+// exist is a property of the R2 manifest at request time, not of the build, so a
+// work added today should be linkable without a redeploy.
+//
+// The empty array is doing real work all the same, and `revalidate` below is a
+// no-op without it. Omit generateStaticParams entirely and Next classifies the
+// route as dynamic — it never enters the prerender manifest, so every request
+// re-renders and nothing is stored. Returning no params instead puts the route in
+// the manifest with a blocking fallback: the first request for an index renders it,
+// the result is cached, and the window below applies from there.
+export const revalidate = 60;
+
+export function generateStaticParams() {
+  return [];
+}
 
 /** The index as a non-negative integer, or null if the segment is not one. */
 function parseIndex(index: string): number | null {
@@ -80,11 +95,6 @@ export default async function WorkPage({
     <>
       <WorksHeading locale={locale} medium={medium} />
 
-      {/* Stands in for the section nav in this view — same row, same size. */}
-      <Link href={`/works/${medium}`} className={styles.back} scroll={false}>
-        {t("back")}
-      </Link>
-
       <MediumGallery
         works={works}
         locale={locale}
@@ -95,6 +105,7 @@ export default async function WorkPage({
           available: t("available"),
           prev: t("prev"),
           next: t("next"),
+          back: t("back"),
         }}
       />
     </>
