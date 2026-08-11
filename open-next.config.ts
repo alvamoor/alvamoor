@@ -24,11 +24,25 @@
 // hint about a fetch. Time-based ISR re-renders through the queue, so with the
 // queue left at "dummy" the stale page would be served and the re-render dropped:
 // the page would sit frozen until the next deploy, and the "add a work, no
-// redeploy" promise those routes document would quietly be false. The durable
-// object does the background re-render and dedupes concurrent requests for the
-// same path; withQueueCache drops repeat messages a few seconds apart before they
-// reach it. Both the DO binding and the WORKER_SELF_REFERENCE it re-enters the
-// Worker through are in wrangler.jsonc.
+// redeploy" promise those routes document would quietly be false.
+//
+// The memory queue re-enters the Worker through the WORKER_SELF_REFERENCE service
+// binding (wrangler.jsonc) and asks it to re-render the stale path. It is the
+// second queue tried here. The durable-object queue is the better of the two —
+// global dedupe, retries on an alarm, a SQLite record of what it has already
+// done — but it cannot be introduced through this repo's CI. Cloudflare Workers
+// Builds uploads a non-production branch as a *version*, and a version upload
+// refuses any Worker carrying a Durable Object migration: "migrations must be
+// fully applied via a non-versioned deployment" (API error 10211). So every PR that
+// adds a DO fails its own build, whatever the code says. The way back to it is to
+// apply the migration once from a plain `wrangler deploy` and only then reintroduce
+// the binding — worth doing if ISR ever revalidates often enough for duplicate
+// re-renders to matter. It does not, yet.
+//
+// What is given up is exact dedupe: the memory queue remembers in-isolate, so two
+// isolates can both re-render the same path. withQueueCache narrows that, checking
+// a colo-local Cache API entry before a message goes through — and a duplicate
+// re-render is wasted work, not a wrong page.
 //
 // enableCacheInterception serves an already-cached page from the cache without
 // booting NextServer or loading the route's JavaScript at all. It is off by
@@ -38,13 +52,13 @@
 import { defineCloudflareConfig } from "@opennextjs/cloudflare/config";
 import kvIncrementalCache from "@opennextjs/cloudflare/overrides/incremental-cache/kv-incremental-cache";
 import { withRegionalCache } from "@opennextjs/cloudflare/overrides/incremental-cache/regional-cache";
-import doQueue from "@opennextjs/cloudflare/overrides/queue/do-queue";
+import memoryQueue from "@opennextjs/cloudflare/overrides/queue/memory-queue";
 import withQueueCache from "@opennextjs/cloudflare/overrides/queue/queue-cache";
 
 export default defineCloudflareConfig({
   incrementalCache: withRegionalCache(kvIncrementalCache, {
     mode: "long-lived",
   }),
-  queue: withQueueCache(doQueue),
+  queue: withQueueCache(memoryQueue),
   enableCacheInterception: true,
 });
