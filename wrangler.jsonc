@@ -24,6 +24,40 @@
       "id": "e7199810cbbc4587a607e8762b13c629",
     },
   ],
+  // The ISR revalidation queue (see open-next.config.ts). Both of these are
+  // OpenNext's names, not ours, and the queue needs both: the durable object is
+  // where the background re-render is scheduled and deduped, and it re-enters this
+  // same Worker through the service binding to perform it. DOQueueHandler is
+  // exported by the generated .open-next/worker.js, so it only exists after a
+  // build — `wrangler dev` against a stale .open-next will not find the class.
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "NEXT_CACHE_DO_QUEUE",
+        "class_name": "DOQueueHandler",
+      },
+    ],
+  },
+  // SQLite-backed, which is what the free plan allows and what DOQueueHandler
+  // expects: it keeps a small table of last-revalidated times so a re-render that
+  // has already happened is not repeated.
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["DOQueueHandler"],
+    },
+  ],
+  // A service binding reaches the Worker directly, so it is not behind Cloudflare
+  // Access the way the custom domain is. That is not a way into /admin: the admin
+  // API validates the Access JWT in the Worker itself and fails closed without it,
+  // and what arrives here is a HEAD for one ISR path carrying
+  // x-prerender-revalidate.
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "alvamoor",
+    },
+  ],
   // Cloudflare Access settings for /admin auth are set as Worker secrets, not
   // vars (see docs/r2-image-migration.md):
   //   pnpm dlx wrangler secret put CF_ACCESS_TEAM_DOMAIN   # <team>.cloudflareaccess.com
