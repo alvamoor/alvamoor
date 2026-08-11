@@ -90,13 +90,18 @@ const DISTANCE_MIN = 1.2;
 /** Share of frame height the work fills in the fit view. */
 const FIT_FILL = 0.7;
 
-const WALL_COLOR = "#e8e4dc";
-const FLOOR_BASE = "#c9bfae";
-const SKIRTING_COLOR = "#dcd6cb";
+// Gallery white — but a shade under paper-white on purpose. A wall painted to render
+// at full brightness everywhere has nowhere left to go when the lighting hits it, and
+// reads as a flat card. Left slightly down, the wash from the ceiling spots is what
+// lifts it to white where the work hangs, which is what a lit gallery wall looks like.
+const WALL_COLOR = "#eceae7";
+const FLOOR_BASE = "#d6cebf";
+/** White skirting, painted with the wall, as galleries do it. */
+const SKIRTING_COLOR = "#f6f5f2";
 /** A shade off the back wall, so a corner is a corner rather than a seam. */
-const SIDE_WALL_COLOR = "#ded9d0";
-const CEILING_COLOR = "#f1eee8";
-const FRAME_COLOR = "#f4f1ea";
+const SIDE_WALL_COLOR = "#e7e5e1";
+const CEILING_COLOR = "#fbfaf8";
+const FRAME_COLOR = "#f8f7f4";
 const POT_COLOR = "#b0705a";
 const SOIL_COLOR = "#42352a";
 const LEAF_COLOR = "#6d8a62";
@@ -118,6 +123,13 @@ const WINDOW_Z = 0.8;
 const FIGURE_COLOR = "#9d9587";
 const CHAIR_COLOR = "#8a7f6d";
 const CANVAS_EDGE = "#ddd7c9";
+
+// Ceiling track and three spot heads, raked at the wall. They are the reason the room
+// is lit the way it is, and having the fittings visible is a large part of why a space
+// reads as a gallery rather than as a room with a picture in it.
+const TRACK_Y = 3.18;
+const TRACK_Z = 1.45;
+const SPOT_XS = [-1.75, 0, 1.75];
 
 /** Where the side walls stand: outside the default frame, found by turning. */
 const ROOM_HALF_W = 3.6;
@@ -181,10 +193,10 @@ function useFloorTexture() {
         // Deterministic per-board tone: real floors are not one colour, and the
         // variation is what stops the repeat reading as wallpaper.
         const t = ((i * 37) % 11) / 11;
-        const l = 74 + t * 8;
+        const l = 79 + t * 7;
         g.fillStyle = `hsl(38 14% ${l}%)`;
         g.fillRect(i * bw, 0, bw, PX);
-        g.strokeStyle = "rgba(60, 48, 34, 0.22)";
+        g.strokeStyle = "rgba(70, 58, 44, 0.16)";
         g.lineWidth = 1.5;
         g.beginPath();
         g.moveTo(i * bw + 0.75, 0);
@@ -218,8 +230,18 @@ const FAR_LIMIT = 9;
  *  in the side wall. At ±29° the window was reachable only as a sliver at the frame
  *  edge — present in the room and not really visible in it. */
 const AZIMUTH_LIMIT = 0.62;
-const POLAR_MIN = 1.02;
-const POLAR_MAX = 1.72;
+// Polar angle is measured from straight up, so these read backwards from instinct and I
+// had them backwards at first: a *smaller* angle lifts the camera and tilts the view
+// DOWN, a larger one drops it and tilts UP. Hence min is how far you may rise, max how
+// far you may crouch.
+//
+// The crouch is what reaches the ceiling track, and it has to be a real crouch: the
+// track sits ~30° above the eye while the frame's top edge only covers 19°, so seeing
+// it means getting low. That is fair enough — in a gallery you tilt your head to find
+// the lights too — and the lighting is legible without it, from the wash on the wall and
+// from shadows that pool at people's feet instead of streaking sideways.
+const POLAR_MIN = 1.3;
+const POLAR_MAX = 1.78;
 
 /** Seconds the move to a named view takes. */
 const VIEW_TWEEN = 0.55;
@@ -264,6 +286,44 @@ function useSkyTexture() {
 }
 
 /**
+ * The pool of light ceiling spots throw down a gallery wall: brightest high and behind
+ * the work, falling away at the edges.
+ *
+ * This is what actually communicates "lit from above". The direction of a light is
+ * almost impossible to read off a flat matte wall — what you read is the gradient it
+ * leaves. Additive over a wall painted slightly under white, so the lit area arrives
+ * at white and the corners stay a shade down, which is the whole look.
+ */
+function useWallWashTexture() {
+  return useMemo(() => {
+    const S = 256;
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = S;
+    const g = canvas.getContext("2d");
+    if (g) {
+      // Centred high: the spots are above and in front, so the brightest band sits
+      // above the painting rather than behind its middle.
+      const glow = g.createRadialGradient(
+        S / 2,
+        S * 0.3,
+        0,
+        S / 2,
+        S * 0.3,
+        S * 0.62,
+      );
+      glow.addColorStop(0, "rgba(255, 255, 252, 0.72)");
+      glow.addColorStop(0.5, "rgba(255, 255, 250, 0.34)");
+      glow.addColorStop(1, "rgba(255, 255, 250, 0)");
+      g.fillStyle = glow;
+      g.fillRect(0, 0, S, S);
+    }
+    const texture = new CanvasTexture(canvas);
+    texture.colorSpace = SRGBColorSpace;
+    return texture;
+  }, []);
+}
+
+/**
  * The patch of daylight a window throws on the floor — soft-edged, so it lies on the
  * boards rather than sitting on them like a decal.
  *
@@ -279,9 +339,9 @@ function useSunTexture() {
     const g = canvas.getContext("2d");
     if (g) {
       const glow = g.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2);
-      glow.addColorStop(0, "rgba(255, 250, 234, 0.8)");
-      glow.addColorStop(0.55, "rgba(255, 248, 228, 0.42)");
-      glow.addColorStop(1, "rgba(255, 245, 222, 0)");
+      glow.addColorStop(0, "rgba(252, 253, 255, 0.6)");
+      glow.addColorStop(0.55, "rgba(250, 252, 255, 0.3)");
+      glow.addColorStop(1, "rgba(250, 252, 255, 0)");
       g.fillStyle = glow;
       g.fillRect(0, 0, S, S);
     }
@@ -677,6 +737,58 @@ function Plant({ x }: { x: number }) {
   );
 }
 
+/**
+ * The ceiling track and its heads, aimed at the wall.
+ *
+ * Raked rather than pointing straight down, for the same reason real galleries rake
+ * theirs: a wall's normal is horizontal, so a light directly overhead barely touches
+ * it. Straight down would leave the painting darker than the floor.
+ */
+function TrackLights() {
+  return (
+    <group position={[0, TRACK_Y, TRACK_Z]}>
+      <mesh>
+        <boxGeometry args={[5.4, 0.05, 0.06]} />
+        <meshStandardMaterial color="#3c3a36" roughness={0.6} metalness={0.2} />
+      </mesh>
+      {SPOT_XS.map((x) => (
+        <group key={x} position={[x, -0.1, 0]} rotation={[-0.62, 0, 0]}>
+          {/* Stem, then a barrel pointing where the light goes. */}
+          <mesh position={[0, 0.06, 0]}>
+            <cylinderGeometry args={[0.014, 0.014, 0.12, 10]} />
+            <meshStandardMaterial color="#3c3a36" roughness={0.6} />
+          </mesh>
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.055, 0.07, 0.17, 16]} />
+            <meshStandardMaterial
+              color="#35332f"
+              roughness={0.55}
+              metalness={0.25}
+            />
+          </mesh>
+          {/* The lens, lit so the fitting looks switched on. */}
+          <mesh position={[0, 0, 0.088]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.05, 0.05, 0.004, 16]} />
+            <meshBasicMaterial color="#fff8e6" />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+
+/** The light the spots leave on the wall. Sits just proud of it, under the painting. */
+function WallWash() {
+  const wash = useWallWashTexture();
+
+  return (
+    <mesh position={[0, 1.95, 0.004]}>
+      <planeGeometry args={[5.6, 3.4]} />
+      <meshBasicMaterial map={wash} transparent depthWrite={false} />
+    </mesh>
+  );
+}
+
 function Room() {
   const floor = useFloorTexture();
 
@@ -722,6 +834,8 @@ function Room() {
         <meshStandardMaterial map={floor} color={FLOOR_BASE} roughness={0.75} />
       </mesh>
 
+      <WallWash />
+      <TrackLights />
       <Window />
 
       {/* Skirting. A 10 cm datum along the junction the whole composition hangs from,
@@ -769,34 +883,36 @@ export default function Showroom({
       >
         <color attach="background" args={[WALL_COLOR]} />
 
-        {/* These look high next to pre-r155 three.js examples and have to be. Lights
-            are physically based by default now, so a Lambertian surface reflects
-            irradiance/π — which is the whole story of why this room started out
-            gloomy. The wall faces +Z and the key light arrives at cos θ ≈ 0.6, so
-            reflected luminance ≈ albedo × (ambient + 0.6 × key) / π. At 0.42 / 0.85
-            that is 0.29 — a #e8e4dc wall rendering near #989790. Doubling both
-            barely moved it, because the fix is not "more" but solving for
-            ambient + 0.6 × key ≈ π.
+        {/* Overhead now, and raked at the wall rather than aimed at the floor. A wall's
+            normal is horizontal, so a light straight above it contributes almost
+            nothing: point these down and the painting ends up darker than the boards.
+            From [0.9, 5.4, 2.9] the wall still sees cos θ ≈ 0.58 while the shadows fall
+            downward and back, which is the difference you actually notice — bodies
+            planted on the floor instead of pinned to the wall.
 
-            Holding ambient at roughly half the key keeps shadow contrast where it
-            was while the pair scale. One casting light, from front-left: a single
-            clear shadow direction reads better than several soft ones fighting. */}
-        <ambientLight intensity={1.4} />
+            Intensities look high next to pre-r155 three.js examples and have to be:
+            lights are physically based by default, so a Lambertian surface reflects
+            irradiance/π. Reflected luminance ≈ albedo × (ambient + 0.58 × key) / π, so
+            white walls want ambient + 0.58 × key ≈ π — not "more light" but that
+            equation. Ambient at roughly half the key keeps shadow contrast steady as
+            the pair scale. */}
+        <ambientLight intensity={1.45} />
         <directionalLight
-          position={[2.6, 4.2, 3.6]}
-          intensity={2.85}
+          position={[0.9, 5.4, 2.9]}
+          intensity={2.9}
           castShadow
           shadow-mapSize={[2048, 2048]}
           shadow-camera-left={-6}
           shadow-camera-right={6}
-          shadow-camera-top={6}
-          shadow-camera-bottom={-2}
+          shadow-camera-top={7}
+          shadow-camera-bottom={-3}
           shadow-camera-near={0.5}
-          shadow-camera-far={20}
+          shadow-camera-far={22}
           shadow-bias={-0.0008}
         />
-        {/* Fill from the other side, uncast, so the shadowed faces do not go dead. */}
-        <directionalLight position={[-3, 2.5, 2]} intensity={0.6} />
+        {/* Fill from high on the other side, uncast, so the shadowed faces do not go
+            dead and the single shadow direction stays single. */}
+        <directionalLight position={[-2.4, 4.4, 1.8]} intensity={0.55} />
 
         <Room />
         <SunPatch />
