@@ -29,6 +29,28 @@ export function generateStaticParams() {
 const FIGURE_CM = 175;
 
 /**
+ * A cache key of the showroom's own, appended to every texture URL.
+ *
+ * Not a cache-buster. The bucket does send `Access-Control-Allow-Origin` now, and R2
+ * sends `Vary: Origin` with it — but Cloudflare's edge does not vary on that header,
+ * so one cached copy answers every request. Whichever request populates it decides
+ * what everyone gets: a plain `<img>` on the works grid sends no `Origin`, R2
+ * correctly answers with no CORS headers, and that response is then served to the
+ * browser too — where WebGL refuses it, on a 200. Observed exactly that, on an entry
+ * created after the policy was applied, while sibling images worked.
+ *
+ * Suffixing the URL gives textures a cache entry no non-CORS request ever touches:
+ * three.js always sets crossOrigin, so this key can only ever be populated by a
+ * request carrying an `Origin`, and therefore always holds a CORS-clean copy. It
+ * costs one extra cached variant per work actually viewed in here.
+ *
+ * The cleaner fix is a Cloudflare Transform Rule on img.alvamoor.com setting
+ * `Access-Control-Allow-Origin: *` unconditionally, so there is only one variant and
+ * it is always usable. That needs zone config rather than code; this holds without it.
+ */
+const TEXTURE_KEY = "tex=1";
+
+/**
  * Where a work of this height reaches on the 175 cm figure standing beside it.
  *
  * This sentence is not decoration. A canvas conveys nothing to a screen reader, so
@@ -106,7 +128,7 @@ export default async function ShowroomPage({ params }: { params: Params }) {
 
       <SceneFrame
         work={{
-          src: work.src,
+          src: `${work.src}?${TEXTURE_KEY}`,
           widthCm: work.widthCm,
           heightCm: work.heightCm,
           title: work.title.en,
