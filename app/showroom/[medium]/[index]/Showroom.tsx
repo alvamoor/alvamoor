@@ -12,7 +12,9 @@ import {
 import { OrbitControls, useTexture } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
+  AdditiveBlending,
   CanvasTexture,
+  DoubleSide,
   NoToneMapping,
   RepeatWrapping,
   SRGBColorSpace,
@@ -130,6 +132,16 @@ const CANVAS_EDGE = "#ddd7c9";
 const TRACK_Y = 3.18;
 const TRACK_Z = 1.45;
 const SPOT_XS = [-1.75, 0, 1.75];
+
+// The rake, measured from straight down, and the single number the fittings, the beams
+// and the pools on the wall are all derived from. Set independently they drifted apart
+// immediately — the wash sat centred at x = 0 while the lamps making it hung at ±1.75,
+// so the light on the wall belonged to nothing in the room.
+const SPOT_RAKE = 0.775;
+/** Rotation that points a head down and at the wall (local +Z becomes the beam). */
+const SPOT_ROT_X = Math.PI - SPOT_RAKE;
+/** Where a beam meets the wall: the drop over the run out from it. */
+const WASH_Y = TRACK_Y - TRACK_Z / Math.tan(SPOT_RAKE);
 
 /** Where the side walls stand: outside the default frame, found by turning. */
 const ROOM_HALF_W = 3.6;
@@ -752,7 +764,7 @@ function TrackLights() {
         <meshStandardMaterial color="#3c3a36" roughness={0.6} metalness={0.2} />
       </mesh>
       {SPOT_XS.map((x) => (
-        <group key={x} position={[x, -0.1, 0]} rotation={[-0.62, 0, 0]}>
+        <group key={x} position={[x, -0.1, 0]} rotation={[SPOT_ROT_X, 0, 0]}>
           {/* Stem, then a barrel pointing where the light goes. */}
           <mesh position={[0, 0.06, 0]}>
             <cylinderGeometry args={[0.014, 0.014, 0.12, 10]} />
@@ -771,21 +783,57 @@ function TrackLights() {
             <cylinderGeometry args={[0.05, 0.05, 0.004, 16]} />
             <meshBasicMaterial color="#fff8e6" />
           </mesh>
+
+          {/* A halo at the lens rather than a beam down to the wall.
+              A visible cone was the obvious thing to try and cannot work here: it is
+              aimed at the wall the painting hangs on, so it crosses in front of the
+              work — and nothing fixes that, because the beam really is between the
+              viewer and the picture. Depth tricks do not help; only not drawing it
+              does. The light gets to announce itself at the fitting and in the pool it
+              lands in, and the painting stays unveiled. */}
+          <mesh position={[0, 0, 0.094]} rotation={[-Math.PI / 2, 0, 0]}>
+            <circleGeometry args={[0.115, 20]} />
+            <meshBasicMaterial
+              color="#fff4d4"
+              transparent
+              opacity={0.5}
+              blending={AdditiveBlending}
+              depthWrite={false}
+              side={DoubleSide}
+            />
+          </mesh>
         </group>
       ))}
     </group>
   );
 }
 
-/** The light the spots leave on the wall. Sits just proud of it, under the painting. */
-function WallWash() {
+/**
+ * What the spots leave on the wall: one pool per head, where that head is actually
+ * pointing.
+ *
+ * Overlapping, so they read as a continuously lit wall with three bright centres —
+ * which is what track lighting looks like, and what a single centred gradient could
+ * never be. Additive over a wall painted a shade under white, so the lit band arrives
+ * at white while the corners stay down.
+ */
+function WallPools() {
   const wash = useWallWashTexture();
 
   return (
-    <mesh position={[0, 1.95, 0.004]}>
-      <planeGeometry args={[5.6, 3.4]} />
-      <meshBasicMaterial map={wash} transparent depthWrite={false} />
-    </mesh>
+    <>
+      {SPOT_XS.map((x) => (
+        <mesh key={x} position={[x, WASH_Y, 0.004]}>
+          <planeGeometry args={[2.9, 3.2]} />
+          <meshBasicMaterial
+            map={wash}
+            transparent
+            blending={AdditiveBlending}
+            depthWrite={false}
+          />
+        </mesh>
+      ))}
+    </>
   );
 }
 
@@ -834,7 +882,7 @@ function Room() {
         <meshStandardMaterial map={floor} color={FLOOR_BASE} roughness={0.75} />
       </mesh>
 
-      <WallWash />
+      <WallPools />
       <TrackLights />
       <Window />
 
