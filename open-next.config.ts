@@ -13,9 +13,23 @@
 //
 // withRegionalCache puts a colo-local layer in front using the Cache API. In
 // "long-lived" mode an entry is held for its own `revalidate` — 60s for our pages
-// — so repeat renders in the same colo do not reach KV. It also refreshes itself
-// from KV in the background on a hit, which is what keeps KV's eventual
-// consistency from being visible for longer than one request.
+// — so repeat renders in the same colo do not reach KV.
+//
+// shouldLazilyUpdateOnCacheHit is why this override defaulted to costing one KV
+// read per request rather than saving any. Left unset on Next >= 16 it resolves to
+// `!bypassTagCacheOnCacheHit`, i.e. true, and then every regional cache *hit* still
+// does `waitUntil(store.get(...))` to refresh itself from KV. Reads therefore
+// tracked request count, not miss count, and on 2026-08-11 that crossed the Free
+// plan's 100k GETs/day: KV returned 429 for the rest of the day. Nothing broke
+// visibly, because a failed get is caught and returned as null — a cache miss — so
+// the site just quietly went back to rendering and re-fetching R2 every view.
+//
+// Turning it off gives up refreshing a colo early: an entry now lives for its full
+// `revalidate` before that colo consults KV again. For the works routes that is the
+// 60s those pages already promise. For the root layout it is 86400, so the footer
+// year (app/[locale]/layout.tsx) can lag a colo behind KV by up to a day on top of
+// KV's own day — a once-a-year, ~48h worst case, against a quota that was taking
+// the whole site down.
 //
 // queue is what the multiple-root-layout restructure made necessary. Pages used to
 // render dynamically no matter what, because app/layout.tsx read a header via
@@ -58,6 +72,7 @@ import withQueueCache from "@opennextjs/cloudflare/overrides/queue/queue-cache";
 export default defineCloudflareConfig({
   incrementalCache: withRegionalCache(kvIncrementalCache, {
     mode: "long-lived",
+    shouldLazilyUpdateOnCacheHit: false,
   }),
   queue: withQueueCache(memoryQueue),
   enableCacheInterception: true,
