@@ -94,6 +94,43 @@ html[data-scroll="down"] .mediumNav {
   }
 }
 
+/* The way into /showroom, in the same row as .back and reading in the same tone —
+   it is the other end of the same band, not a call to action. Mirrors .back's
+   desktop lift so the two sit level; on mobile both stay in flow, .back left and
+   this right, sharing one line.
+
+   Underlined because, unlike .back, it leaves the localized site for a route with
+   its own document — worth signalling that it is a departure. */
+.atScale {
+  align-self: flex-end;
+  padding: 0.25rem var(--pad-x) clamp(0.75rem, 2vw, 1.25rem);
+  margin-top: calc(-1 * clamp(0.75rem, 2vw, 1.25rem) - 1.5rem);
+  font-size: clamp(0.9375rem, 2vw, 1rem);
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  color: color-mix(in srgb, var(--v2-fg) 70%, transparent);
+  transition: color 200ms ease;
+}
+
+.atScale:hover {
+  color: var(--v2-fg);
+}
+
+@media (min-width: 768px) {
+  .atScale {
+    position: absolute;
+    top: var(--header-h, 0px);
+    right: 0;
+    z-index: 2;
+    margin-top: 0;
+    padding: 0.25rem var(--pad-x) 0;
+    font-size: 1.0625rem;
+  }
+}
+
 /* ── Grid overview (default view) ───────────────────────────────── */
 
 .grid {

@@ -15,6 +15,7 @@ type Labels = {
   prev: string;
   next: string;
   back: string;
+  atScale: string;
 };
 
 type Props = {
@@ -163,6 +164,22 @@ export default function MediumGallery({
       <Link href={`/works/${medium}`} className={styles.back} scroll={false}>
         {labels.back}
       </Link>
+
+      {/* The way into the showroom, offered only for the work you are actually
+          looking at and only when it records a size — 31 of the 78 works say
+          0 × 0, and there is no room to build for those.
+
+          A plain <a>, not next-intl's Link: /showroom is outside [locale] (see
+          middleware.ts), so a locale-aware Link would prefix a segment the route
+          does not have. It is also a real navigation rather than a client
+          transition, since the destination is its own document with its own <html>. */}
+      {works[current] &&
+        works[current].widthCm > 0 &&
+        works[current].heightCm > 0 && (
+          <a href={`/showroom/${medium}/${current}`} className={styles.atScale}>
+            {labels.atScale}
+          </a>
+        )}
 
       <div className={styles.scrollerWrap} data-view="scroller">
         {hasPrev && (

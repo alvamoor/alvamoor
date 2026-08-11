@@ -19,30 +19,25 @@ const nextConfig: NextConfig = {
         destination: "/:locale/works/:medium/:w",
         permanent: false,
       },
-    ];
-  },
-  async headers() {
-    return [
+      // /gallery was a night scene of nine floating planes, replaced by /showroom,
+      // which shows one work at its real size. It cannot redirect to a showroom URL
+      // because it never identified a work; "/" negotiates a locale and lands on
+      // the landing page.
       {
-        source: "/artworks/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
-      {
-        source: "/fonts/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
+        source: "/gallery",
+        destination: "/",
+        permanent: false,
       },
     ];
   },
+  // No headers block. Both rules that lived here served /gallery: /artworks/:path*
+  // for the scene's textures — a directory deleted long before the route was — and
+  // /fonts/:path* for the Text3D typeface, removed with it. The site's own display
+  // face is loaded through next/font/local and served fingerprinted out of
+  // _next/static/media, which is already immutable. Worth knowing before adding a
+  // rule back: docs/code-audit-2026-08-10.md found this block never fired anyway,
+  // because the Worker does not sit in front of static assets — a public/_headers
+  // file is the mechanism that works on Cloudflare.
 };
 
 initOpenNextCloudflareForDev();

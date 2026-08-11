@@ -131,3 +131,28 @@ export async function getByMedium(medium: Medium): Promise<Artwork[]> {
 export function isMedium(value: string | undefined): value is Medium {
   return MEDIA.some((m) => m === value);
 }
+
+/**
+ * A work's position in its medium, parsed from a URL segment — or null if the
+ * segment is not a plain non-negative integer.
+ *
+ * Lives here rather than beside either route because two of them now address a
+ * work by index: the single-work view and the showroom. `Number()` would accept
+ * "3.0", " 3" and "3e0", and each of those would be a second URL for the same
+ * painting.
+ */
+export function parseWorkIndex(segment: string): number | null {
+  if (!/^\d+$/.test(segment)) return null;
+  const n = Number(segment);
+  return Number.isSafeInteger(n) ? n : null;
+}
+
+/**
+ * Whether a work records a real size, and so can be shown at scale. The manifest
+ * schema requires widthCm/heightCm to be numbers but permits 0, and /admin's new
+ * work form defaults both to 0 — so a large share of entries claim no size at
+ * all. Anything built on these numbers has to ask first.
+ */
+export function hasDimensions(work: Pick<Artwork, "widthCm" | "heightCm">) {
+  return work.widthCm > 0 && work.heightCm > 0;
+}

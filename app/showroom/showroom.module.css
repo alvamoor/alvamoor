@@ -1,0 +1,125 @@
+/* Chrome for the showroom: a back pill, a dimensions panel, and a distance
+   toggle. Adapted from app/gallery/page.module.css — the .back and .arrow rules
+   are carried over unchanged, since they already sit correctly over a canvas. The
+   night scene's .watermark and .dots are gone: a viewport-sized wordmark competes
+   with a room whose whole job is to be read as a room, and there is one work here
+   rather than nine to page between.
+
+   Everything is z-index 2, above the fixed canvas. */
+
+.back {
+  position: fixed;
+  top: var(--pad-y);
+  left: var(--pad-x);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #14110d;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 0.5rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 2;
+  transition:
+    background 180ms ease,
+    color 180ms ease;
+}
+
+.back:hover {
+  background: rgba(255, 255, 255, 1);
+}
+
+.arrow {
+  display: inline-block;
+  transition: transform 220ms ease;
+}
+
+.back:hover .arrow {
+  transform: translateX(-3px);
+}
+
+/* The panel is not decoration — it is the accessible equivalent of the scene. A
+   canvas that conveys size conveys nothing to a screen reader, so the measurement
+   and the human comparison are real text, server-rendered, present before three.js
+   loads. Bottom-left rather than centred: it must not sit where the painting is. */
+.panel {
+  position: fixed;
+  bottom: var(--pad-y);
+  left: var(--pad-x);
+  max-width: min(22rem, calc(100vw - 2 * var(--pad-x)));
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.875rem 1.125rem;
+  color: #14110d;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 0.75rem;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 2;
+}
+
+.title {
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+/* The measurement itself, and the reason the page exists — so it is the one thing
+   here set in tabular figures, to read as a number rather than as prose. */
+.size {
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.compare {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: color-mix(in srgb, #14110d 62%, transparent);
+}
+
+/* Opposite corner from the panel, so the two never collide on a narrow screen. */
+.distance {
+  position: fixed;
+  bottom: var(--pad-y);
+  right: var(--pad-x);
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #14110d;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 0.5rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 2;
+  transition: background 180ms ease;
+}
+
+.distance:hover {
+  background: rgba(255, 255, 255, 1);
+}
+
+.back:focus-visible,
+.distance:focus-visible {
+  outline: 2px solid #14110d;
+  outline-offset: 3px;
+}
+
+/* Fills the viewport while the three.js chunk is in flight, in the wall's colour
+   so the canvas arriving is a change of detail rather than a flash. The old scene
+   had no loading state at all — the canvas simply appeared. */
+.loading {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background: #e8e4dc;
+}

@@ -113,8 +113,13 @@ export default [
     },
   },
 
+  // react-three-fiber turns three.js classes into JSX elements, so <mesh>,
+  // <planeGeometry> and their props are unknown to eslint-plugin-react — which
+  // resolves every one of position/args/map/roughness to a DOM attribute that does
+  // not exist. Scoped to the showroom so the rule keeps working on real DOM
+  // everywhere else. (Was app/**/gallery/** for the scene this replaced.)
   {
-    files: ["app/**/gallery/**/*.{ts,tsx}"],
+    files: ["app/showroom/**/*.{ts,tsx}"],
     rules: {
       "react/no-unknown-property": "off",
     },

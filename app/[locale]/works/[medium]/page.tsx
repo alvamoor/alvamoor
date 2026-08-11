@@ -78,6 +78,7 @@ export default async function MediumPage({
           prev: t("prev"),
           next: t("next"),
           back: t("back"),
+          atScale: t("atScale"),
         }}
       />
     </>
