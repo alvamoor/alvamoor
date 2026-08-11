@@ -50,7 +50,11 @@ function comparison(heightCm: number): string {
           : heightCm < 140
             ? "chest"
             : "shoulder";
-  return `About ${landmark} height on the ${FIGURE_CM} cm figure beside it.`;
+  // The percentage is not padding. "About ankle height" alone reads as *where the
+  // work hangs*, and everything hangs at 145 cm to the centre — so a 20 cm work
+  // described as ankle height while floating at chest height invites exactly the
+  // wrong reading. The ratio pins the sentence to the work's size.
+  return `${landmark} height on the ${FIGURE_CM} cm figure beside it — about ${Math.round(ratio * 100)}% as tall.`;
 }
 
 type Params = Promise<{ medium: string; index: string }>;

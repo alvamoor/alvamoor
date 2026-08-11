@@ -47,10 +47,14 @@
 /* The panel is not decoration — it is the accessible equivalent of the scene. A
    canvas that conveys size conveys nothing to a screen reader, so the measurement
    and the human comparison are real text, server-rendered, present before three.js
-   loads. Bottom-left rather than centred: it must not sit where the painting is. */
+   loads.
+
+   Below the back pill, not in a bottom corner: the floor band is where the scale is
+   actually told — boards converging, skirting, furniture standing on it — and down
+   there the panel was parked squarely on top of the chair. */
 .panel {
   position: fixed;
-  bottom: var(--pad-y);
+  top: calc(var(--pad-y) + 3.25rem);
   left: var(--pad-x);
   max-width: min(22rem, calc(100vw - 2 * var(--pad-x)));
   display: flex;
