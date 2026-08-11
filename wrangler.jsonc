@@ -13,6 +13,16 @@
     "directory": ".open-next/assets",
   },
   // R2 bucket the /admin routes write to (images + manifests).
+  //
+  // It also carries a CORS policy, which is not expressible here and lives in
+  // r2-cors.json — apply it with:
+  //   pnpm dlx wrangler r2 bucket cors set images --file r2-cors.json
+  // /showroom needs it: WebGL cannot use an image as a texture unless the response
+  // allows a cross-origin read, and img.alvamoor.com is a different origin from the
+  // site. Plain <img> on the works pages never cared, which is why the bucket went
+  // without a policy until the showroom was built. Committed rather than left as
+  // account state because account state that nothing describes is what caused both
+  // of today's outages.
   "r2_buckets": [{ "binding": "IMAGES_BUCKET", "bucket_name": "images" }],
   // Backing store for OpenNext's incremental cache (see open-next.config.ts) —
   // both the manifest fetches and the prerendered pages. Nothing in app/ touches
