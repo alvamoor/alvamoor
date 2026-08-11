@@ -89,6 +89,9 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
+// updates the year on change
+export const revalidate = 86400;
+
 // This is a root layout — there is no app/layout.tsx above it, so it owns <html>
 // and <body> for the whole public site. /admin and /gallery are separate roots
 // with their own.
