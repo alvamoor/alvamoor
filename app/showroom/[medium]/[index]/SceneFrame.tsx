@@ -15,16 +15,22 @@ import type { ShowroomWork } from "./Showroom";
 // boundary. `useTexture` suspends, and with nothing to catch it the canvas simply
 // appeared whenever it was ready. Both fallbacks here are just the wall's colour —
 // the real content of the page (title, measurement, comparison) is server-rendered
-// DOM in page.tsx and is already on screen, so there is nothing to spin over.
+// DOM in ShowroomView and is already on screen, so there is nothing to spin over.
 const Showroom = dynamic(() => import("./Showroom"), {
   ssr: false,
   loading: () => <div className={styles.loading} />,
 });
 
-export function SceneFrame({ work }: { work: ShowroomWork }) {
+export function SceneFrame({
+  work,
+  preload,
+}: {
+  work: ShowroomWork;
+  preload?: string[];
+}) {
   return (
     <Suspense fallback={<div className={styles.loading} />}>
-      <Showroom work={work} />
+      <Showroom work={work} preload={preload} />
     </Suspense>
   );
 }

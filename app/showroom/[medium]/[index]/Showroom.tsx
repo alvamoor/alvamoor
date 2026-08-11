@@ -375,8 +375,22 @@ function Room() {
   );
 }
 
-export default function Showroom({ work }: { work: ShowroomWork }) {
+export default function Showroom({
+  work,
+  preload = [],
+}: {
+  work: ShowroomWork;
+  preload?: string[];
+}) {
   const [fit, setFit] = useState(false);
+
+  // Fetch the neighbouring works' textures now, so stepping to one swaps the painting
+  // instead of showing an empty wall while an image downloads. drei keeps a cache
+  // keyed by URL, which is the same cache useTexture reads from, so an already
+  // preloaded texture resolves without suspending at all.
+  useEffect(() => {
+    for (const src of preload) useTexture.preload(src);
+  }, [preload]);
   const h = work.heightCm / 100;
   const halfW = work.widthCm / 200;
 

@@ -118,6 +118,63 @@
   outline-offset: 3px;
 }
 
+/* Stepping through the room. Bottom-centre, between the panel top-left and the
+   distance toggle bottom-right, so the three controls never meet. One pill holding
+   both arrows and the count: they are one control, and splitting them into two
+   floating buttons would read as two unrelated ones. */
+.nav {
+  position: fixed;
+  bottom: var(--pad-y);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 2;
+}
+
+.step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  /* The glyphs are ‹ › at a size that makes them a target rather than punctuation. */
+  font-size: 1.25rem;
+  line-height: 1;
+  color: #14110d;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+
+.step:hover {
+  background: rgba(20, 17, 13, 0.08);
+}
+
+.step:focus-visible {
+  outline: 2px solid #14110d;
+  outline-offset: 2px;
+}
+
+/* Tabular, so the pill does not twitch as the number changes width. */
+.count {
+  min-width: 3.5rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, #14110d 70%, transparent);
+}
+
 /* Fills the viewport while the three.js chunk is in flight, in the wall's colour
    so the canvas arriving is a change of detail rather than a flash. The old scene
    had no loading state at all — the canvas simply appeared. */

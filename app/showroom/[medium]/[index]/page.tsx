@@ -2,15 +2,15 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import {
+  type Artwork,
   getByMedium,
   hasDimensions,
   isMedium,
   parseWorkIndex,
 } from "@/app/lib/artworks";
 import { BackLink } from "@/app/showroom/BackLink";
-import styles from "@/app/showroom/showroom.module.css";
 
-import { SceneFrame } from "./SceneFrame";
+import { type ShowroomEntry, ShowroomView } from "./ShowroomView";
 
 // Same shape as the single-work view one level of the site over: nothing is
 // enumerated, because how many works exist is a property of the R2 manifest rather
@@ -25,7 +25,7 @@ export function generateStaticParams() {
   return [];
 }
 
-/** The reference body in the scene. */
+/** The reference body in the scene, quoted in metadata. */
 const FIGURE_CM = 175;
 
 /**
@@ -50,53 +50,53 @@ const FIGURE_CM = 175;
  */
 const TEXTURE_KEY = "tex=1";
 
-/**
- * Where a work of this height reaches on the 175 cm figure standing beside it.
- *
- * This sentence is not decoration. A canvas conveys nothing to a screen reader, so
- * for some visitors this text *is* the showroom — and even for everyone else, "about
- * chest height" lands faster than "130 cm" does.
- */
-function comparison(heightCm: number): string {
-  const ratio = heightCm / FIGURE_CM;
-  if (heightCm >= FIGURE_CM) {
-    return `Taller than the ${FIGURE_CM} cm figure beside it — about ${ratio.toFixed(1)}× its height.`;
-  }
-  const landmark =
-    heightCm < 35
-      ? "ankle"
-      : heightCm < 60
-        ? "knee"
-        : heightCm < 100
-          ? "hip"
-          : heightCm < 140
-            ? "chest"
-            : "shoulder";
-  // The percentage is not padding. "About ankle height" alone reads as *where the
-  // work hangs*, and everything hangs at 145 cm to the centre — so a 20 cm work
-  // described as ankle height while floating at chest height invites exactly the
-  // wrong reading. The ratio pins the sentence to the work's size.
-  return `${landmark} height on the ${FIGURE_CM} cm figure beside it — about ${Math.round(ratio * 100)}% as tall.`;
-}
-
 type Params = Promise<{ medium: string; index: string }>;
 
-/** The work at this address, or null if there is not one that can be shown at scale. */
-async function resolveWork(params: Params) {
+function toEntry(work: Artwork, index: number): ShowroomEntry {
+  return {
+    index,
+    src: `${work.src}?${TEXTURE_KEY}`,
+    widthCm: work.widthCm,
+    heightCm: work.heightCm,
+    title: work.title.en,
+  };
+}
+
+/**
+ * Every work in this medium that can be shown at scale, plus where the requested one
+ * sits among them.
+ *
+ * The whole medium goes to the client so the room can step from one work to the next
+ * without a navigation — a few kilobytes, against re-parsing three.js per work.
+ *
+ * Works with no recorded size are dropped rather than shown: 31 of 78 record 0 × 0,
+ * because /admin's new-work form defaults both to zero and the manifest schema
+ * permits it, and inventing a size for them would be worse than leaving them out.
+ * Which is why an entry keeps its real `index` — the array position and the number in
+ * the URL are different things once anything has been filtered out.
+ */
+async function resolve(params: Params) {
   const { medium, index } = await params;
   if (!isMedium(medium)) return null;
 
   const i = parseWorkIndex(index);
   if (i === null) return null;
 
-  const work = (await getByMedium(medium))[i];
-  // A work with no recorded size has no business in a room built to show size. Of
-  // 78 works, 31 record 0 × 0 — /admin's new-work form defaults both to zero and
-  // the manifest schema permits it — and inventing a size for them would be worse
-  // than leaving them out.
-  if (!work || !hasDimensions(work)) return null;
+  const all = await getByMedium(medium);
+  const requested = all[i];
+  if (!requested || !hasDimensions(requested)) return null;
 
-  return work;
+  const works = all
+    .map((work, at) => ({ work, at }))
+    .filter(({ work }) => hasDimensions(work))
+    .map(({ work, at }) => toEntry(work, at));
+
+  return {
+    medium,
+    works,
+    start: works.findIndex((entry) => entry.index === i),
+    requested,
+  };
 }
 
 export async function generateMetadata({
@@ -104,12 +104,13 @@ export async function generateMetadata({
 }: {
   params: Params;
 }): Promise<Metadata> {
-  const work = await resolveWork(params);
-  if (!work) return {};
+  const resolved = await resolve(params);
+  if (!resolved) return {};
+  const { requested } = resolved;
 
   return {
-    title: `${work.title.en} at scale — alva moor`,
-    description: `${work.title.en}, ${work.widthCm} × ${work.heightCm} cm, shown at real size beside a ${FIGURE_CM} cm figure.`,
+    title: `${requested.title.en} at scale — alva moor`,
+    description: `${requested.title.en}, ${requested.widthCm} × ${requested.heightCm} cm, shown at real size beside a ${FIGURE_CM} cm figure.`,
     // Not indexed: the work's own page is its canonical address, and 78 near-identical
     // room views would compete with it for no one's benefit. Still followed, so the
     // link back out counts.
@@ -118,32 +119,19 @@ export async function generateMetadata({
 }
 
 export default async function ShowroomPage({ params }: { params: Params }) {
-  const work = await resolveWork(params);
-  if (!work) notFound();
+  const resolved = await resolve(params);
+  if (!resolved) notFound();
 
   return (
     <>
       {/* English throughout: /showroom sits outside [locale] (see layout.tsx). */}
       <BackLink label="back" />
 
-      <SceneFrame
-        work={{
-          src: `${work.src}?${TEXTURE_KEY}`,
-          widthCm: work.widthCm,
-          heightCm: work.heightCm,
-          title: work.title.en,
-        }}
+      <ShowroomView
+        works={resolved.works}
+        start={resolved.start}
+        medium={resolved.medium}
       />
-
-      {/* Server-rendered, so it is on screen before three.js arrives and present
-          for anything that never runs it. */}
-      <div className={styles.panel}>
-        <span className={styles.title}>{work.title.en}</span>
-        <span className={styles.size}>
-          {work.widthCm} × {work.heightCm} cm
-        </span>
-        <span className={styles.compare}>{comparison(work.heightCm)}</span>
-      </div>
     </>
   );
 }
