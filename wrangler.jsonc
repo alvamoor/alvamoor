@@ -14,14 +14,37 @@
   },
   // R2 bucket the /admin routes write to (images + manifests).
   "r2_buckets": [{ "binding": "IMAGES_BUCKET", "bucket_name": "images" }],
-  // Backing store for OpenNext's incremental cache (see open-next.config.ts).
-  // Nothing in app/ touches this binding — the name is the one the
-  // kv-incremental-cache override looks up, so it must stay exactly this.
-  // Without it the cache falls back to "dummy", which caches nothing.
+  // Backing store for OpenNext's incremental cache (see open-next.config.ts) —
+  // both the manifest fetches and the prerendered pages. Nothing in app/ touches
+  // this binding; the name is the one the kv-incremental-cache override looks up,
+  // so it must stay exactly this. Remove it and nothing breaks loudly: every read
+  // throws "No KV Namespace", the error is swallowed, and the site quietly
+  // re-renders and re-fetches R2 on every single view.
   "kv_namespaces": [
     {
       "binding": "NEXT_INC_CACHE_KV",
       "id": "e7199810cbbc4587a607e8762b13c629",
+    },
+  ],
+  // How ISR revalidation gets back into this Worker (see open-next.config.ts). The
+  // binding name is OpenNext's, not ours — the memory queue looks up exactly this,
+  // and without it the background re-render is dropped, so a page goes stale and
+  // stays stale until the next deploy.
+  //
+  // Deliberately a service binding and not a Durable Object. The DO queue dedupes
+  // better, but it needs a migration, and Workers Builds uploads every
+  // non-production branch as a *version*, which rejects any Worker carrying one
+  // (API error 10211) — so a PR adding a DO fails its own build no matter what the
+  // code says. A service binding has no such restriction.
+  //
+  // It reaches the Worker directly, so it is not behind Cloudflare Access the way
+  // the custom domain is. That is not a way into /admin: the admin API validates
+  // the Access JWT in the Worker itself and fails closed without it, and what
+  // arrives here is a HEAD for one ISR path carrying x-prerender-revalidate.
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "alvamoor",
     },
   ],
   // Cloudflare Access settings for /admin auth are set as Worker secrets, not

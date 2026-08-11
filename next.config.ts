@@ -7,6 +7,20 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const nextConfig: NextConfig = {
   reactStrictMode: false,
+  async redirects() {
+    return [
+      // A single work used to live at /works/<medium>?w=<n>, which is now
+      // /works/<medium>/<n> — a route param, because reading searchParams opted
+      // the whole route into dynamic rendering. Links shared before the move
+      // still resolve.
+      {
+        source: "/:locale/works/:medium",
+        has: [{ type: "query", key: "w", value: "(?<w>\\d+)" }],
+        destination: "/:locale/works/:medium/:w",
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {

@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { type Artwork } from "@/app/lib/artworks";
 import { TILE_TINTS } from "@/app/lib/palette";
-import { usePathname, useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
 import styles from "../works.module.css";
@@ -14,6 +14,7 @@ type Labels = {
   available: string;
   prev: string;
   next: string;
+  back: string;
 };
 
 type Props = {
@@ -32,7 +33,6 @@ export default function MediumGallery({
   open,
 }: Props) {
   const router = useRouter();
-  const pathname = usePathname();
 
   const mode = open === null ? "grid" : "scroller";
   const startIndex = open ?? 0;
@@ -50,10 +50,6 @@ export default function MediumGallery({
   );
   const openImgRef = useRef<HTMLImageElement | null>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
-
-  function openScroller(index: number) {
-    router.push(`${pathname}?w=${index}`, { scroll: false });
-  }
 
   function scrollByDir(dir: 1 | -1) {
     const el = scrollerRef.current;
@@ -91,17 +87,19 @@ export default function MediumGallery({
     return () => el.removeEventListener("scroll", onScroll);
   }, [mode]);
 
-  // Esc closes an open caption, else returns to the grid.
+  // Esc closes an open caption, else returns to the grid. The grid's URL is named
+  // rather than derived: `pathname` is this work's own address now, so dropping a
+  // segment from it would be guesswork.
   useEffect(() => {
     if (mode !== "scroller") return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       if (openId) setOpenId(null);
-      else router.push(pathname, { scroll: false });
+      else router.push(`/works/${medium}`, { scroll: false });
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [mode, openId, router, pathname]);
+  }, [mode, openId, router, medium]);
 
   useEffect(() => {
     if (!openId) return;
@@ -118,12 +116,16 @@ export default function MediumGallery({
     return (
       <div className={styles.grid}>
         {works.map((a, i) => (
-          <button
+          // A real link, not a button: each work has an address, so opening one
+          // should middle-click and right-click like anything else. prefetch is
+          // off because a grid is 50-odd of these and prefetching all of them
+          // would cost more than the navigation it saves.
+          <Link
             key={a.id}
-            type="button"
+            href={`/works/${medium}/${i}`}
             className={styles.thumb}
-            onClick={() => openScroller(i)}
-            aria-label={a.title[locale]}
+            prefetch={false}
+            scroll={false}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -137,7 +139,7 @@ export default function MediumGallery({
               decoding="async"
               style={{ backgroundColor: TILE_TINTS[i % TILE_TINTS.length] }}
             />
-          </button>
+          </Link>
         ))}
       </div>
     );
@@ -153,77 +155,89 @@ export default function MediumGallery({
   // data-view is the hook the shell watches to lock itself to the viewport for
   // this one view — see shell.module.css.
   return (
-    <div className={styles.scrollerWrap} data-view="scroller">
-      {hasPrev && (
-        <button
-          type="button"
-          className={`${styles.navArrow} ${styles.navArrowLeft}`}
-          onClick={() => scrollByDir(-1)}
-          aria-label={labels.prev}
-        >
-          ‹
-        </button>
-      )}
+    <>
+      {/* The single-work view's stand-in for the section nav. It lives here, not
+          in the page, because next-intl's Link reads a header when rendered on
+          the server — see MediumNav. Still a sibling of the scroller, so the
+          flex chain the locked view depends on is unchanged. */}
+      <Link href={`/works/${medium}`} className={styles.back} scroll={false}>
+        {labels.back}
+      </Link>
 
-      <div className={styles.works} data-medium={medium} ref={scrollerRef}>
-        {works.map((a, i) => (
+      <div className={styles.scrollerWrap} data-view="scroller">
+        {hasPrev && (
           <button
-            key={a.id}
             type="button"
-            className={styles.work}
-            onClick={() => toggle(a.id)}
-            aria-pressed={openId === a.id}
+            className={`${styles.navArrow} ${styles.navArrowLeft}`}
+            onClick={() => scrollByDir(-1)}
+            aria-label={labels.prev}
           >
-            <span className={styles.frame}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                ref={openId === a.id ? openImgRef : null}
-                className={styles.image}
-                src={a.src}
-                srcSet={a.webpSrcSet}
-                sizes="100vw"
-                alt={a.title[locale]}
-                loading={Math.abs(i - current) <= 1 ? "eager" : "lazy"}
-                fetchPriority={i === current ? "high" : "auto"}
-                decoding="async"
-              />
-              {openId === a.id && imageBox && (
-                <span
-                  className={styles.caption}
-                  style={{
-                    width: imageBox.w,
-                    maxHeight: imageBox.h,
-                    top: `calc(50% + ${imageBox.h / 2}px)`,
-                    left: "50%",
-                  }}
-                >
-                  <span className={styles.captionTitle}>{a.title[locale]}</span>
-                  {a.description?.[locale] && (
-                    <span className={styles.captionDescription}>
-                      {a.description[locale]}
-                    </span>
-                  )}
-                  <span className={styles.captionSpec}>
-                    {a.mediumLabel[locale]} · {a.widthCm} × {a.heightCm} cm ·{" "}
-                    {a.year}
-                  </span>
-                </span>
-              )}
-            </span>
+            ‹
           </button>
-        ))}
-      </div>
+        )}
 
-      {hasNext && (
-        <button
-          type="button"
-          className={`${styles.navArrow} ${styles.navArrowRight}`}
-          onClick={() => scrollByDir(1)}
-          aria-label={labels.next}
-        >
-          ›
-        </button>
-      )}
-    </div>
+        <div className={styles.works} data-medium={medium} ref={scrollerRef}>
+          {works.map((a, i) => (
+            <button
+              key={a.id}
+              type="button"
+              className={styles.work}
+              onClick={() => toggle(a.id)}
+              aria-pressed={openId === a.id}
+            >
+              <span className={styles.frame}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  ref={openId === a.id ? openImgRef : null}
+                  className={styles.image}
+                  src={a.src}
+                  srcSet={a.webpSrcSet}
+                  sizes="100vw"
+                  alt={a.title[locale]}
+                  loading={Math.abs(i - current) <= 1 ? "eager" : "lazy"}
+                  fetchPriority={i === current ? "high" : "auto"}
+                  decoding="async"
+                />
+                {openId === a.id && imageBox && (
+                  <span
+                    className={styles.caption}
+                    style={{
+                      width: imageBox.w,
+                      maxHeight: imageBox.h,
+                      top: `calc(50% + ${imageBox.h / 2}px)`,
+                      left: "50%",
+                    }}
+                  >
+                    <span className={styles.captionTitle}>
+                      {a.title[locale]}
+                    </span>
+                    {a.description?.[locale] && (
+                      <span className={styles.captionDescription}>
+                        {a.description[locale]}
+                      </span>
+                    )}
+                    <span className={styles.captionSpec}>
+                      {a.mediumLabel[locale]} · {a.widthCm} × {a.heightCm} cm ·{" "}
+                      {a.year}
+                    </span>
+                  </span>
+                )}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {hasNext && (
+          <button
+            type="button"
+            className={`${styles.navArrow} ${styles.navArrowRight}`}
+            onClick={() => scrollByDir(1)}
+            aria-label={labels.next}
+          >
+            ›
+          </button>
+        )}
+      </div>
+    </>
   );
 }

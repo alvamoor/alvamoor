@@ -1,19 +1,32 @@
-import type { Metadata } from "next";
-import { NextIntlClientProvider } from "next-intl";
+import type { Metadata, Viewport } from "next";
 import { getMessages, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { Backdrop } from "@/app/components/Backdrop";
+import { IntlProvider } from "@/app/components/IntlProvider";
 import { LocaleSwitcher } from "@/app/components/LocaleSwitcher";
 import { ScrollChrome } from "@/app/components/ScrollChrome";
 import { SiteNav } from "@/app/components/SiteNav";
 import { StructuredData } from "@/app/components/StructuredData";
 import { Wordmark } from "@/app/components/Wordmark";
+import { backdrop, sans } from "@/app/fonts";
+import "@/app/globals.css";
+import { TILE_TINTS } from "@/app/lib/palette";
 import { type Locale, isLocale, routing } from "@/i18n/routing";
 
 import styles from "./shell.module.css";
 
 const SITE_URL = "https://alvamoor.com";
+
+export const viewport: Viewport = {
+  // The tile the landing centres on at first paint (InfiniteScroll starts on the
+  // pattern's origin), so the browser chrome matches the page it frames.
+  themeColor: TILE_TINTS[0],
+  width: "device-width",
+  initialScale: 1,
+  // Deliberately no maximumScale/userScalable: locking zoom fails WCAG 1.4.4,
+  // and on a site whose subject is paintings, pinching into one is the point.
+};
 
 export async function generateMetadata({
   params,
@@ -76,6 +89,15 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
+// This is a root layout — there is no app/layout.tsx above it, so it owns <html>
+// and <body> for the whole public site. /admin and /gallery are separate roots
+// with their own.
+//
+// That structure is the point: `lang` now comes from the [locale] segment, which
+// this layout is handed as a param. It used to come from getLocale() in a root
+// layout above, and next-intl implements that as headers().get(), which marked
+// every route in the app dynamic — including /admin, which reads nothing. Params
+// carry no such cost, so these pages can be prerendered and cached.
 export default async function LocaleLayout({
   children,
   params,
@@ -86,44 +108,43 @@ export default async function LocaleLayout({
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
 
-  // The locale is passed explicitly rather than primed once via
-  // setRequestLocale: that helper is deprecated in next-intl 4 in favour of
-  // next/root-params, which cannot see [locale] while app/layout.tsx is the root
-  // layout (it is, because /gallery and /admin live outside [locale]). Passing it
-  // is what the helper was standing in for anyway, and it needs no ambient state.
   const messages = await getMessages({ locale });
   const t = await getTranslations({ locale, namespace: "Landing" });
   const year = new Date().getFullYear();
 
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
-      <StructuredData locale={locale} />
+    <html lang={locale} className={`${sans.variable} ${backdrop.variable}`}>
+      <body>
+        <IntlProvider locale={locale} messages={messages}>
+          <StructuredData locale={locale} />
 
-      <div className={styles.page}>
-        <Backdrop />
+          <div className={styles.page}>
+            <Backdrop />
 
-        <div className={styles.shell}>
-          <ScrollChrome />
+            <div className={styles.shell}>
+              <ScrollChrome />
 
-          <div className={styles.veil} aria-hidden="true" />
-          <div className={styles.watermark} aria-hidden="true" />
+              <div className={styles.veil} aria-hidden="true" />
+              <div className={styles.watermark} aria-hidden="true" />
 
-          {/* data-chrome: what ScrollChrome measures for --header-h. */}
-          <header className={styles.header} data-chrome="header">
-            <div className={styles.headerTop}>
-              <Wordmark />
-              <LocaleSwitcher />
+              {/* data-chrome: what ScrollChrome measures for --header-h. */}
+              <header className={styles.header} data-chrome="header">
+                <div className={styles.headerTop}>
+                  <Wordmark />
+                  <LocaleSwitcher />
+                </div>
+                <SiteNav />
+              </header>
+
+              <main className={styles.main}>{children}</main>
+
+              <footer className={styles.footer}>
+                <span className={styles.year}>{t("year", { year })}</span>
+              </footer>
             </div>
-            <SiteNav />
-          </header>
-
-          <main className={styles.main}>{children}</main>
-
-          <footer className={styles.footer}>
-            <span className={styles.year}>{t("year", { year })}</span>
-          </footer>
-        </div>
-      </div>
-    </NextIntlClientProvider>
+          </div>
+        </IntlProvider>
+      </body>
+    </html>
   );
 }

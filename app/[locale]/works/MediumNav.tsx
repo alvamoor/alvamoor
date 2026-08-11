@@ -1,4 +1,6 @@
-import { getTranslations } from "next-intl/server";
+"use client";
+
+import { useTranslations } from "next-intl";
 
 import { Link } from "@/i18n/navigation";
 
@@ -9,8 +11,11 @@ const SECTIONS = ["canvas", "paper"] as const;
 
 type Section = (typeof SECTIONS)[number];
 
-export default async function MediumNav({ active }: { active: Section }) {
-  const t = await getTranslations("Gallery");
+// A client component for the same reason as Wordmark: next-intl's Link reads the
+// current locale from a header when rendered on the server, which would make this
+// route dynamic. On the client it comes from provider context.
+export default function MediumNav({ active }: { active: Section }) {
+  const t = useTranslations("Gallery");
 
   return (
     // data-chrome: what ScrollChrome measures for --subnav-h, so the frosted
@@ -32,11 +37,6 @@ export default async function MediumNav({ active }: { active: Section }) {
           {t(section)}
         </Link>
       ))}
-      {/* Third door out to the 3D virtual gallery (a different kind of route).
-      <a href="/gallery" className={styles.mediumNavLink}>
-        {t("virtualGallery")}
-      </a>
-      */}
     </nav>
   );
 }
