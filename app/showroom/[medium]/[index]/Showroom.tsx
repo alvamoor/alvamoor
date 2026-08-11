@@ -96,6 +96,25 @@ const SKIRTING_COLOR = "#dcd6cb";
 /** A shade off the back wall, so a corner is a corner rather than a seam. */
 const SIDE_WALL_COLOR = "#ded9d0";
 const CEILING_COLOR = "#f1eee8";
+const FRAME_COLOR = "#f4f1ea";
+const POT_COLOR = "#b0705a";
+const SOIL_COLOR = "#42352a";
+const LEAF_COLOR = "#6d8a62";
+const STEM_COLOR = "#5f7a55";
+
+// An ordinary domestic window, and ordinary is the point: 120 × 150 with the sill at
+// 90 cm is a size everybody has stood next to, so it reads as scale as well as light.
+// On the right-hand wall, because the key light already comes from that side — a
+// window opposite the light would have the room lit from nowhere.
+const WINDOW_W = 1.2;
+const WINDOW_H = 1.5;
+const SILL_H = 0.9;
+const FRAME_STOCK = 0.06;
+const MULLION = 0.035;
+/** Along the room's depth. Near the corner on purpose: at 2.2 m it sat forward of
+ *  everything the camera can turn to see, so the window existed and was unreachable.
+ *  At 1.0 it comes into frame with the corner. */
+const WINDOW_Z = 0.8;
 const FIGURE_COLOR = "#9d9587";
 const CHAIR_COLOR = "#8a7f6d";
 const CANVAS_EDGE = "#ddd7c9";
@@ -195,8 +214,10 @@ function useFloorTexture() {
 // have given itself away.
 const NEAR_LIMIT = 1.1;
 const FAR_LIMIT = 9;
-/** ±29° of turn: enough to see the canvas edge-on and the room's corner. */
-const AZIMUTH_LIMIT = 0.5;
+/** ±35° of turn: enough to see the canvas edge-on, the room's corner, and the window
+ *  in the side wall. At ±29° the window was reachable only as a sliver at the frame
+ *  edge — present in the room and not really visible in it. */
+const AZIMUTH_LIMIT = 0.62;
 const POLAR_MIN = 1.02;
 const POLAR_MAX = 1.72;
 
@@ -204,6 +225,71 @@ const POLAR_MAX = 1.72;
 const VIEW_TWEEN = 0.55;
 
 type View = "room" | "fit";
+
+/**
+ * What is outside: sky over a band of foliage, in a canvas rather than a photograph.
+ *
+ * A window onto a flat colour reads as a lightbox. Two or three bands of gradient are
+ * enough for the eye to accept a world out there, and generating them keeps the
+ * promise the floor texture makes — nothing here can 404.
+ */
+function useSkyTexture() {
+  return useMemo(() => {
+    const W = 64;
+    const H = 256;
+    const canvas = document.createElement("canvas");
+    canvas.width = W;
+    canvas.height = H;
+    const g = canvas.getContext("2d");
+    if (g) {
+      const sky = g.createLinearGradient(0, 0, 0, H);
+      sky.addColorStop(0, "#b9d6ea");
+      sky.addColorStop(0.55, "#dde9ef");
+      sky.addColorStop(0.72, "#eef2ee");
+      g.fillStyle = sky;
+      g.fillRect(0, 0, W, H);
+      // Foliage: a soft mass rather than drawn trees, which at this size would only
+      // read as noise.
+      const trees = g.createLinearGradient(0, H * 0.66, 0, H);
+      trees.addColorStop(0, "rgba(122, 148, 112, 0)");
+      trees.addColorStop(0.35, "rgba(108, 136, 100, 0.85)");
+      trees.addColorStop(1, "rgba(86, 110, 82, 0.95)");
+      g.fillStyle = trees;
+      g.fillRect(0, H * 0.66, W, H * 0.34);
+    }
+    const texture = new CanvasTexture(canvas);
+    texture.colorSpace = SRGBColorSpace;
+    return texture;
+  }, []);
+}
+
+/**
+ * The patch of daylight a window throws on the floor — soft-edged, so it lies on the
+ * boards rather than sitting on them like a decal.
+ *
+ * This is the one piece of the window visible without turning, and it does more for
+ * the room than the window itself: light on the floor says the space has an outside,
+ * before you have found where it is.
+ */
+function useSunTexture() {
+  return useMemo(() => {
+    const S = 256;
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = S;
+    const g = canvas.getContext("2d");
+    if (g) {
+      const glow = g.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2);
+      glow.addColorStop(0, "rgba(255, 250, 234, 0.8)");
+      glow.addColorStop(0.55, "rgba(255, 248, 228, 0.42)");
+      glow.addColorStop(1, "rgba(255, 245, 222, 0)");
+      g.fillStyle = glow;
+      g.fillRect(0, 0, S, S);
+    }
+    const texture = new CanvasTexture(canvas);
+    texture.colorSpace = SRGBColorSpace;
+    return texture;
+  }, []);
+}
 
 /**
  * The camera: placed by us, then driven by you.
@@ -438,6 +524,159 @@ function Chair({ x }: { x: number }) {
   );
 }
 
+/**
+ * A window on the right-hand wall: reveal, frame, mullions and a view out.
+ *
+ * On the right because that is where the key light already comes from. A window on the
+ * shadowed side would leave the room lit by nothing, which the eye notices even when
+ * it cannot say why.
+ */
+function Window() {
+  const sky = useSkyTexture();
+  const halfW = WINDOW_W / 2;
+  const halfH = WINDOW_H / 2;
+  const centreY = SILL_H + halfH;
+
+  return (
+    // Laid out flat in local X/Y and turned to face into the room, like the wall it
+    // sits in.
+    <group
+      position={[ROOM_HALF_W - 0.02, centreY, WINDOW_Z]}
+      rotation={[0, -Math.PI / 2, 0]}
+    >
+      {/* The view out. Unlit, because it is outside: shading daylight with the room's
+          own lamps would make it darker than the wall around it. */}
+      <mesh>
+        <planeGeometry args={[WINDOW_W, WINDOW_H]} />
+        <meshBasicMaterial map={sky} />
+      </mesh>
+
+      {/* Frame: four lengths around the opening. */}
+      {[
+        {
+          p: [0, halfH + FRAME_STOCK / 2, 0],
+          a: [WINDOW_W + FRAME_STOCK * 2, FRAME_STOCK, 0.09],
+        },
+        {
+          p: [0, -halfH - FRAME_STOCK / 2, 0],
+          a: [WINDOW_W + FRAME_STOCK * 2, FRAME_STOCK, 0.12],
+        },
+        {
+          p: [-halfW - FRAME_STOCK / 2, 0, 0],
+          a: [FRAME_STOCK, WINDOW_H, 0.09],
+        },
+        {
+          p: [halfW + FRAME_STOCK / 2, 0, 0],
+          a: [FRAME_STOCK, WINDOW_H, 0.09],
+        },
+      ].map(({ p, a }, i) => (
+        // Deliberately not casting. No light actually passes through the glass, so a
+        // frame-shaped shadow would land on the wall with nothing to explain it.
+        <mesh key={i} position={p as [number, number, number]}>
+          <boxGeometry args={a as [number, number, number]} />
+          <meshStandardMaterial color={FRAME_COLOR} roughness={0.8} />
+        </mesh>
+      ))}
+
+      {/* Mullions. They divide the glass into panes of a size everyone has seen, which
+          is half of what makes a window legible as a window. */}
+      <mesh position={[0, 0, 0.01]}>
+        <boxGeometry args={[MULLION, WINDOW_H, 0.03]} />
+        <meshStandardMaterial color={FRAME_COLOR} roughness={0.8} />
+      </mesh>
+      <mesh position={[0, 0, 0.01]}>
+        <boxGeometry args={[WINDOW_W, MULLION, 0.03]} />
+        <meshStandardMaterial color={FRAME_COLOR} roughness={0.8} />
+      </mesh>
+    </group>
+  );
+}
+
+/**
+ * Daylight on the boards, as a soft-edged quad rather than a real light.
+ *
+ * Additive and unlit, so it brightens the floor without lighting anything else — a
+ * second casting light would have thrown a second set of shadows and undone the one
+ * clear direction the room is lit from. Angled off the grain so it reads as light
+ * falling across the boards rather than as a board.
+ */
+function SunPatch() {
+  const sun = useSunTexture();
+
+  // Left of centre and hard against the wall, for two reasons. The key light travels
+  // left-and-back, so a pool from a right-hand window belongs on this side — the
+  // figure's shadow already falls that way. And the visible band of floor is far
+  // narrower than it looks: at the room distance the frame's lower edge crosses the
+  // floor around z = 0.5, so anything further forward than that is simply below the
+  // picture.
+  // Wide and shallow, sitting in the strip of floor that is on screen. A square pool
+  // put most of its gradient behind the wall or below the frame, so all that showed
+  // was the faint outer edge of it — which is to say, nothing.
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0.28]} position={[-0.5, 0.004, 0.26]}>
+      <planeGeometry args={[2.6, 0.7]} />
+      <meshBasicMaterial map={sun} transparent depthWrite={false} />
+    </mesh>
+  );
+}
+
+/**
+ * A potted plant, at the size a floor plant actually is: about a metre over a 30 cm
+ * pot. Placed on the opposite side from the figure and inside the default frame, so
+ * the room has something living in it before you have moved at all.
+ *
+ * Leaves are flattened spheres on stems. Not botany — but a fan of green shapes rising
+ * out of a terracotta pot is read as a plant instantly, and anything more detailed
+ * would start competing with the painting.
+ */
+function Plant({ x }: { x: number }) {
+  const leaves = useMemo(
+    () =>
+      Array.from({ length: 9 }, (_, i) => {
+        // Deterministic spread: a fan, tilted a little further out as it goes round.
+        const around = (i / 9) * Math.PI * 2;
+        const lean = 0.34 + ((i * 5) % 7) / 24;
+        const rise = 0.42 + ((i * 3) % 5) / 12;
+        return { around, lean, rise };
+      }),
+    [],
+  );
+
+  return (
+    <group position={[x, 0, 0.5]}>
+      <mesh position={[0, 0.15, 0]} castShadow>
+        <cylinderGeometry args={[0.17, 0.13, 0.3, 20]} />
+        <meshStandardMaterial color={POT_COLOR} roughness={0.85} />
+      </mesh>
+      <mesh position={[0, 0.3, 0]}>
+        <cylinderGeometry args={[0.155, 0.155, 0.02, 20]} />
+        <meshStandardMaterial color={SOIL_COLOR} roughness={1} />
+      </mesh>
+      {leaves.map(({ around, lean, rise }, i) => (
+        <group key={i} rotation={[0, around, 0]}>
+          <mesh
+            position={[Math.sin(lean) * rise * 0.5, 0.3 + rise * 0.5, 0]}
+            rotation={[0, 0, -lean]}
+            castShadow
+          >
+            <cylinderGeometry args={[0.008, 0.012, rise, 6]} />
+            <meshStandardMaterial color={STEM_COLOR} roughness={0.9} />
+          </mesh>
+          <mesh
+            position={[Math.sin(lean) * rise, 0.3 + rise, 0]}
+            rotation={[0, 0, -lean]}
+            scale={[0.042, 0.18, 0.055]}
+            castShadow
+          >
+            <sphereGeometry args={[1, 12, 10]} />
+            <meshStandardMaterial color={LEAF_COLOR} roughness={0.85} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+
 function Room() {
   const floor = useFloorTexture();
 
@@ -482,6 +721,8 @@ function Room() {
         <planeGeometry args={[FLOOR_W, FLOOR_D]} />
         <meshStandardMaterial map={floor} color={FLOOR_BASE} roughness={0.75} />
       </mesh>
+
+      <Window />
 
       {/* Skirting. A 10 cm datum along the junction the whole composition hangs from,
           and it turns that junction from a colour change into an edge. */}
@@ -558,6 +799,10 @@ export default function Showroom({
         <directionalLight position={[-3, 2.5, 2]} intensity={0.6} />
 
         <Room />
+        <SunPatch />
+        {/* Furniture is placed relative to the work so nothing ever crowds it, and
+            clamped so a 250 cm canvas does not push the plant through the wall. */}
+        <Plant x={Math.max(-2.7, -(halfW + 1.15))} />
         <Chair x={-(halfW + CHAIR_GAP)} />
         <Figure x={halfW + FIGURE_GAP} />
         {/* The boundary belongs *inside* the Canvas, around the one thing that
