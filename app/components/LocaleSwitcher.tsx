@@ -29,6 +29,7 @@ export function LocaleSwitcher() {
           <Link
             href={pathname}
             locale={option}
+            prefetch={false}
             className={styles.link}
             aria-current={option === locale ? "page" : undefined}
           >

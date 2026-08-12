@@ -30,6 +30,7 @@ export function SiteNav() {
           <Link
             key={item.key}
             href={item.href}
+            prefetch={false}
             className={`${styles.link}${active ? ` ${styles.active}` : ""}`}
             aria-current={active ? "page" : undefined}
           >

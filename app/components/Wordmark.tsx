@@ -23,7 +23,7 @@ export function Wordmark() {
   const t = useTranslations("Landing");
 
   return (
-    <Link href="/" className={styles.mark}>
+    <Link href="/" prefetch={false} className={styles.mark}>
       {t("name")}
     </Link>
   );
