@@ -96,6 +96,127 @@
   padding: 0;
 }
 
+/* The <li> is now a wrapper, not the card: it holds an insertion strip as well, and an
+   <ol> may only contain <li> elements, so the strips cannot be siblings of the rows. */
+.item {
+  position: relative;
+}
+
+/* Selection toolbar. Sticky, because the list runs to 80-odd works and the whole point
+   is to select at one end and place at the other — scrolling must not take the controls
+   away with it. */
+.selectBar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 8px;
+  background: #fdfbe9;
+}
+
+.selectBar button {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: #fff;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.note {
+  margin: 0.35rem 0 0;
+  max-width: 22rem;
+  color: rgba(0, 0, 0, 0.55);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.selectCount {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.selectHint {
+  color: rgba(0, 0, 0, 0.55);
+  font-size: 0.85rem;
+}
+
+/* The insertion strip. Sits in the 1rem gap .card already leaves above itself, so it
+   costs no layout when hidden and shifts nothing when shown. Low-contrast until hovered
+   — there is one of these between every pair of works, and they should read as a seam
+   rather than as 80 buttons. */
+.dropSlot {
+  display: block;
+  width: 100%;
+  height: 1rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: center;
+}
+
+.dropSlot::before {
+  content: "";
+  display: block;
+  height: 2px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.dropSlot:hover::before,
+.dropSlot:focus-visible::before {
+  background: #1f6feb;
+}
+
+.dropSlotLabel {
+  display: none;
+  font-size: 0.8rem;
+  color: #1f6feb;
+}
+
+.dropSlot:hover .dropSlotLabel,
+.dropSlot:focus-visible .dropSlotLabel {
+  display: block;
+}
+
+/* Selected and mid-drag states. Both are on the card rather than the <li>, so the
+   insertion strip above stays neutral. */
+.cardSelected {
+  border-color: #1f6feb;
+  background: #f5f9ff;
+}
+
+.cardDragging {
+  opacity: 0.6;
+}
+
+/* The checkbox column, before the thumbnail. */
+.pick {
+  display: flex;
+  align-items: center;
+  padding-top: 0.15rem;
+  flex: none;
+  cursor: pointer;
+}
+
+/* Grab cursor is the only affordance a drag handle has. */
+.handle {
+  cursor: grab;
+  touch-action: none;
+}
+
+.handle:active {
+  cursor: grabbing;
+}
+
 .row {
   display: flex;
   gap: 1rem;

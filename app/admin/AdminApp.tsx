@@ -1,10 +1,32 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+import {
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  restrictToParentElement,
+  restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 import type { ManifestEntry, Medium } from "@/app/lib/artworks";
 
 import styles from "./admin.module.css";
+import { moveBlock, rangeBetween, shiftBlock } from "./reorder";
 import { resizeToWebp } from "./resize";
 
 const IMAGE_BASE =
@@ -82,6 +104,33 @@ export default function AdminApp() {
   const [draft, setDraft] = useState<Draft>(() => emptyDraft("paper"));
   const [file, setFile] = useState<File | null>(null);
 
+  // Selection is keyed by `base`, not by index: indices move under every reorder,
+  // whereas a base is stable and already unique (validateEntries rejects duplicates).
+  // `anchor` is the other end of a shift-click range.
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [anchor, setAnchor] = useState<string | null>(null);
+
+  const selectedIndices = useMemo(
+    () =>
+      entries.reduce<number[]>((acc, e, i) => {
+        if (selected.has(e.base)) acc.push(i);
+        return acc;
+      }, []),
+    [entries, selected],
+  );
+
+  // Pointer covers mouse and touch — /admin gets reordered from a tablet as well as a
+  // desk. Keyboard is the reason this is a library at all: it gives the admin its first
+  // keyboard reordering, where before there was no keyboard handling anywhere in the
+  // file. The 6px activation distance keeps a click on the handle from being read as a
+  // one-pixel drag.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
   const load = useCallback(async (m: Medium) => {
     setBusy(true);
     setMsg({ kind: "", text: "" });
@@ -89,6 +138,7 @@ export default function AdminApp() {
       const res = await apiFetch(`/api/admin/works?medium=${m}`);
       setEntries(await res.json());
       setDirty(false);
+      clearSelection();
     } catch (e) {
       setMsg({ kind: "err", text: msgOf(e) });
     } finally {
@@ -126,15 +176,72 @@ export default function AdminApp() {
     setDirty(true);
   }
 
-  function move(i: number, dir: -1 | 1) {
+  function clearSelection() {
+    setSelected(new Set());
+    setAnchor(null);
+  }
+
+  /**
+   * Apply a reorder, and only mark the form dirty if the order actually changed.
+   *
+   * Every reorder path goes through here — the row arrows, the toolbar, the insertion
+   * strips and drag — so there is one place that decides what "changed" means. The old
+   * move() set dirty unconditionally, so pressing an edge case armed the
+   * unsaved-changes warning over a no-op.
+   */
+  function reorder(next: (es: ManifestEntry[]) => ManifestEntry[]) {
     setEntries((es) => {
-      const j = i + dir;
-      if (j < 0 || j >= es.length) return es;
-      const copy = [...es];
-      [copy[i], copy[j]] = [copy[j], copy[i]];
-      return copy;
+      const out = next(es);
+      if (out !== es) setDirty(true);
+      return out;
     });
-    setDirty(true);
+  }
+
+  /** One row, one step. Unchanged in behaviour from the swap it replaces. */
+  function move(i: number, dir: -1 | 1) {
+    reorder((es) => shiftBlock(es, [i], dir));
+  }
+
+  /** The selected block, one step. */
+  function shiftSelection(dir: -1 | 1) {
+    reorder((es) => shiftBlock(es, selectedIndices, dir));
+  }
+
+  /** The selected block, to an insertion point. `target` counts the list as it looks now. */
+  function placeSelection(target: number) {
+    reorder((es) => moveBlock(es, selectedIndices, target));
+  }
+
+  /**
+   * Whether placing the selection at `target` would leave the list exactly as it is.
+   *
+   * Only true for a contiguous selection sitting against that insertion point — a
+   * scattered selection always changes something, because placing it collapses it.
+   * Used to hide the two strips that would be dead controls.
+   */
+  function isNoopTarget(target: number) {
+    if (selectedIndices.length === 0) return true;
+    const first = selectedIndices[0];
+    const last = selectedIndices[selectedIndices.length - 1];
+    const contiguous = last - first + 1 === selectedIndices.length;
+    return contiguous && (target === first || target === last + 1);
+  }
+
+  function toggleSelect(base: string, extend: boolean) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      // Shift-click takes the run between the anchor and here, which is the only way to
+      // pick up twenty studies without twenty clicks.
+      if (extend && anchor) {
+        for (const b of rangeBetween(entries, (e) => e.base, anchor, base))
+          next.add(b);
+        return next;
+      }
+      if (next.has(base)) next.delete(base);
+      else next.add(base);
+      return next;
+    });
+    if (!extend) setAnchor(base);
   }
 
   function remove(i: number) {
@@ -191,6 +298,30 @@ export default function AdminApp() {
     }
   }
 
+  /**
+   * Dropping a dragged row.
+   *
+   * Dragging a row that is part of the selection moves the whole selection, so a drag
+   * and the toolbar mean the same thing. Dragging an unselected row moves just that row
+   * and leaves the selection alone.
+   *
+   * dnd-kit reports the index the row landed on; moveBlock wants an insertion point, and
+   * the two differ by one when moving downward — dropping onto index 4 from above means
+   * "after the item at 4", which is insertion point 5.
+   */
+  function onDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const from = entries.findIndex((e) => e.base === active.id);
+    const to = entries.findIndex((e) => e.base === over.id);
+    if (from === -1 || to === -1) return;
+
+    const block = selected.has(String(active.id)) ? selectedIndices : [from];
+    const target = to > from ? to + 1 : to;
+    reorder((es) => moveBlock(es, block, target));
+  }
+
   async function save() {
     setBusy(true);
     setMsg({ kind: "", text: "" });
@@ -201,6 +332,7 @@ export default function AdminApp() {
         body: JSON.stringify({ medium, entries }),
       });
       setDirty(false);
+      clearSelection();
       setMsg({ kind: "ok", text: "Saved. Live within ~1 minute." });
     } catch (e) {
       setMsg({ kind: "err", text: msgOf(e) });
@@ -235,6 +367,14 @@ export default function AdminApp() {
           >
             {dirty ? "Save changes" : "Saved"}
           </button>
+          {/* Said once, quietly, because it is easy to forget and impossible to see:
+              a work's public URL is its position, so reordering repoints every link
+              below the change. A previously shared /works/canvas/3 will show whatever
+              is third afterwards. */}
+          <p className={styles.note}>
+            Reordering changes each work&rsquo;s link — /works/{medium}
+            /&lt;n&gt; is a position, not a name.
+          </p>
         </div>
       </header>
 
@@ -264,57 +404,244 @@ export default function AdminApp() {
       </section>
 
       {/* Existing works */}
-      <ol className={styles.list}>
-        {entries.map((e, i) => (
-          <li key={e.base} className={styles.card}>
-            <div className={styles.row}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                className={styles.thumb}
-                src={`${IMAGE_BASE}/${medium}/${e.base}-640.webp`}
-                alt=""
+      {selected.size > 0 && (
+        // Only present when there is a selection, so the list is not permanently
+        // fronted by controls that would do nothing.
+        <div className={styles.selectBar}>
+          <span className={styles.selectCount}>{selected.size} selected</span>
+          <button
+            type="button"
+            onClick={() => shiftSelection(-1)}
+            aria-label="Move selected works up one place"
+          >
+            ↑
+          </button>
+          <button
+            type="button"
+            onClick={() => shiftSelection(1)}
+            aria-label="Move selected works down one place"
+          >
+            ↓
+          </button>
+          <button type="button" onClick={() => placeSelection(0)}>
+            to top
+          </button>
+          <button type="button" onClick={() => placeSelection(entries.length)}>
+            to bottom
+          </button>
+          <button type="button" onClick={clearSelection}>
+            clear
+          </button>
+          {/* The list is 80-odd works long; say where they will land rather than
+              making it a surprise. */}
+          <span className={styles.selectHint}>
+            or click a line between works to place them there
+          </span>
+        </div>
+      )}
+
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        // Vertical only, and kept inside the list: this is a single column, so
+        // sideways travel is nothing but a chance to drop a work somewhere unintended.
+        modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+        onDragEnd={onDragEnd}
+      >
+        <SortableContext
+          items={entries.map((e) => e.base)}
+          strategy={verticalListSortingStrategy}
+        >
+          <ol className={styles.list}>
+            {entries.map((e, i) => (
+              <EntryRow
+                key={e.base}
+                entry={e}
+                index={i}
+                total={entries.length}
+                medium={medium}
+                selected={selected.has(e.base)}
+                selectedCount={selected.size}
+                dropTarget={selected.size > 0 && !isNoopTarget(i) ? i : null}
+                onPlace={placeSelection}
+                onToggleSelect={toggleSelect}
+                onPatch={patch}
+                onMove={move}
+                onRemove={remove}
               />
-              <div className={styles.rowMain}>
-                <EntryFields entry={e} onChange={(p) => patch(i, p)} />
-              </div>
-              <div className={styles.rowControls}>
-                <button
-                  type="button"
-                  onClick={() => move(i, -1)}
-                  disabled={i === 0}
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  onClick={() => move(i, 1)}
-                  disabled={i === entries.length - 1}
-                >
-                  ↓
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    patch(i, {
-                      status: e.status === "sold" ? "available" : "sold",
-                    })
-                  }
-                >
-                  {e.status === "sold" ? "Mark available" : "Mark sold"}
-                </button>
-                <button
-                  type="button"
-                  className={styles.del}
-                  onClick={() => remove(i)}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </li>
-        ))}
-      </ol>
+            ))}
+            {/* The last insertion point has no row after it to hang off, so it gets an
+                item of its own. An <ol> may only contain <li>, which is also why every
+                other strip lives inside the row it precedes. */}
+            {selected.size > 0 && !isNoopTarget(entries.length) && (
+              <li className={styles.item}>
+                <DropSlot
+                  count={selected.size}
+                  onClick={() => placeSelection(entries.length)}
+                />
+              </li>
+            )}
+          </ol>
+        </SortableContext>
+      </DndContext>
     </main>
+  );
+}
+
+/**
+ * One insertion point: a thin line in the gap between two cards that puts the selection
+ * there.
+ *
+ * This is the control that makes a list of 81 works workable. Dragging a study from the
+ * end to position five means travelling past seventy-five rows however good the drag
+ * implementation is; selecting it and clicking a line is two gestures at either end of
+ * the list, with a scroll in between.
+ */
+function DropSlot({ count, onClick }: { count: number; onClick: () => void }) {
+  return (
+    <button type="button" className={styles.dropSlot} onClick={onClick}>
+      <span className={styles.dropSlotLabel}>
+        place {count} {count === 1 ? "work" : "works"} here
+      </span>
+    </button>
+  );
+}
+
+/**
+ * One work in the list, draggable by its handle.
+ *
+ * A component rather than inline JSX because useSortable is a hook and needs to run once
+ * per row. The listeners go on the handle alone, never the whole row: the row is full of
+ * text inputs, and a row-wide drag would swallow every attempt to select a title.
+ */
+function EntryRow({
+  entry,
+  index,
+  total,
+  medium,
+  selected,
+  selectedCount,
+  dropTarget,
+  onPlace,
+  onToggleSelect,
+  onPatch,
+  onMove,
+  onRemove,
+}: {
+  entry: ManifestEntry;
+  index: number;
+  total: number;
+  medium: Medium;
+  selected: boolean;
+  /** How many works a click on the strip would move. */
+  selectedCount: number;
+  /** Insertion point to offer above this row, or null for none. */
+  dropTarget: number | null;
+  onPlace: (target: number) => void;
+  onToggleSelect: (base: string, extend: boolean) => void;
+  onPatch: (i: number, next: Partial<ManifestEntry>) => void;
+  onMove: (i: number, dir: -1 | 1) => void;
+  onRemove: (i: number) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    // The handle is not the draggable element, so dnd-kit has to be told which node
+    // activated the drag — without it the keyboard sensor computes its start position
+    // from the wrong element.
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: entry.base });
+
+  return (
+    <li
+      ref={setNodeRef}
+      className={styles.item}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+    >
+      {dropTarget !== null && (
+        <DropSlot count={selectedCount} onClick={() => onPlace(dropTarget)} />
+      )}
+
+      <div
+        className={`${styles.card} ${selected ? styles.cardSelected : ""} ${
+          isDragging ? styles.cardDragging : ""
+        }`}
+      >
+        <div className={styles.row}>
+          <label className={styles.pick}>
+            <input
+              type="checkbox"
+              checked={selected}
+              // Shift extends from the last plain click, so a run of works is two
+              // clicks rather than twenty. onClick rather than onChange because the
+              // modifier keys are only on the mouse event.
+              onClick={(ev) => onToggleSelect(entry.base, ev.shiftKey)}
+              onChange={() => {}}
+              aria-label={`Select ${entry.title.en || entry.base}`}
+            />
+          </label>
+
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className={styles.thumb}
+            src={`${IMAGE_BASE}/${medium}/${entry.base}-640.webp`}
+            alt=""
+          />
+          <div className={styles.rowMain}>
+            <EntryFields entry={entry} onChange={(p) => onPatch(index, p)} />
+          </div>
+          <div className={styles.rowControls}>
+            <button
+              type="button"
+              className={styles.handle}
+              ref={setActivatorNodeRef}
+              aria-label={`Reorder ${entry.title.en || entry.base}`}
+              {...attributes}
+              {...listeners}
+            >
+              ⠿
+            </button>
+            <button
+              type="button"
+              onClick={() => onMove(index, -1)}
+              disabled={index === 0}
+              aria-label="Move up one place"
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              onClick={() => onMove(index, 1)}
+              disabled={index === total - 1}
+              aria-label="Move down one place"
+            >
+              ↓
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                onPatch(index, {
+                  status: entry.status === "sold" ? "available" : "sold",
+                })
+              }
+            >
+              {entry.status === "sold" ? "Mark available" : "Mark sold"}
+            </button>
+            <button
+              type="button"
+              className={styles.del}
+              onClick={() => onRemove(index)}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </li>
   );
 }
 
