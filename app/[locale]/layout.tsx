@@ -93,8 +93,7 @@ export function generateStaticParams() {
 export const revalidate = 86400;
 
 // This is a root layout — there is no app/layout.tsx above it, so it owns <html>
-// and <body> for the whole public site. /admin and /gallery are separate roots
-// with their own.
+// and <body> for the whole public site. /admin is a separate root with its own.
 //
 // That structure is the point: `lang` now comes from the [locale] segment, which
 // this layout is handed as a param. It used to come from getLocale() in a root

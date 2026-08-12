@@ -113,12 +113,5 @@ export default [
     },
   },
 
-  {
-    files: ["app/**/gallery/**/*.{ts,tsx}"],
-    rules: {
-      "react/no-unknown-property": "off",
-    },
-  },
-
   prettierRecommended,
 ];

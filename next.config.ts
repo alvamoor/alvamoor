@@ -21,28 +21,13 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  async headers() {
-    return [
-      {
-        source: "/artworks/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
-      {
-        source: "/fonts/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
-    ];
-  },
+  // No headers block. Both rules that lived here served the deleted 3D scene:
+  // /artworks/:path* for its textures and /fonts/:path* for the Text3D typeface.
+  // The site's own display face is loaded through next/font/local and served
+  // fingerprinted out of _next/static/media, which is already immutable. Worth
+  // knowing before adding one back: docs/code-audit-2026-08-10.md found this block
+  // never fired anyway, because the Worker does not sit in front of static assets —
+  // a public/_headers file is the mechanism that works on Cloudflare.
 };
 
 initOpenNextCloudflareForDev();

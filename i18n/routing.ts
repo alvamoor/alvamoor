@@ -6,8 +6,7 @@ export const routing = defineRouting({
   localePrefix: "always",
   // next-intl v4 made the locale cookie a session cookie by default, which would
   // drop a visitor's language choice when they close the browser. Keep the v3
-  // behaviour: remember it for a year. `app/gallery/page.tsx` also reads
-  // NEXT_LOCALE to decide where its back link points.
+  // behaviour: remember it for a year.
   localeCookie: { maxAge: 60 * 60 * 24 * 365 },
 });
 

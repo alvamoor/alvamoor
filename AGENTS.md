@@ -7,8 +7,7 @@ artwork image**, which is documented in full below.
 
 ### TL;DR — adding a new work (every step, in order)
 
-A new artwork (e.g. `IMG_4618`) usually appears in **both** the 3D landing scene
-and a medium gallery, so all of these steps are done:
+A new artwork (e.g. `IMG_4618`) goes into one medium's gallery. Every step:
 
 ```bash
 # 1. HEIC -> webp variants (isolate the one file; the script reads a whole dir)
@@ -16,43 +15,35 @@ tmp=$(mktemp -d) && cp content/canvas/IMG_4618.heic "$tmp"/ \
   && node scripts/gen-image-variants.mjs "$tmp" image-variants && rm -rf "$tmp"
 #    -> image-variants/IMG_4618-{640,1024,1200}.webp
 
-# 2. 3D scene: add the base name to the BASE_NAMES array in
-#    app/gallery/artworks.ts  (front of the array = shown first).
-#    Also copy the 1200 variant into public/artworks/ and redeploy — this
-#    gallery is bundled, not R2:
-cp image-variants/IMG_4618-1200.webp public/artworks/
-
-# 3. Upload variants to R2 (--remote is REQUIRED; `canvas` or `paper` folder)
+# 2. Upload variants to R2 (--remote is REQUIRED; `canvas` or `paper` folder)
 for f in image-variants/IMG_4618-*.webp; do
   npx wrangler r2 object put "images/canvas/$(basename "$f")" \
     --file "$f" --content-type image/webp --remote
 done
 
-# 4. Medium gallery: add the entry to content/canvas.json
-#    (front of the array = shown first). Schema + fields shown in Step 2b below.
+# 3. Add the entry to content/canvas.json
+#    (front of the array = shown first). Schema + fields shown in Step 2 below.
 
-# 5. Publish the manifest to R2
+# 4. Publish the manifest to R2
 node scripts/sync-manifest.mjs canvas
 
-# 6. Verify (manifest entry + a 200 on the image)
+# 5. Verify (manifest entry + a 200 on the image)
 curl -s  https://img.alvamoor.com/canvas/index.json | head
 curl -sI https://img.alvamoor.com/canvas/IMG_4618-1200.webp
 ```
 
-The R2 medium gallery (steps 3–5) goes live within ~60s, **no redeploy**. The 3D
-scene (step 2) is bundled static assets, so it needs `npm run deploy`. Per-step
-detail and the schema are below.
+Live within ~60s, **no redeploy** — the manifest is fetched at request time with a
+60s cache window. Per-step detail and the schema are below.
 
 ---
 
-There are **two separate galleries**, each fed differently. Figure out which one
-the image belongs to (or both):
+Both galleries are fed the same way — R2, one manifest each. Figure out which
+medium the image belongs to:
 
-| Gallery      | Route      | Image source                       | Array / manifest                          |
-| ------------ | ---------- | ---------------------------------- | ----------------------------------------- |
-| 3D scene     | `/gallery` | static files in `public/artworks/` | `BASE_NAMES` in `app/gallery/artworks.ts` |
-| Paper works  | `/paper`   | Cloudflare R2 (`paper/` folder)    | `content/paper.json`                      |
-| Canvas works | `/canvas`  | Cloudflare R2 (`canvas/` folder)   | `content/canvas.json`                     |
+| Gallery      | Route     | Image source                     | Manifest             |
+| ------------ | --------- | -------------------------------- | -------------------- |
+| Paper works  | `/paper`  | Cloudflare R2 (`paper/` folder)  | `content/paper.json` |
+| Canvas works | `/canvas` | Cloudflare R2 (`canvas/` folder) | `content/canvas.json` |
 
 Originals (HEIC straight off the phone, etc.) live in `content/<medium>/`.
 The base name (e.g. `IMG_4618`) is the key stem; variants are
@@ -73,21 +64,10 @@ tmp=$(mktemp -d) && cp content/canvas/IMG_4618.heic "$tmp"/ \
 # -> image-variants/IMG_4618-640.webp, -1024.webp, -1200.webp
 ```
 
-`image-variants/` is git-ignored — the files live in R2 (or `public/artworks/`),
+`image-variants/` is git-ignored — the files live in R2,
 not the repo.
 
-### Step 2a — 3D scene (`/gallery`)
-
-The 3D scene serves textures as **static assets** from `public/artworks/`
-(no R2, no rewrite — just `next.config.ts` cache headers on `/artworks/*`).
-
-1. Copy the `-1200.webp` into `public/artworks/`:
-   `cp image-variants/IMG_4618-1200.webp public/artworks/`
-2. Add the base name to `BASE_NAMES` in `app/gallery/artworks.ts` (array order =
-   display order; front of the array = shown first).
-3. This gallery needs a **redeploy** (`npm run deploy`) — it's bundled, not R2.
-
-### Step 2b — Paper / canvas works (`/paper`, `/canvas`)
+### Step 2 — Paper / canvas works (`/paper`, `/canvas`)
 
 These are driven by JSON manifests in R2, so **no redeploy** is needed — changes
 go live within the ~60s revalidate window.
@@ -165,7 +145,7 @@ node scripts/reap-orphans.mjs --min-age-hours=1  # loosen the freshness guard
   interrupted bulk upload. Safe to delete.
 - **MISSING** — a manifest entry names `<base>-<width>.webp` and the object is
   not there. This is a **broken image on the live site**, and the script cannot
-  fix it: re-upload the variant (Step 1 + Step 2b above). Exits non-zero so it is
+  fix it: re-upload the variant (Step 1 + Step 2 above). Exits non-zero so it is
   hard to miss.
 
 It **deletes nothing without `--delete`**, and skips orphans newer than 24h on

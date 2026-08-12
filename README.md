@@ -1,13 +1,12 @@
 # alva moor
 
-The website for the artist **alva moor** — a bilingual (EN/DE) portfolio with a
-3D landing scene and gallery views of works on paper and canvas.
+The website for the artist **alva moor** — a bilingual (EN/DE) portfolio with
+gallery views of works on paper and canvas.
 
 - **Framework:** [Next.js 16](https://nextjs.org/) (App Router, React 19, Turbopack)
 - **Hosting:** Cloudflare Workers via [OpenNext](https://opennext.js.org/cloudflare)
 - **i18n:** [next-intl](https://next-intl.dev/) (`en` default, `de`)
 - **Images/data:** Cloudflare R2 (served from `img.alvamoor.com`)
-- **3D:** react-three-fiber / three.js
 
 ---
 
@@ -36,7 +35,6 @@ Default-locale (English) pages are unprefixed (`/works/paper`); German is under
 | `/works`        | Redirects to `/works/canvas`                            |
 | `/works/canvas` | Works on canvas (data from R2)                          |
 | `/works/paper`  | Works on paper (data from R2)                           |
-| `/gallery`      | 3D scene (static images bundled from `public/artworks`) |
 | `/admin`        | Works admin — add/edit/reorder works (see below)        |
 
 ## Environment variables & secrets
@@ -147,7 +145,6 @@ app/
   components/         Backdrop, Wordmark, SiteNav, LocaleSwitcher, TileField
   admin/              works admin UI (client) — add/edit/reorder/tag works
   api/admin/          admin API (manifest read/write + image upload) behind Access
-  gallery/            the 3D react-three-fiber scene (/gallery)
   lib/                data layer: artworks.ts (R2 manifests), admin-r2.ts, admin-auth.ts
 content/              *.json manifests + originals staging (git-ignored images)
 messages/             en.json / de.json translation catalogs
@@ -158,15 +155,10 @@ docs/                 setup + concept notes
 
 ## Content & images
 
-There are **two galleries**, fed differently:
-
-- **`/works/paper` and `/works/canvas`** read JSON manifests from R2 (`<medium>/index.json`)
-  and images from the same bucket. Manifest changes go live within ~60s, **no
-  redeploy**. Local staging copies live in `content/<medium>.json`; publish with
-  `node scripts/sync-manifest.mjs <paper|canvas>`.
-- **`/gallery`** (3D scene) uses static images bundled from `public/artworks/`
-  and the `BASE_NAMES` array in `app/gallery/artworks.ts`; changes require a
-  redeploy.
+**`/works/paper` and `/works/canvas`** read JSON manifests from R2
+(`<medium>/index.json`) and images from the same bucket. Manifest changes go live
+within ~60s, **no redeploy**. Local staging copies live in `content/<medium>.json`;
+publish with `node scripts/sync-manifest.mjs <paper|canvas>`.
 
 **Adding an artwork** — two independent ways:
 
