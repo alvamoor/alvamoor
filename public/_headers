@@ -40,7 +40,3 @@
 /manifest.webmanifest
   Cache-Control: public, max-age=86400
 
-# Shorter, because this one names the works and their count, and /admin can change
-# that without a redeploy.
-/llms.txt
-  Cache-Control: public, max-age=3600
