@@ -24,8 +24,6 @@ export const viewport: Viewport = {
   themeColor: TILE_TINTS[0],
   width: "device-width",
   initialScale: 1,
-  // Deliberately no maximumScale/userScalable: locking zoom fails WCAG 1.4.4,
-  // and on a site whose subject is paintings, pinching into one is the point.
 };
 
 export async function generateMetadata({
@@ -73,6 +71,15 @@ export async function generateMetadata({
       index: true,
       follow: true,
     },
+    // Declared rather than served from app/, and stated here because the
+    // difference is not cosmetic: app/icon.svg and app/manifest.ts were Next
+    // *metadata routes*, so every page load invoked the Worker for each. They also
+    // answered `cache-control: public, max-age=0, must-revalidate` with an
+    // unquoted — therefore malformed — ETag, so If-None-Match never matched and
+    // each revalidation re-sent the whole body instead of a 304. Moved into
+    // public/ they are static assets: served without invoking the Worker (free and
+    // unlimited on Workers), and they return real 304s.
+    manifest: "/manifest.webmanifest",
     icons: {
       icon: [
         { url: "/icon.svg", type: "image/svg+xml" },
@@ -80,7 +87,9 @@ export async function generateMetadata({
       ],
       // iOS uses a PNG apple-touch-icon (it ignores SVG here).
       apple: [{ url: "/apple-icon.png", type: "image/png", sizes: "180x180" }],
-      shortcut: [{ url: "/icon.svg", type: "image/svg+xml" }],
+      // No `shortcut`. rel="shortcut icon" is a legacy alias of rel="icon" that no
+      // browser has needed since IE9, and it pointed at the same /icon.svg — so it
+      // was a second reference to a file already declared above.
     },
   };
 }

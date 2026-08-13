@@ -1,0 +1,46 @@
+# Cache lifetimes for the static assets. This file — not next.config.ts's
+# `headers()` — is the mechanism that works here, and the distinction is the whole
+# reason it exists.
+#
+# `headers()` works by having the Next server attach headers to responses it
+# serves. Static assets never reach the Next server: Cloudflare's asset layer
+# answers them directly, which is exactly why they cost nothing. So `headers()`
+# has nothing to attach to. This repo carried two `headers()` rules for months
+# that silently did nothing; docs/code-audit-2026-08-10.md found them dead and
+# 141cd1b deleted them. `_headers` is read by the asset server itself.
+#
+# Without this file everything is served `public, max-age=0, must-revalidate`,
+# which obliges the browser to send a conditional request for every asset on every
+# page load — about 19 of them per view here. They come back as empty 304s, so the
+# cost is round trips rather than bytes, but on a slow connection that is the
+# larger part of a repeat visit.
+
+# Content-hashed by the build: the filename changes whenever the bytes do, so a
+# stale copy is unreachable by construction. This is the one place `immutable`
+# is unambiguously correct, and it covers the ~15 chunks, stylesheets and fonts a
+# page pulls.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Fixed filenames, so deliberately NOT immutable. A week means replacing an icon
+# takes effect for returning visitors within a week instead of never — the price
+# of not putting a content hash in the name.
+/icon.svg
+  Cache-Control: public, max-age=604800
+/favicon-48.png
+  Cache-Control: public, max-age=604800
+/apple-icon.png
+  Cache-Control: public, max-age=604800
+/icon-192.png
+  Cache-Control: public, max-age=604800
+/icon-512.png
+  Cache-Control: public, max-age=604800
+
+# Install metadata; changes only when the icon set or the name does.
+/manifest.webmanifest
+  Cache-Control: public, max-age=86400
+
+# Shorter, because this one names the works and their count, and /admin can change
+# that without a redeploy.
+/llms.txt
+  Cache-Control: public, max-age=3600
