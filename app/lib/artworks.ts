@@ -42,7 +42,7 @@ const IMAGE_BASE =
 
 // Widths present in R2. Keep in sync with WIDTHS in gen-image-variants.mjs and
 // the admin upload/resize. Exported for the admin API.
-const ENABLE_384 = process.env.NEXT_PUBLIC_ENABLE_384 === '1';
+const ENABLE_384 = process.env.NEXT_PUBLIC_ENABLE_384 === "1";
 export const WIDTHS = ENABLE_384 ? [384, 640, 1024, 1200] : [640, 1024, 1200];
 const FALLBACK_WIDTH = ENABLE_384 ? 384 : 1024;
 
