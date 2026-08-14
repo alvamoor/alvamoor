@@ -36,9 +36,10 @@ describe("getByMedium", () => {
     const [w] = works;
     expect(w.id).toBe("paper-01");
     expect(w.medium).toBe("paper");
-    // Fallback src is the 1024 variant in the medium's folder.
-    expect(w.src).toMatch(/\/paper\/paper-01-1024\.webp$/);
-    // Responsive srcSet spans all three uploaded widths.
+    // Fallback src is the smallest variant — src is for clients ignoring srcSet.
+    expect(w.src).toMatch(/\/paper\/paper-01-384\.webp$/);
+    // Responsive srcSet spans all four uploaded widths.
+    expect(w.webpSrcSet).toContain("384w");
     expect(w.webpSrcSet).toContain("640w");
     expect(w.webpSrcSet).toContain("1024w");
     expect(w.webpSrcSet).toContain("1200w");

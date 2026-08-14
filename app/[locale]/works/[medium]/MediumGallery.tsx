@@ -132,7 +132,10 @@ export default function MediumGallery({
               className={styles.thumbImg}
               src={a.src}
               srcSet={a.webpSrcSet}
-              sizes="(min-width: 768px) 190px, 33vw"
+              // The column is ~267px above 56rem and ~30vw below; these are
+              // inflated ~12% because object-fit: cover crops, so a landscape
+              // source needs more pixels than the box and `sizes` cannot say so.
+              sizes="(min-width: 56rem) 300px, 34vw"
               alt={a.title[locale]}
               loading={i < EAGER_COUNT ? "eager" : "lazy"}
               fetchPriority={i < EAGER_COUNT ? "high" : "auto"}
