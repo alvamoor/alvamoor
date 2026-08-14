@@ -37,9 +37,7 @@ export function LocaleSwitcher() {
                 : undefined
             }
             className={styles.link}
-            aria-current={
-              option === locale ? "page" : undefined
-            }
+            aria-current={option === locale ? "page" : undefined}
           >
             {t(option)}
           </Link>
