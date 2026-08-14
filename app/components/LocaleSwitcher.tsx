@@ -26,19 +26,20 @@ export function LocaleSwitcher() {
               {" / "}
             </span>
           )}
-          <Link
-            href={pathname}
-            locale={option}
-            prefetch={
-              option === locale
-                ? false
-                : pathname.startsWith("/works")
-                ? false
-                : undefined
-            }
-            className={styles.link}
-            aria-current={option === locale ? "page" : undefined}
-          >
+          {(() => {
+            const prefetchProp = option === locale ? false : pathname.startsWith("/works") ? false : undefined;
+            return (
+              <Link
+                href={pathname}
+                locale={option}
+                prefetch={prefetchProp}
+                className={styles.link}
+                aria-current={option === locale ? "page" : undefined}
+              >
+                {t(option)}
+              </Link>
+            );
+          })()}
             {t(option)}
           </Link>
         </span>
