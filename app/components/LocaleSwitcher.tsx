@@ -29,7 +29,8 @@ export function LocaleSwitcher() {
           <Link
             href={pathname}
             locale={option}
-            prefetch={false}
+            // Active locale = a link to this page. See SiteNav.
+            prefetch={option === locale ? false : undefined}
             className={styles.link}
             aria-current={option === locale ? "page" : undefined}
           >

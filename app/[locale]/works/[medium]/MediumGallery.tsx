@@ -79,12 +79,22 @@ export default function MediumGallery({
     if (mode !== "scroller") return;
     const el = scrollerRef.current;
     if (!el) return;
-    const onScroll = () => {
-      if (el.clientWidth)
-        setCurrent(Math.round(el.scrollLeft / el.clientWidth));
+    // rAF-coalesced: one layout read per frame, not one per scroll event.
+    let frame = 0;
+    const read = () => {
+      frame = 0;
+      const width = el.clientWidth;
+      if (width) setCurrent(Math.round(el.scrollLeft / width));
     };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(read);
+    };
+
     el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
   }, [mode]);
 
   // Esc closes an open caption, else returns to the grid. The grid's URL is named

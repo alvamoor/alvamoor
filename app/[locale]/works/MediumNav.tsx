@@ -29,7 +29,8 @@ export default function MediumNav({ active }: { active: Section }) {
         <Link
           key={section}
           href={`/works/${section}`}
-          prefetch={false}
+          // Active section = a link to this page. See SiteNav.
+          prefetch={section === active ? false : undefined}
           className={`${styles.mediumNavLink} ${
             section === active ? styles.mediumNavActive : ""
           }`}
