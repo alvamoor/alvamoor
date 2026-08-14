@@ -79,22 +79,12 @@ export default function MediumGallery({
     if (mode !== "scroller") return;
     const el = scrollerRef.current;
     if (!el) return;
-    // rAF-coalesced: one layout read per frame, not one per scroll event.
-    let frame = 0;
-    const read = () => {
-      frame = 0;
-      const width = el.clientWidth;
-      if (width) setCurrent(Math.round(el.scrollLeft / width));
-    };
     const onScroll = () => {
-      if (!frame) frame = requestAnimationFrame(read);
+      if (el.clientWidth)
+        setCurrent(Math.round(el.scrollLeft / el.clientWidth));
     };
-
     el.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      el.removeEventListener("scroll", onScroll);
-      if (frame) cancelAnimationFrame(frame);
-    };
+    return () => el.removeEventListener("scroll", onScroll);
   }, [mode]);
 
   // Esc closes an open caption, else returns to the grid. The grid's URL is named
@@ -142,10 +132,7 @@ export default function MediumGallery({
               className={styles.thumbImg}
               src={a.src}
               srcSet={a.webpSrcSet}
-              // The column is ~267px above 56rem and ~30vw below; these are
-              // inflated ~12% because object-fit: cover crops, so a landscape
-              // source needs more pixels than the box and `sizes` cannot say so.
-              sizes="(min-width: 56rem) 300px, 34vw"
+              sizes="(min-width: 768px) 190px, 33vw"
               alt={a.title[locale]}
               loading={i < EAGER_COUNT ? "eager" : "lazy"}
               fetchPriority={i < EAGER_COUNT ? "high" : "auto"}

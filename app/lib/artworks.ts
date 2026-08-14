@@ -42,12 +42,8 @@ const IMAGE_BASE =
 
 // Widths present in R2. Keep in sync with WIDTHS in gen-image-variants.mjs and
 // the admin upload/resize. Exported for the admin API.
-
-// Every width here is named in webpSrcSet, so adding one before R2 has it makes
-// every work advertise a 404. 384 was backfilled first by scripts/backfill-384.mjs.
-export const WIDTHS = [384, 640, 1024, 1200];
-
-const FALLBACK_WIDTH = 384;
+export const WIDTHS = [640, 1024, 1200];
+const FALLBACK_WIDTH = 1024;
 
 // How long (seconds) a fetched manifest is cached before re-fetching. New works
 // appear within this window without an app redeploy.

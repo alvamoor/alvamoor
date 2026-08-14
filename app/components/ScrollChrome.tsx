@@ -82,19 +82,15 @@ export function ScrollChrome() {
 
     const observer = new ResizeObserver(() => measure());
 
-    // Read every height first, then write: setProperty on <html> invalidates
-    // layout, so a read after a write forces a synchronous reflow.
     function measure() {
-      const heights = parts.map(({ selector, property }) => ({
-        property,
-        height:
-          document.querySelector<HTMLElement>(selector)?.getBoundingClientRect()
-            .height ?? null,
-      }));
-
-      for (const { property, height } of heights) {
-        if (height === null) root.style.removeProperty(property);
-        else root.style.setProperty(property, `${Math.round(height)}px`);
+      for (const { selector, property } of parts) {
+        const element = document.querySelector<HTMLElement>(selector);
+        if (!element) {
+          root.style.removeProperty(property);
+          continue;
+        }
+        const { height } = element.getBoundingClientRect();
+        root.style.setProperty(property, `${Math.round(height)}px`);
       }
     }
 
