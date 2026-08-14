@@ -26,13 +26,11 @@ export function SiteNav() {
     <nav aria-label={t("label")} className={styles.nav}>
       {ITEMS.map((item) => {
         const active = pathname.startsWith(item.segment);
-        const isHeavy = item.segment === "/works"; // avoid prefetching routes that trigger many cache/R2 reads
-        const prefetchProp = active ? false : isHeavy ? false : undefined;
         return (
           <Link
             key={item.key}
             href={item.href}
-            prefetch={prefetchProp}
+            prefetch={false}
             className={`${styles.link}${active ? ` ${styles.active}` : ""}`}
             aria-current={active ? "page" : undefined}
           >

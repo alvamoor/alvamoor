@@ -26,25 +26,15 @@ export function LocaleSwitcher() {
               {" / "}
             </span>
           )}
-          {(() => {
-            const prefetchProp =
-              option === locale
-                ? false
-                : pathname.startsWith("/works")
-                  ? false
-                  : undefined;
-            return (
-              <Link
-                href={pathname}
-                locale={option}
-                prefetch={prefetchProp}
-                className={styles.link}
-                aria-current={option === locale ? "page" : undefined}
-              >
-                {t(option)}
-              </Link>
-            );
-          })()}
+          <Link
+            href={pathname}
+            locale={option}
+            prefetch={false}
+            className={styles.link}
+            aria-current={option === locale ? "page" : undefined}
+          >
+            {t(option)}
+          </Link>
         </span>
       ))}
     </nav>
