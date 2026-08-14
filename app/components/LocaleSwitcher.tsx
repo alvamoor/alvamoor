@@ -27,7 +27,12 @@ export function LocaleSwitcher() {
             </span>
           )}
           {(() => {
-            const prefetchProp = option === locale ? false : pathname.startsWith("/works") ? false : undefined;
+            const prefetchProp =
+              option === locale
+                ? false
+                : pathname.startsWith("/works")
+                  ? false
+                  : undefined;
             return (
               <Link
                 href={pathname}
@@ -40,8 +45,6 @@ export function LocaleSwitcher() {
               </Link>
             );
           })()}
-            {t(option)}
-          </Link>
         </span>
       ))}
     </nav>
