@@ -15,8 +15,8 @@ describe("planWidths", () => {
   });
 
   it("caps at the source width and never upscales", () => {
-    expect([...planWidths(900).values()]).toEqual([640, 900, 900]);
-    expect([...planWidths(500).values()]).toEqual([500, 500, 500]);
+    expect([...planWidths(900).values()]).toEqual([384, 640, 900, 900]);
+    expect([...planWidths(500).values()]).toEqual([384, 500, 500, 500]);
   });
 
   it("renders each slot at its full width when the source is large enough", () => {
