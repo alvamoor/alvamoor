@@ -30,9 +30,7 @@ export function SiteNav() {
           <Link
             key={item.key}
             href={item.href}
-            // Active item = a link to this page; prefetching it made every route
-            // fetch itself, which caused the 2026-08-11/12 outages.
-            prefetch={active ? false : undefined}
+            prefetch={false}
             className={`${styles.link}${active ? ` ${styles.active}` : ""}`}
             aria-current={active ? "page" : undefined}
           >
