@@ -29,7 +29,7 @@ export function LocaleSwitcher() {
           <Link
             href={pathname}
             locale={option}
-            prefetch={false}
+            prefetch={option === locale ? false : pathname.startsWith('/works') ? false : undefined}
             className={styles.link}
             aria-current={option === locale ? "page" : undefined}
           >
