@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { type ManifestEntry, getByMedium } from "./artworks";
+import { type ManifestEntry, getByMedium, getWindow } from "./artworks";
 
 describe("getByMedium", () => {
   afterEach(() => vi.unstubAllGlobals());
@@ -103,6 +103,74 @@ describe("getByMedium", () => {
         },
       }));
       expect(await getByMedium("paper")).toEqual([]);
+    });
+  });
+
+  // The single-work view renders three works, not the whole medium — see the
+  // WorkWindow comment in artworks.ts for why that limit exists.
+  describe("getWindow", () => {
+    const three = ["a", "b", "c"].map((base) => ({ ...entry, base }));
+
+    it("returns the work and both neighbours", async () => {
+      stubFetch(() => ({ ok: true, json: async () => three }));
+
+      const win = await getWindow("paper", "b");
+      expect(win?.prev?.base).toBe("a");
+      expect(win?.current.base).toBe("b");
+      expect(win?.next?.base).toBe("c");
+    });
+
+    // The bulk-reorder case, which is what positional URLs got wrong: after a
+    // re-sort, the same base must still open the same work, and must pick up the
+    // neighbours it has *now* rather than the ones it had when the page was built.
+    it("follows a reorder: same work, new neighbours", async () => {
+      const reordered = ["c", "b", "a"].map((base) => ({ ...entry, base }));
+
+      stubFetch(() => ({ ok: true, json: async () => three }));
+      const before = await getWindow("paper", "a");
+      expect(before?.current.base).toBe("a");
+      expect(before?.prev).toBeNull();
+      expect(before?.next?.base).toBe("b");
+
+      stubFetch(() => ({ ok: true, json: async () => reordered }));
+      const after = await getWindow("paper", "a");
+      // The identity does not move with the order — that is the whole point of
+      // addressing a work by name.
+      expect(after?.current.base).toBe("a");
+      // The adjacency does.
+      expect(after?.prev?.base).toBe("b");
+      expect(after?.next).toBeNull();
+    });
+
+    // The arrows and the swipe handler are driven by these being null, so the ends
+    // of a medium have to report as ends rather than wrap or repeat.
+    it("has no prev at the start and no next at the end", async () => {
+      stubFetch(() => ({ ok: true, json: async () => three }));
+
+      expect((await getWindow("paper", "a"))?.prev).toBeNull();
+      expect((await getWindow("paper", "c"))?.next).toBeNull();
+    });
+
+    it("is a window of one when the medium holds a single work", async () => {
+      stubFetch(() => ({ ok: true, json: async () => [entry] }));
+
+      const win = await getWindow("paper", entry.base);
+      expect(win?.current.base).toBe(entry.base);
+      expect(win?.prev).toBeNull();
+      expect(win?.next).toBeNull();
+    });
+
+    // What a link to a deleted work hits. The route turns this into the grid.
+    it("returns null for a base the manifest does not name", async () => {
+      stubFetch(() => ({ ok: true, json: async () => three }));
+      expect(await getWindow("paper", "gone")).toBeNull();
+    });
+
+    // A leftover positional URL is just another name the manifest does not have:
+    // it must not resolve to the work currently sitting at that index.
+    it("returns null for a digits-only segment", async () => {
+      stubFetch(() => ({ ok: true, json: async () => three }));
+      expect(await getWindow("paper", "1")).toBeNull();
     });
   });
 });

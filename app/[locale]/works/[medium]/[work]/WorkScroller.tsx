@@ -3,95 +3,110 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { type Artwork } from "@/app/lib/artworks";
-import { TILE_TINTS } from "@/app/lib/palette";
 import { Link, useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
-import styles from "../works.module.css";
+import styles from "../../works.module.css";
 
 type Labels = {
-  sold: string;
-  available: string;
   prev: string;
   next: string;
   back: string;
 };
 
 type Props = {
-  works: Artwork[];
+  prev: Artwork | null;
+  current: Artwork;
+  next: Artwork | null;
   locale: Locale;
   labels: Labels;
   medium: string;
-  open: number | null;
 };
 
-export default function MediumGallery({
-  works,
+/** How long the scroller has to be still before a swipe counts as landed. */
+const SETTLE_MS = 120;
+
+export default function WorkScroller({
+  prev,
+  current,
+  next,
   locale,
   labels,
   medium,
-  open,
 }: Props) {
   const router = useRouter();
 
-  const mode = open === null ? "grid" : "scroller";
-  const startIndex = open ?? 0;
-
-  // Roughly the above-the-fold grid rows (3 cols mobile, 4 desktop). These load
-  // eagerly at high priority for a fast LCP; everything below stays lazy.
-  const EAGER_COUNT = 8;
+  // Two slides at the ends of the medium, three everywhere else.
+  const slides = [prev, current, next].filter((w): w is Artwork => w !== null);
+  const startIndex = prev ? 1 : 0;
 
   const [openId, setOpenId] = useState<string | null>(null);
-  // The work currently centred in the scroller — drives which images stay
-  // loaded (this one plus its left/right neighbours) so arrowing never blanks.
-  const [current, setCurrent] = useState(startIndex);
   const [imageBox, setImageBox] = useState<{ w: number; h: number } | null>(
     null,
   );
   const openImgRef = useRef<HTMLImageElement | null>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
+  // Set the moment a swipe has decided where it is going, and cleared once the
+  // work it went to has arrived. Without it the scroll that carries the old
+  // slides off screen reads as another swipe and pushes a second navigation.
+  const navigating = useRef(false);
 
-  function scrollByDir(dir: 1 | -1) {
-    const el = scrollerRef.current;
-    if (el) el.scrollBy({ left: dir * el.clientWidth, behavior: "smooth" });
-  }
-
-  function toggle(id: string) {
-    setImageBox(null);
-    setOpenId((cur) => (cur === id ? null : id));
-  }
-
-  useEffect(() => {
-    setOpenId(null);
-    setImageBox(null);
-  }, [open]);
-
-  // Position the scroller on the clicked work when entering it.
+  // Land on the current work. Only three works are rendered, so this is a short
+  // distance — but it must not be an animated one: assigning scrollLeft honours
+  // `scroll-behavior: smooth`, and arriving from a swipe that would animate back
+  // across the slide just left. Instant here, smooth left in place for the arrows.
   useLayoutEffect(() => {
-    if (mode !== "scroller") return;
-    const el = scrollerRef.current;
-    if (el) el.scrollLeft = startIndex * el.clientWidth;
-    setCurrent(startIndex);
-  }, [mode, startIndex]);
-
-  // Track the centred work as the scroller moves so neighbours stay preloaded.
-  useEffect(() => {
-    if (mode !== "scroller") return;
     const el = scrollerRef.current;
     if (!el) return;
-    const onScroll = () => {
-      if (el.clientWidth)
-        setCurrent(Math.round(el.scrollLeft / el.clientWidth));
+
+    const behavior = el.style.scrollBehavior;
+    el.style.scrollBehavior = "auto";
+    el.scrollLeft = startIndex * el.clientWidth;
+    el.style.scrollBehavior = behavior;
+
+    navigating.current = false;
+    setOpenId(null);
+    setImageBox(null);
+  }, [current.id, startIndex]);
+
+  // Swiping to a neighbour is a navigation, because the neighbour is the last
+  // slide there is: the URL becomes that work and the server sends a fresh window
+  // around it. That is what lets a swipe still cross the whole gallery while the
+  // page stays three images wide.
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    const order = [prev, current, next].filter((w): w is Artwork => w !== null);
+    let timer: ReturnType<typeof setTimeout>;
+
+    const settle = () => {
+      if (navigating.current || !el.clientWidth) return;
+      const target = order[Math.round(el.scrollLeft / el.clientWidth)];
+      if (!target || target.id === current.id) return;
+
+      navigating.current = true;
+      router.push(`/works/${medium}/${target.base}`, { scroll: false });
     };
+
+    // Scroll end rather than scroll: a swipe fires dozens of these on the way,
+    // and only where it stops is a work.
+    const onScroll = () => {
+      clearTimeout(timer);
+      timer = setTimeout(settle, SETTLE_MS);
+    };
+
     el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
-  }, [mode]);
+    return () => {
+      clearTimeout(timer);
+      el.removeEventListener("scroll", onScroll);
+    };
+  }, [prev, current, next, medium, router]);
 
   // Esc closes an open caption, else returns to the grid. The grid's URL is named
   // rather than derived: `pathname` is this work's own address now, so dropping a
   // segment from it would be guesswork.
   useEffect(() => {
-    if (mode !== "scroller") return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       if (openId) setOpenId(null);
@@ -99,7 +114,7 @@ export default function MediumGallery({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [mode, openId, router, medium]);
+  }, [openId, router, medium]);
 
   useEffect(() => {
     if (!openId) return;
@@ -112,48 +127,10 @@ export default function MediumGallery({
     return () => window.removeEventListener("resize", measure);
   }, [openId]);
 
-  if (mode === "grid") {
-    return (
-      <div className={styles.grid}>
-        {works.map((a, i) => (
-          // A real link, not a button: each work has an address, so opening one
-          // should middle-click and right-click like anything else. prefetch is
-          // off because a grid is 50-odd of these and prefetching all of them
-          // would cost more than the navigation it saves.
-          <Link
-            key={a.id}
-            href={`/works/${medium}/${i}`}
-            className={styles.thumb}
-            prefetch={false}
-            scroll={false}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              className={styles.thumbImg}
-              src={a.src}
-              srcSet={a.webpSrcSet}
-              // The column is ~267px above 56rem and ~30vw below; these are
-              // inflated ~12% because object-fit: cover crops, so a landscape
-              // source needs more pixels than the box and `sizes` cannot say so.
-              sizes="(min-width: 56rem) 300px, 34vw"
-              alt={a.title[locale]}
-              loading={i < EAGER_COUNT ? "eager" : "lazy"}
-              fetchPriority={i < EAGER_COUNT ? "high" : "auto"}
-              decoding="async"
-              style={{ backgroundColor: TILE_TINTS[i % TILE_TINTS.length] }}
-            />
-          </Link>
-        ))}
-      </div>
-    );
+  function toggle(id: string) {
+    setImageBox(null);
+    setOpenId((cur) => (cur === id ? null : id));
   }
-
-  // Each arrow is only there when it leads somewhere: none on the first work
-  // going back, none on the last going forward, and none at all for a single
-  // work. `current` follows the centred work as the scroller moves (see the
-  // scroll handler above), so they appear and disappear as you go.
-  const hasPrev = current > 0;
-  const hasNext = current < works.length - 1;
 
   // data-view is the hook the shell watches to lock itself to the viewport for
   // this one view — see shell.module.css.
@@ -168,19 +145,22 @@ export default function MediumGallery({
       </Link>
 
       <div className={styles.scrollerWrap} data-view="scroller">
-        {hasPrev && (
-          <button
-            type="button"
+        {/* Links rather than scroll buttons now that a neighbour is a URL: the
+            arrows middle-click and right-click like anything else, and they lead
+            to the same place a swipe does. */}
+        {prev && (
+          <Link
+            href={`/works/${medium}/${prev.base}`}
             className={`${styles.navArrow} ${styles.navArrowLeft}`}
-            onClick={() => scrollByDir(-1)}
             aria-label={labels.prev}
+            scroll={false}
           >
             ‹
-          </button>
+          </Link>
         )}
 
         <div className={styles.works} data-medium={medium} ref={scrollerRef}>
-          {works.map((a, i) => (
+          {slides.map((a) => (
             <button
               key={a.id}
               type="button"
@@ -197,8 +177,11 @@ export default function MediumGallery({
                   srcSet={a.webpSrcSet}
                   sizes="100vw"
                   alt={a.title[locale]}
-                  loading={Math.abs(i - current) <= 1 ? "eager" : "lazy"}
-                  fetchPriority={i === current ? "high" : "auto"}
+                  // All three eagerly: the neighbours are here to be swiped to,
+                  // and one of them decoded in advance is the whole point of
+                  // rendering them at all.
+                  loading="eager"
+                  fetchPriority={a.id === current.id ? "high" : "auto"}
                   decoding="async"
                 />
                 {openId === a.id && imageBox && (
@@ -230,15 +213,15 @@ export default function MediumGallery({
           ))}
         </div>
 
-        {hasNext && (
-          <button
-            type="button"
+        {next && (
+          <Link
+            href={`/works/${medium}/${next.base}`}
             className={`${styles.navArrow} ${styles.navArrowRight}`}
-            onClick={() => scrollByDir(1)}
             aria-label={labels.next}
+            scroll={false}
           >
             ›
-          </button>
+          </Link>
         )}
       </div>
     </>

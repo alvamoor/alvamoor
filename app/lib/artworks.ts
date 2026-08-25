@@ -135,3 +135,42 @@ export async function getByMedium(medium: Medium): Promise<Artwork[]> {
 export function isMedium(value: string | undefined): value is Medium {
   return MEDIA.some((m) => m === value);
 }
+
+/**
+ * A work and its two neighbours — everything the single-work view renders.
+ *
+ * The view used to be handed the whole medium: 94 paper works meant 94 `<img>`
+ * elements with four-width srcSets, and the same 94 again serialized into the RSC
+ * payload, per index URL, per locale. That render does not fit in a Worker's CPU
+ * budget, so the ISR re-render after a manifest change died and the page stayed
+ * frozen on whatever it had rendered last. Three works is what a scroller can
+ * actually show, and it is cheap enough to re-render.
+ */
+export type WorkWindow = {
+  prev: Artwork | null;
+  current: Artwork;
+  next: Artwork | null;
+};
+
+/**
+ * The window around the work named `base`, or null if this medium has no such work.
+ *
+ * There is deliberately no lookup by position to go with this. Nothing addresses a
+ * work by its index any more, and the one thing that briefly did — a redirect from
+ * the old positional URLs — was itself cached, so it could keep pointing at
+ * whatever was 44th at the time it was last rendered.
+ */
+export async function getWindow(
+  medium: Medium,
+  base: string,
+): Promise<WorkWindow | null> {
+  const works = await getByMedium(medium);
+  const i = works.findIndex((w) => w.base === base);
+  if (i === -1) return null;
+
+  return {
+    prev: works[i - 1] ?? null,
+    current: works[i],
+    next: works[i + 1] ?? null,
+  };
+}

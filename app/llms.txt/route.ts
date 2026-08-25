@@ -118,9 +118,9 @@ The site is bilingual. Every page exists under both \`/en\` and \`/de\`.
 ${summaries.map(describe).join("\n") || "- Sections are temporarily unavailable."}
 - [All works (EN)](${SITE}/en/works) · [Alle Werke (DE)](${SITE}/de/works)
 
-Individual works live at \`/{locale}/works/{medium}/{n}\`, where \`n\` is a
-zero-based position in that medium's current list. Positions shift as works are
-added, so cite the index pages above rather than a numbered work.
+Individual works live at \`/{locale}/works/{medium}/{base}\`, where \`base\` names
+the work and stays with it: adding or reordering works does not repoint these
+URLs, so a single work is safe to cite.
 
 ## About
 

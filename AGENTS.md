@@ -40,9 +40,9 @@ Live within ~60s, **no redeploy** — the manifest is fetched at request time wi
 Both galleries are fed the same way — R2, one manifest each. Figure out which
 medium the image belongs to:
 
-| Gallery      | Route     | Image source                     | Manifest             |
-| ------------ | --------- | -------------------------------- | -------------------- |
-| Paper works  | `/paper`  | Cloudflare R2 (`paper/` folder)  | `content/paper.json` |
+| Gallery      | Route     | Image source                     | Manifest              |
+| ------------ | --------- | -------------------------------- | --------------------- |
+| Paper works  | `/paper`  | Cloudflare R2 (`paper/` folder)  | `content/paper.json`  |
 | Canvas works | `/canvas` | Cloudflare R2 (`canvas/` folder) | `content/canvas.json` |
 
 Originals (HEIC straight off the phone, etc.) live in `content/<medium>/`.
@@ -126,6 +126,26 @@ There's also a self-service **`/admin`** UI (Cloudflare Access-gated) that does
 the resize + R2 upload + manifest write in the browser — the manual flow above
 is the power-user / scripted fallback. See `docs/r2-image-migration.md` for the
 full background.
+
+## `base` is the public URL
+
+A work's `base` is its address: `/{locale}/works/{medium}/{base}`, served by
+`app/[locale]/works/[medium]/[work]/page.tsx`. Two consequences:
+
+- **Reordering is safe.** Array order sets display order only. It used to set the
+  URL too (`/works/paper/44` was a position), which meant every bulk re-sort
+  silently repointed every link after the change.
+- **Renaming a `base` breaks that work's links**, and moves its four R2 objects.
+  Every base is a UUID as of 2026-08-24 — `scripts/uuidify-bases.mjs` re-keyed the
+  43 hand-named ones (`paper-14`, `IMG_3190`, …), with the old→new mapping recorded
+  in `content/base-renames.json`, which is the only way back from a UUID to the
+  name a bucket object used to have.
+
+The single-work view renders the work plus its two neighbours, never the whole
+medium — `getWindow` in `app/lib/artworks.ts`. That is a hard requirement, not a
+nicety: rendering all 94 paper works did not fit in the Worker's CPU budget, so the
+ISR re-render after a manifest change failed and the page froze on its last
+successful render. Keep that view at three works.
 
 ## Auditing R2 (orphans and missing images)
 

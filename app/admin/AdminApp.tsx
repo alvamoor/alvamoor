@@ -367,13 +367,13 @@ export default function AdminApp() {
           >
             {dirty ? "Save changes" : "Saved"}
           </button>
-          {/* Said once, quietly, because it is easy to forget and impossible to see:
-              a work's public URL is its position, so reordering repoints every link
-              below the change. A previously shared /works/canvas/3 will show whatever
-              is third afterwards. */}
+          {/* This used to warn that reordering repointed every link below the
+              change, because a work's URL was its position. It is not any more —
+              the URL is the work's name — so the note now says the opposite, and
+              is worth keeping for exactly that reason. */}
           <p className={styles.note}>
-            Reordering changes each work&rsquo;s link — /works/{medium}
-            /&lt;n&gt; is a position, not a name.
+            Reordering changes display order only — /works/{medium}
+            /&lt;name&gt; stays with the work.
           </p>
         </div>
       </header>
@@ -405,8 +405,7 @@ export default function AdminApp() {
 
       {/* Existing works */}
       {selected.size > 0 && (
-        // Only present when there is a selection, so the list is not permanently
-        // fronted by controls that would do nothing.
+        // Only present when there is a selection
         <div className={styles.selectBar}>
           <span className={styles.selectCount}>{selected.size} selected</span>
           <button
@@ -432,8 +431,6 @@ export default function AdminApp() {
           <button type="button" onClick={clearSelection}>
             clear
           </button>
-          {/* The list is 80-odd works long; say where they will land rather than
-              making it a surprise. */}
           <span className={styles.selectHint}>
             or click a line between works to place them there
           </span>

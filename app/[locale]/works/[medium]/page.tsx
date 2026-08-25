@@ -8,7 +8,7 @@ import { routing } from "@/i18n/routing";
 
 import MediumNav from "../MediumNav";
 import { WorksHeading } from "../WorksHeading";
-import MediumGallery from "./MediumGallery";
+import MediumGrid from "./MediumGrid";
 
 // Prerendered, then revalidated every 60s. That window is what keeps "add a work,
 // no redeploy" true: the build bakes whatever R2 held at the time, and the first
@@ -46,7 +46,7 @@ export async function generateMetadata({
   };
 }
 
-// The grid. A single work lives at ./[index] rather than behind a `?w=` search
+// The grid. A single work lives at ./[work] rather than behind a `?w=` search
 // param: reading searchParams here opted the whole route into dynamic rendering,
 // where a route param does not, so this page can be cached once the root layout
 // stops reading a header (see docs/code-audit-2026-08-10.md).
@@ -58,7 +58,6 @@ export default async function MediumPage({
   const { locale, medium } = await params;
   if (!isMedium(medium)) notFound();
 
-  const t = await getTranslations({ locale, namespace: "Gallery" });
   const works = await getByMedium(medium);
 
   return (
@@ -67,19 +66,7 @@ export default async function MediumPage({
 
       <MediumNav active={medium} />
 
-      <MediumGallery
-        works={works}
-        locale={locale}
-        medium={medium}
-        open={null}
-        labels={{
-          sold: t("sold"),
-          available: t("available"),
-          prev: t("prev"),
-          next: t("next"),
-          back: t("back"),
-        }}
-      />
+      <MediumGrid works={works} locale={locale} medium={medium} />
     </>
   );
 }

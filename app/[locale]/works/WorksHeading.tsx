@@ -6,7 +6,7 @@ import type { Locale } from "@/i18n/routing";
 import pageStyles from "../pages.module.css";
 
 // The chrome both works views need: the grid at /works/<medium> and the single
-// work at /works/<medium>/<index>. Identical on each, so it lives here rather
+// work at /works/<medium>/<base>. Identical on each, so it lives here rather
 // than twice.
 export async function WorksHeading({
   locale,
