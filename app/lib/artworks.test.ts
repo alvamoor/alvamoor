@@ -1,4 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import { type ManifestEntry, getByMedium, getWindow } from "./artworks";
 
@@ -114,10 +122,12 @@ describe("getByMedium", () => {
     it("returns the work and both neighbours", async () => {
       stubFetch(() => ({ ok: true, json: async () => three }));
 
-      const win = await getWindow("paper", "b");
-      expect(win?.prev?.base).toBe("a");
-      expect(win?.current.base).toBe("b");
-      expect(win?.next?.base).toBe("c");
+      const found = await getWindow("paper", "b");
+      expect(found.status).toBe("ok");
+      assert(found.status === "ok");
+      expect(found.window.prev?.base).toBe("a");
+      expect(found.window.current.base).toBe("b");
+      expect(found.window.next?.base).toBe("c");
     });
 
     // The bulk-reorder case, which is what positional URLs got wrong: after a
@@ -128,18 +138,20 @@ describe("getByMedium", () => {
 
       stubFetch(() => ({ ok: true, json: async () => three }));
       const before = await getWindow("paper", "a");
-      expect(before?.current.base).toBe("a");
-      expect(before?.prev).toBeNull();
-      expect(before?.next?.base).toBe("b");
+      assert(before.status === "ok");
+      expect(before.window.current.base).toBe("a");
+      expect(before.window.prev).toBeNull();
+      expect(before.window.next?.base).toBe("b");
 
       stubFetch(() => ({ ok: true, json: async () => reordered }));
       const after = await getWindow("paper", "a");
+      assert(after.status === "ok");
       // The identity does not move with the order — that is the whole point of
       // addressing a work by name.
-      expect(after?.current.base).toBe("a");
+      expect(after.window.current.base).toBe("a");
       // The adjacency does.
-      expect(after?.prev?.base).toBe("b");
-      expect(after?.next).toBeNull();
+      expect(after.window.prev?.base).toBe("b");
+      expect(after.window.next).toBeNull();
     });
 
     // The arrows and the swipe handler are driven by these being null, so the ends
@@ -147,30 +159,69 @@ describe("getByMedium", () => {
     it("has no prev at the start and no next at the end", async () => {
       stubFetch(() => ({ ok: true, json: async () => three }));
 
-      expect((await getWindow("paper", "a"))?.prev).toBeNull();
-      expect((await getWindow("paper", "c"))?.next).toBeNull();
+      const first = await getWindow("paper", "a");
+      const last = await getWindow("paper", "c");
+      assert(first.status === "ok" && last.status === "ok");
+      expect(first.window.prev).toBeNull();
+      expect(last.window.next).toBeNull();
     });
 
     it("is a window of one when the medium holds a single work", async () => {
       stubFetch(() => ({ ok: true, json: async () => [entry] }));
 
-      const win = await getWindow("paper", entry.base);
-      expect(win?.current.base).toBe(entry.base);
-      expect(win?.prev).toBeNull();
-      expect(win?.next).toBeNull();
+      const found = await getWindow("paper", entry.base);
+      assert(found.status === "ok");
+      expect(found.window.current.base).toBe(entry.base);
+      expect(found.window.prev).toBeNull();
+      expect(found.window.next).toBeNull();
     });
 
     // What a link to a deleted work hits. The route turns this into the grid.
     it("returns null for a base the manifest does not name", async () => {
       stubFetch(() => ({ ok: true, json: async () => three }));
-      expect(await getWindow("paper", "gone")).toBeNull();
+      expect((await getWindow("paper", "gone")).status).toBe("missing");
     });
 
     // A leftover positional URL is just another name the manifest does not have:
     // it must not resolve to the work currently sitting at that index.
     it("returns null for a digits-only segment", async () => {
       stubFetch(() => ({ ok: true, json: async () => three }));
-      expect(await getWindow("paper", "1")).toBeNull();
+      expect((await getWindow("paper", "1")).status).toBe("missing");
+    });
+
+    // The reason this returns three cases instead of two. An unreadable manifest
+    // must NOT read as "missing": the route caches a redirect for that, so one
+    // failed fetch would be stored as "this work is gone".
+    describe("when the manifest cannot be read", () => {
+      beforeEach(() => {
+        vi.spyOn(console, "warn").mockImplementation(() => {});
+      });
+      afterEach(() => vi.restoreAllMocks());
+
+      it("reports unavailable, not missing, on a non-ok response", async () => {
+        stubFetch(() => ({ ok: false, json: async () => [] }));
+        expect((await getWindow("paper", "a")).status).toBe("unavailable");
+      });
+
+      it("reports unavailable when the body is not an array", async () => {
+        stubFetch(() => ({ ok: true, json: async () => ({}) }));
+        expect((await getWindow("paper", "a")).status).toBe("unavailable");
+      });
+
+      it("reports unavailable when fetch itself throws", async () => {
+        vi.stubGlobal(
+          "fetch",
+          vi.fn(() => Promise.reject(new Error("boom"))),
+        );
+        expect((await getWindow("paper", "a")).status).toBe("unavailable");
+      });
+
+      // A medium that really is empty is a different thing again: the manifest read
+      // fine, so a name that is not in it is genuinely missing.
+      it("still reports missing when an empty manifest reads fine", async () => {
+        stubFetch(() => ({ ok: true, json: async () => [] }));
+        expect((await getWindow("paper", "a")).status).toBe("missing");
+      });
     });
   });
 });

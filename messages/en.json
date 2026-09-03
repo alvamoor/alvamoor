@@ -40,5 +40,16 @@
     "prev": "Previous work",
     "next": "Next work",
     "virtualGallery": "Virtual gallery"
+  },
+  "Error": {
+    "heading": "something went wrong on our end",
+    "body": "This page could not be loaded. It is not your browser or your connection, and there is nothing you need to fix. It is usually brief, so one more try is often all it takes.",
+    "retry": "try again",
+    "back": "back to the works"
+  },
+  "NotFound": {
+    "heading": "nothing here",
+    "body": "This page does not exist — or it did once and no longer does. Nothing is broken; the address just does not lead anywhere.",
+    "back": "back to the works"
   }
 }

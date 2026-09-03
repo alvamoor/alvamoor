@@ -35,9 +35,9 @@ export async function generateMetadata({
   if (!isMedium(medium)) return {};
 
   const found = await getWindow(medium, work);
-  if (!found) return {};
+  if (found.status !== "ok") return {};
 
-  const { current } = found;
+  const { current } = found.window;
   const t = await getTranslations({ locale, namespace: "Gallery" });
   const path = `/works/${medium}/${current.base}`;
 
@@ -70,10 +70,18 @@ export default async function WorkPage({
 
   const found = await getWindow(medium, work);
 
-  if (!found) {
-    // Anything this medium does not name — a deleted work, a typo, or one of the
+  // The manifest could not be read, so we do not know whether this work exists.
+  // Throwing is the whole point: it renders ../../../error.tsx and, unlike a
+  // redirect or a notFound, Next stores nothing for a render that threw. A blip
+  // costs one request instead of being cached as "this work is gone" for the rest
+  // of the revalidate window.
+  if (found.status === "unavailable")
+    throw new Error(`${medium} manifest unavailable: ${found.reason}`);
+
+  if (found.status === "missing") {
+    // Anything the manifest does not name — a deleted work, a typo, or one of the
     // positional URLs works had before this route addressed them by name — lands
-    // on the grid rather than on an error.
+    // on the grid. Safe to cache: it stays true until the manifest changes.
     //
     // A position is deliberately NOT resolved to the work that currently sits
     // there. That redirect was cached like any other response (s-maxage=60,
@@ -85,18 +93,20 @@ export default async function WorkPage({
 
     // Unreachable: redirect() throws. It is here because next-intl types it as
     // returning void rather than never, so without it the compiler still believes
-    // `found` may be null below.
+    // `found` may not be "ok" below.
     notFound();
   }
+
+  const { window: win } = found;
 
   return (
     <>
       <WorksHeading locale={locale} medium={medium} />
 
       <WorkScroller
-        prev={found.prev}
-        current={found.current}
-        next={found.next}
+        prev={win.prev}
+        current={win.current}
+        next={win.next}
         locale={locale}
         medium={medium}
         labels={{

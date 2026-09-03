@@ -40,5 +40,16 @@
     "prev": "Vorheriges Werk",
     "next": "Nächstes Werk",
     "virtualGallery": "Virtuelle Galerie"
+  },
+  "Error": {
+    "heading": "auf unserer Seite ist etwas schiefgelaufen",
+    "body": "Diese Seite konnte nicht geladen werden. Es liegt nicht an deinem Browser oder deiner Verbindung, und du musst nichts richten. Meist ist es nur kurz — ein weiterer Versuch genügt oft.",
+    "retry": "nochmal versuchen",
+    "back": "zurück zu den Arbeiten"
+  },
+  "NotFound": {
+    "heading": "hier ist nichts",
+    "body": "Diese Seite gibt es nicht — oder es gab sie einmal und jetzt nicht mehr. Es ist nichts kaputt; die Adresse führt nur nirgendwohin.",
+    "back": "zurück zu den Arbeiten"
   }
 }

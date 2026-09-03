@@ -92,14 +92,22 @@ export function validateEntry(e: unknown): string | null {
   return null;
 }
 
-export async function getByMedium(medium: Medium): Promise<Artwork[]> {
-  const res = await fetch(`${IMAGE_BASE}/${medium}/index.json`, {
-    next: { revalidate: REVALIDATE },
-  });
-  if (!res.ok) return [];
+type ManifestRead =
+  { ok: true; works: Artwork[] } | { ok: false; reason: string };
+
+async function loadManifest(medium: Medium): Promise<ManifestRead> {
+  let res: Response;
+  try {
+    res = await fetch(`${IMAGE_BASE}/${medium}/index.json`, {
+      next: { revalidate: REVALIDATE },
+    });
+  } catch (cause) {
+    return { ok: false, reason: `fetch failed: ${(cause as Error).message}` };
+  }
+  if (!res.ok) return { ok: false, reason: `HTTP ${res.status}` };
 
   const raw: unknown = await res.json().catch(() => null);
-  if (!Array.isArray(raw)) return [];
+  if (!Array.isArray(raw)) return { ok: false, reason: "not a JSON array" };
 
   // The manifest is hand-editable and published by three different paths, so it
   // is not trusted here. A malformed entry used to reach the renderer intact and
@@ -124,36 +132,44 @@ export async function getByMedium(medium: Medium): Promise<Artwork[]> {
     entries.push(entry);
   }
 
-  return entries.map((entry) => ({
-    ...entry,
-    id: entry.base,
-    medium,
-    ...srcFor(medium, entry.base),
-  }));
+  return {
+    ok: true,
+    works: entries.map((entry) => ({
+      ...entry,
+      id: entry.base,
+      medium,
+      ...srcFor(medium, entry.base),
+    })),
+  };
+}
+
+export async function getByMedium(medium: Medium): Promise<Artwork[]> {
+  const read = await loadManifest(medium);
+  if (!read.ok) {
+    // eslint-disable-next-line no-console
+    console.warn(`${medium} manifest unavailable: ${read.reason}`);
+    return [];
+  }
+  return read.works;
 }
 
 export function isMedium(value: string | undefined): value is Medium {
   return MEDIA.some((m) => m === value);
 }
 
-/**
- * A work and its two neighbours — everything the single-work view renders.
- *
- * The view used to be handed the whole medium: 94 paper works meant 94 `<img>`
- * elements with four-width srcSets, and the same 94 again serialized into the RSC
- * payload, per index URL, per locale. That render does not fit in a Worker's CPU
- * budget, so the ISR re-render after a manifest change died and the page stayed
- * frozen on whatever it had rendered last. Three works is what a scroller can
- * actually show, and it is cheap enough to re-render.
- */
 export type WorkWindow = {
   prev: Artwork | null;
   current: Artwork;
   next: Artwork | null;
 };
 
+export type WorkLookup =
+  | { status: "ok"; window: WorkWindow }
+  | { status: "missing" }
+  | { status: "unavailable"; reason: string };
+
 /**
- * The window around the work named `base`, or null if this medium has no such work.
+ * The window around the work named `base`.
  *
  * There is deliberately no lookup by position to go with this. Nothing addresses a
  * work by its index any more, and the one thing that briefly did — a redirect from
@@ -163,14 +179,20 @@ export type WorkWindow = {
 export async function getWindow(
   medium: Medium,
   base: string,
-): Promise<WorkWindow | null> {
-  const works = await getByMedium(medium);
+): Promise<WorkLookup> {
+  const read = await loadManifest(medium);
+  if (!read.ok) return { status: "unavailable", reason: read.reason };
+
+  const works = read.works;
   const i = works.findIndex((w) => w.base === base);
-  if (i === -1) return null;
+  if (i === -1) return { status: "missing" };
 
   return {
-    prev: works[i - 1] ?? null,
-    current: works[i],
-    next: works[i + 1] ?? null,
+    status: "ok",
+    window: {
+      prev: works[i - 1] ?? null,
+      current: works[i],
+      next: works[i + 1] ?? null,
+    },
   };
 }
