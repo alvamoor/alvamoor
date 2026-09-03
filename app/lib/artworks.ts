@@ -157,6 +157,10 @@ export function isMedium(value: string | undefined): value is Medium {
   return MEDIA.some((m) => m === value);
 }
 
+export function tileId(base: string): string {
+  return `work-${base}`;
+}
+
 export type WorkWindow = {
   prev: Artwork | null;
   current: Artwork;

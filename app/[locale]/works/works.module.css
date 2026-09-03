@@ -124,6 +124,16 @@ html[data-scroll="down"] .mediumNav {
   position: relative;
   display: block;
   overflow: hidden;
+  /* Where the browser stops when it scrolls to this tile's id — the anchor "back"
+     from a single work targets. Without it the tile lands *under* the sticky header
+     and its subnav, which is worse than not scrolling at all: you arrive looking at
+     the wrong row and cannot tell that anything was aimed at. Both heights are
+     measured and published by ScrollChrome; the fallbacks keep this sensible before
+     hydration, and the extra rem is breathing room so the tile reads as chosen
+     rather than as jammed against the chrome. */
+  scroll-margin-block-start: calc(
+    var(--header-h, 3.5rem) + var(--subnav-h, 2rem) + 1rem
+  );
   appearance: none;
   border: 0;
   margin: 0;

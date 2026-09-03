@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { type Artwork } from "@/app/lib/artworks";
+import { type Artwork, tileId } from "@/app/lib/artworks";
 import { Link, useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
@@ -103,18 +103,17 @@ export default function WorkScroller({
     };
   }, [prev, current, next, medium, router]);
 
-  // Esc closes an open caption, else returns to the grid. The grid's URL is named
-  // rather than derived: `pathname` is this work's own address now, so dropping a
-  // segment from it would be guesswork.
+  const backHref = `/works/${medium}#${tileId(current.base)}`;
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       if (openId) setOpenId(null);
-      else router.push(`/works/${medium}`, { scroll: false });
+      else router.push(backHref);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [openId, router, medium]);
+  }, [openId, router, backHref]);
 
   useEffect(() => {
     if (!openId) return;
@@ -140,7 +139,7 @@ export default function WorkScroller({
           in the page, because next-intl's Link reads a header when rendered on
           the server — see MediumNav. Still a sibling of the scroller, so the
           flex chain the locked view depends on is unchanged. */}
-      <Link href={`/works/${medium}`} className={styles.back} scroll={false}>
+      <Link href={backHref} className={styles.back}>
         {labels.back}
       </Link>
 

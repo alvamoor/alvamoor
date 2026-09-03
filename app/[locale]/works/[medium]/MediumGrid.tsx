@@ -1,6 +1,6 @@
 "use client";
 
-import { type Artwork } from "@/app/lib/artworks";
+import { type Artwork, tileId } from "@/app/lib/artworks";
 import { TILE_TINTS } from "@/app/lib/palette";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -23,6 +23,9 @@ export default function MediumGrid({ works, locale, medium }: Props) {
       {works.map((a, i) => (
         <Link
           key={a.id}
+          // The anchor "back" returns to, so leaving a work lands on its tile
+          // rather than at the top of the grid — see backHref in WorkScroller.
+          id={tileId(a.base)}
           href={`/works/${medium}/${a.base}`}
           className={styles.thumb}
           prefetch={false}
