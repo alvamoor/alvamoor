@@ -13,15 +13,17 @@ function urlFor(locale: string, path: string) {
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
 
-  return PATHS.map((path) => ({
-    url: urlFor(routing.defaultLocale, path),
-    lastModified,
-    changeFrequency: "weekly",
-    priority: path === "" ? 1 : 0.8,
-    alternates: {
-      languages: Object.fromEntries(
-        routing.locales.map((l) => [l, urlFor(l, path)]),
-      ),
-    },
-  }));
+  return PATHS.flatMap((path) =>
+    routing.locales.map((locale) => ({
+      url: urlFor(locale, path),
+      lastModified,
+      changeFrequency: "weekly" as const,
+      priority: path === "" ? 1 : 0.8,
+      alternates: {
+        languages: Object.fromEntries(
+          routing.locales.map((l) => [l, urlFor(l, path)]),
+        ),
+      },
+    })),
+  );
 }
