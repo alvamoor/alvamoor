@@ -146,10 +146,9 @@ app/
   admin/              works admin UI (client) — add/edit/reorder/tag works
   api/admin/          admin API (manifest read/write + image upload) behind Access
   lib/                data layer: artworks.ts (R2 manifests), admin-r2.ts, admin-auth.ts
-content/              *.json manifests + originals staging (git-ignored images)
 messages/             en.json / de.json translation catalogs
 i18n/                 next-intl routing + request config
-scripts/              gen-image-variants.mjs, sync-manifest.mjs
+scripts/              uuidify-bases.mjs, reap-orphans.mjs (one-off / audit tools)
 docs/                 setup + concept notes
 ```
 
@@ -157,17 +156,12 @@ docs/                 setup + concept notes
 
 **`/works/paper` and `/works/canvas`** read JSON manifests from R2
 (`<medium>/index.json`) and images from the same bucket. Manifest changes go live
-within ~60s, **no redeploy**. Local staging copies live in `content/<medium>.json`;
-publish with `node scripts/sync-manifest.mjs <paper|canvas>`.
+within ~60s, **no redeploy**.
 
-**Adding an artwork** — two independent ways:
-
-- **`/admin` UI** (usual): resizes the image in the browser
-  (`app/admin/resize.ts`), uploads the webp variants to R2, and writes the
-  manifest — no scripts, no redeploy.
-- **Manual / bulk CLI:** `scripts/gen-image-variants.mjs` (HEIC → webp sizes),
-  then edit `content/<medium>.json` and publish with
-  `scripts/sync-manifest.mjs`.
+**Adding an artwork** — through the **`/admin` UI** only: it resizes the image
+in the browser (`app/admin/resize.ts`), uploads the webp variants to R2, and
+writes the manifest — no scripts, no redeploy. See `AGENTS.md` for the manifest
+schema.
 
 ### Caching
 
