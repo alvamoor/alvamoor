@@ -24,13 +24,7 @@ export type ManifestEntry = {
   widthCm: number;
   heightCm: number;
   status: "available" | "sold";
-  /**
-   * ISO 8601 date this work was published, e.g. "2026-09-23". Optional because
-   * every work uploaded before /feed.xml existed has none — that is a gap in
-   * the data, not something to paper over, so the feed omits <pubDate> for
-   * those rather than fabricating one. Set automatically on every new
-   * /admin upload.
-   */
+  /** ISO 8601 date this work was published. Set automatically by /admin. */
   addedAt?: string;
 };
 

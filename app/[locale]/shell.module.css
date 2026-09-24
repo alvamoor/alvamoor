@@ -235,9 +235,6 @@ html[data-scroll="down"] .veil {
   font-variant-numeric: tabular-nums;
 }
 
-/* Same muted tone as the copyright line beside it; the underline (rather than
-   contactLink's border-bottom treatment) stays out of the way of the
-   lowercase/uppercase letter-spacing the footer already sets. */
 .feedLink {
   color: inherit;
   text-decoration: underline;

@@ -66,8 +66,6 @@ export async function generateMetadata({
       // a negotiator: it redirects to /en or /de by Accept-Language, which is
       // exactly what a crawler with no language preference should be handed.
       languages: { ...languages, "x-default": "/" },
-      // One feed, not one per locale — app/feed.xml/route.ts explains why RSS
-      // 2.0 can't carry both languages at once.
       types: { "application/rss+xml": "/feed.xml" },
     },
     robots: {
@@ -151,8 +149,6 @@ export default async function LocaleLayout({
 
               <footer className={styles.footer}>
                 <span className={styles.year}>{t("year", { year })}</span>
-                {/* Same feed for every locale — see the alternates.types note
-                    above — so this link never varies by locale either. */}
                 <a href="/feed.xml" className={styles.feedLink}>
                   {t("feed")}
                 </a>
