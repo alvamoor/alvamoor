@@ -24,6 +24,14 @@ export type ManifestEntry = {
   widthCm: number;
   heightCm: number;
   status: "available" | "sold";
+  /**
+   * ISO 8601 date this work was published, e.g. "2026-09-23". Optional because
+   * every work uploaded before /feed.xml existed has none — that is a gap in
+   * the data, not something to paper over, so the feed omits <pubDate> for
+   * those rather than fabricating one. Set automatically on every new
+   * /admin upload.
+   */
+  addedAt?: string;
 };
 
 export type Artwork = ManifestEntry & {
@@ -84,6 +92,11 @@ export function validateEntry(e: unknown): string | null {
   if (!isText(o.mediumLabel)) return "mediumLabel must have en+de";
   if (o.description !== undefined && !isText(o.description))
     return "description must have en+de";
+  if (
+    o.addedAt !== undefined &&
+    (typeof o.addedAt !== "string" || Number.isNaN(Date.parse(o.addedAt)))
+  )
+    return "addedAt must be an ISO date string";
   if (typeof o.year !== "number") return "year must be a number";
   if (typeof o.widthCm !== "number" || typeof o.heightCm !== "number")
     return "widthCm/heightCm must be numbers";

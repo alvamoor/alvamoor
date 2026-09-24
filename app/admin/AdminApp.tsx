@@ -276,7 +276,11 @@ export default function AdminApp() {
           `Only ${stored ?? 0} of ${variants.size} image sizes reached storage — the work was not added. Please try again.`,
         );
 
-      const entry: ManifestEntry = { base, ...draft };
+      const entry: ManifestEntry = {
+        base,
+        ...draft,
+        addedAt: new Date().toISOString(),
+      };
       // Drop an empty description so it isn't stored as blank.
       if (!entry.description?.en.trim() && !entry.description?.de.trim())
         delete entry.description;

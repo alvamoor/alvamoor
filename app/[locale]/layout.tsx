@@ -66,6 +66,9 @@ export async function generateMetadata({
       // a negotiator: it redirects to /en or /de by Accept-Language, which is
       // exactly what a crawler with no language preference should be handed.
       languages: { ...languages, "x-default": "/" },
+      // One feed, not one per locale — app/feed.xml/route.ts explains why RSS
+      // 2.0 can't carry both languages at once.
+      types: { "application/rss+xml": "/feed.xml" },
     },
     robots: {
       index: true,

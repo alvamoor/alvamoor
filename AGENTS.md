@@ -24,12 +24,15 @@ first); `base` is the R2 object-key stem, with variants at
   "year": 2026,
   "widthCm": 130,
   "heightCm": 170,
-  "status": "available"
+  "status": "available",
+  "addedAt": "2026-09-24T00:00:00.000Z"
 }
 ```
 
 Canvas works are **always "Pigments on canvas"**. `status` is
-`available` | `sold`.
+`available` | `sold`. `addedAt` (ISO 8601) drives `<pubDate>` and sort order in
+`/feed.xml` — `/admin` sets it automatically on every new work, so it's only
+ever missing on works added before this field existed.
 
 ### Verify
 
@@ -37,6 +40,13 @@ Canvas works are **always "Pigments on canvas"**. `status` is
 curl -s  https://img.alvamoor.com/canvas/index.json          # entry present
 curl -sI https://img.alvamoor.com/canvas/<base>-1200.webp     # expect 200, image/webp
 ```
+
+### RSS
+
+`app/feed.xml/route.ts` derives an RSS 2.0 feed from the same two manifests —
+no separate step, no extra state. English-only (RSS 2.0 has no per-item
+language tag), newest-`addedAt`-first; works with no `addedAt` sink to the back
+as undated rather than being guessed at.
 
 ## `base` is the public URL
 
