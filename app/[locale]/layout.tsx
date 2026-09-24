@@ -151,6 +151,11 @@ export default async function LocaleLayout({
 
               <footer className={styles.footer}>
                 <span className={styles.year}>{t("year", { year })}</span>
+                {/* Same feed for every locale — see the alternates.types note
+                    above — so this link never varies by locale either. */}
+                <a href="/feed.xml" className={styles.feedLink}>
+                  {t("feed")}
+                </a>
               </footer>
             </div>
           </div>
