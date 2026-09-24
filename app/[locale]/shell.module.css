@@ -235,6 +235,18 @@ html[data-scroll="down"] .veil {
   font-variant-numeric: tabular-nums;
 }
 
+.feedLink {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--v2-line);
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color 180ms ease;
+}
+
+.feedLink:hover {
+  text-decoration-color: var(--v2-fg);
+}
+
 /* min-height: 0 is load-bearing, not tidiness: as a column flex item .main
    defaults to min-height: auto, which refuses to shrink below its content. The
    locked single-work view then never gets a bounded height to hand down, and the

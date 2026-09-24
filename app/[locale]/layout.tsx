@@ -66,6 +66,7 @@ export async function generateMetadata({
       // a negotiator: it redirects to /en or /de by Accept-Language, which is
       // exactly what a crawler with no language preference should be handed.
       languages: { ...languages, "x-default": "/" },
+      types: { "application/rss+xml": "/feed.xml" },
     },
     robots: {
       index: true,
@@ -148,6 +149,9 @@ export default async function LocaleLayout({
 
               <footer className={styles.footer}>
                 <span className={styles.year}>{t("year", { year })}</span>
+                <a href="/feed.xml" className={styles.feedLink}>
+                  {t("feed")}
+                </a>
               </footer>
             </div>
           </div>

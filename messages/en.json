@@ -3,7 +3,8 @@
     "name": "alva moor",
     "description": "abstract paintings.\natmospheric, layered, and intuitive.",
     "jobTitle": "Visual Artist",
-    "year": "© {year}"
+    "year": "© {year}",
+    "feed": "rss"
   },
   "Nav": {
     "label": "Main",

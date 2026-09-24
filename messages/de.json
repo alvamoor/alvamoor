@@ -3,7 +3,8 @@
     "name": "alva moor",
     "description": "abstrakte malerei.\natmosphärisch, geschichtet, intuitiv.",
     "jobTitle": "Bildende Künstlerin",
-    "year": "© {year}"
+    "year": "© {year}",
+    "feed": "rss"
   },
   "Nav": {
     "label": "Hauptmenü",
