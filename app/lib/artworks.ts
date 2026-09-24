@@ -1,8 +1,8 @@
 // Artwork data is stored as JSON manifests in Cloudflare R2, one per medium:
 //   <IMAGE_BASE>/paper/index.json, <IMAGE_BASE>/canvas/index.json
 // Each manifest is an array of ManifestEntry. Images live alongside in the same
-// folder as <base>-<width>.webp. Adding a work = upload its image variants +
-// add a manifest entry + run scripts/sync-manifest.mjs — no code change.
+// folder as <base>-<width>.webp. Works are added through /admin, which writes
+// both the image variants and the manifest entry — no code change.
 // See docs/r2-image-migration.md.
 
 export const MEDIA = ["paper", "canvas"] as const;
@@ -40,8 +40,8 @@ export type Artwork = ManifestEntry & {
 const IMAGE_BASE =
   process.env.NEXT_PUBLIC_IMAGE_BASE_URL ?? "https://img.alvamoor.com";
 
-// Widths present in R2. Keep in sync with WIDTHS in gen-image-variants.mjs and
-// the admin upload/resize. Exported for the admin API.
+// Widths present in R2. Keep in sync with the admin upload/resize.
+// Exported for the admin API.
 
 // Every width here is named in webpSrcSet, so adding one before R2 has it makes
 // every work advertise a 404. 384 was backfilled first by scripts/backfill-384.mjs.
