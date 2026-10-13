@@ -8,7 +8,7 @@ import {
   vi,
 } from "vitest";
 
-import { type ManifestEntry, getByMedium, getWindow } from "./artworks";
+import { type ManifestEntry, altFor, getByMedium, getWindow } from "./artworks";
 
 describe("getByMedium", () => {
   afterEach(() => vi.unstubAllGlobals());
@@ -223,5 +223,33 @@ describe("getByMedium", () => {
         expect((await getWindow("paper", "a")).status).toBe("missing");
       });
     });
+  });
+});
+
+describe("altFor", () => {
+  const base = {
+    title: { en: "airth IIIB", de: "airth IIIB" },
+    mediumLabel: { en: "Acrylics on canvas", de: "Acryl auf Leinwand" },
+    year: 2026,
+    widthCm: 50,
+    heightCm: 60,
+  };
+
+  it("builds a distinct alt from the manifest fields", () => {
+    expect(altFor(base, "en")).toBe(
+      "airth IIIB, Acrylics on canvas, 2026, 50 × 60 cm — artwork by alva moor",
+    );
+    expect(altFor(base, "de")).toContain("Kunstwerk von alva moor");
+  });
+
+  it("prefers a written description", () => {
+    const description = { en: "Blue fields", de: "Blaue Felder" };
+    expect(altFor({ ...base, description }, "de")).toBe("Blaue Felder");
+  });
+
+  it("omits unknown sizes", () => {
+    expect(altFor({ ...base, widthCm: 0, heightCm: 0 }, "en")).not.toContain(
+      "cm",
+    );
   });
 });

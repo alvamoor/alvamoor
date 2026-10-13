@@ -1,6 +1,6 @@
 "use client";
 
-import { type Artwork, tileId } from "@/app/lib/artworks";
+import { type Artwork, altFor, tileId } from "@/app/lib/artworks";
 import { TILE_TINTS } from "@/app/lib/palette";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -40,7 +40,7 @@ export default function MediumGrid({ works, locale, medium }: Props) {
             // inflated ~12% because object-fit: cover crops, so a landscape
             // source needs more pixels than the box and `sizes` cannot say so.
             sizes="(min-width: 56rem) 300px, 34vw"
-            alt={a.title[locale]}
+            alt={altFor(a, locale)}
             loading={i < EAGER_COUNT ? "eager" : "lazy"}
             fetchPriority={i < EAGER_COUNT ? "high" : "auto"}
             decoding="async"

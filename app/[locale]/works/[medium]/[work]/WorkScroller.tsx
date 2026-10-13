@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { type Artwork, tileId } from "@/app/lib/artworks";
+import { type Artwork, altFor, tileId } from "@/app/lib/artworks";
 import { Link, useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
@@ -175,7 +175,7 @@ export default function WorkScroller({
                   src={a.src}
                   srcSet={a.webpSrcSet}
                   sizes="100vw"
-                  alt={a.title[locale]}
+                  alt={altFor(a, locale)}
                   // All three eagerly: the neighbours are here to be swiped to,
                   // and one of them decoded in advance is the whole point of
                   // rendering them at all.

@@ -168,6 +168,24 @@ export function tileId(base: string): string {
   return `work-${base}`;
 }
 
+const ALT_BY = { en: "artwork by alva moor", de: "Kunstwerk von alva moor" };
+
+export function altFor(
+  a: Pick<
+    ManifestEntry,
+    "title" | "description" | "mediumLabel" | "year" | "widthCm" | "heightCm"
+  >,
+  locale: keyof LocalizedText,
+): string {
+  const described = a.description?.[locale]?.trim();
+  if (described) return described;
+
+  const parts = [a.title[locale], a.mediumLabel[locale], String(a.year)];
+  if (a.widthCm > 0 && a.heightCm > 0)
+    parts.push(`${a.widthCm} × ${a.heightCm} cm`);
+  return `${parts.join(", ")} — ${ALT_BY[locale]}`;
+}
+
 export type WorkWindow = {
   prev: Artwork | null;
   current: Artwork;
