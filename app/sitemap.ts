@@ -40,7 +40,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const path = `/works/${medium}/${work.base}`;
       return routing.locales.map((locale) => ({
         url: urlFor(locale, path),
-        lastModified: work.addedAt ? new Date(work.addedAt) : lastModified,
+        lastModified: work.addedAt ? new Date(work.addedAt) : undefined,
         changeFrequency: "monthly" as const,
         priority: 0.6,
         alternates: {
