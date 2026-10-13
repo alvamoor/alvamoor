@@ -4,10 +4,13 @@ import { notFound } from "next/navigation";
 
 import { Backdrop } from "@/app/components/Backdrop";
 import { IntlProvider } from "@/app/components/IntlProvider";
+import {
+  JsonLinkedDataScript,
+  personJsonLd,
+} from "@/app/components/JsonLinkedDataScript";
 import { LocaleSwitcher } from "@/app/components/LocaleSwitcher";
 import { ScrollChrome } from "@/app/components/ScrollChrome";
 import { SiteNav } from "@/app/components/SiteNav";
-import { StructuredData } from "@/app/components/StructuredData";
 import { Wordmark } from "@/app/components/Wordmark";
 import { backdrop, sans } from "@/app/fonts";
 import "@/app/globals.css";
@@ -119,13 +122,19 @@ export default async function LocaleLayout({
 
   const messages = await getMessages({ locale });
   const t = await getTranslations({ locale, namespace: "Landing" });
+  const tAbout = await getTranslations({ locale, namespace: "About" });
   const year = new Date().getFullYear();
 
   return (
     <html lang={locale} className={`${sans.variable} ${backdrop.variable}`}>
       <body>
         <IntlProvider locale={locale} messages={messages}>
-          <StructuredData locale={locale} />
+          <JsonLinkedDataScript
+            data={personJsonLd({
+              jobTitle: t("jobTitle"),
+              statement: tAbout("statement"),
+            })}
+          />
 
           <div className={styles.page}>
             <Backdrop />

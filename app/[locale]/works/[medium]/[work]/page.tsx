@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
+import {
+  JsonLinkedDataScript,
+  visualArtworkJsonLd,
+} from "@/app/components/JsonLinkedDataScript";
 import { getWindow, isMedium } from "@/app/lib/artworks";
 import { redirect } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -101,6 +105,7 @@ export default async function WorkPage({
 
   return (
     <>
+      <JsonLinkedDataScript data={visualArtworkJsonLd(win.current, locale)} />
       <WorksHeading locale={locale} medium={medium} />
 
       <WorkScroller
