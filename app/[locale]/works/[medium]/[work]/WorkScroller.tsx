@@ -18,6 +18,7 @@ type Props = {
   prev: Artwork | null;
   current: Artwork;
   next: Artwork | null;
+  ahead: Artwork[];
   locale: Locale;
   labels: Labels;
   medium: string;
@@ -30,6 +31,7 @@ export default function WorkScroller({
   prev,
   current,
   next,
+  ahead,
   locale,
   labels,
   medium,
@@ -102,6 +104,24 @@ export default function WorkScroller({
       el.removeEventListener("scroll", onScroll);
     };
   }, [prev, current, next, medium, router]);
+
+  // Warm the cache for the works a swipe will land on next. The slide for a work
+  // two steps away is only rendered after the navigation to its neighbour, so
+  // without this its image starts downloading at that point and a quick second
+  // swipe arrives at a blank frame. The same srcset and sizes as the slide, so the
+  // browser picks the same file and the slide finds it cached.
+  const aheadKey = ahead.map((w) => w.id).join("|");
+  useEffect(() => {
+    for (const w of ahead) {
+      const img = new Image();
+      img.fetchPriority = "low";
+      img.sizes = "100vw";
+      img.srcset = w.webpSrcSet;
+      img.src = w.src;
+    }
+    // aheadKey stands in for `ahead`, whose identity changes on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aheadKey]);
 
   const backHref = `/works/${medium}#${tileId(current.base)}`;
 

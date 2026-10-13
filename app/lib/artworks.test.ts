@@ -130,6 +130,25 @@ describe("getByMedium", () => {
       expect(found.window.next?.base).toBe("c");
     });
 
+    it("reaches one work past each neighbour", async () => {
+      const nine = "abcdefghi".split("").map((base) => ({ ...entry, base }));
+      stubFetch(() => ({ ok: true, json: async () => nine }));
+
+      const found = await getWindow("paper", "e");
+      assert(found.status === "ok");
+      expect(found.window.ahead.map((w) => w.base)).toEqual(["g", "c"]);
+    });
+
+    it("stops `ahead` at the ends of the medium", async () => {
+      stubFetch(() => ({ ok: true, json: async () => three }));
+
+      const first = await getWindow("paper", "a");
+      const middle = await getWindow("paper", "b");
+      assert(first.status === "ok" && middle.status === "ok");
+      expect(first.window.ahead.map((w) => w.base)).toEqual(["c"]);
+      expect(middle.window.ahead).toEqual([]);
+    });
+
     // The bulk-reorder case, which is what positional URLs got wrong: after a
     // re-sort, the same base must still open the same work, and must pick up the
     // neighbours it has *now* rather than the ones it had when the page was built.

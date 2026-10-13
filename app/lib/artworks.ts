@@ -190,7 +190,16 @@ export type WorkWindow = {
   prev: Artwork | null;
   current: Artwork;
   next: Artwork | null;
+  /**
+   * The one work just beyond each of prev and next, for the client to warm
+   * the image cache with. Data only: they are never rendered, so the view stays
+   * three works wide.
+   */
+  ahead: Artwork[];
 };
+
+/** How many works beyond each neighbour `ahead` reaches. */
+const AHEAD = 1;
 
 export type WorkLookup =
   | { status: "ok"; window: WorkWindow }
@@ -216,12 +225,18 @@ export async function getWindow(
   const i = works.findIndex((w) => w.base === base);
   if (i === -1) return { status: "missing" };
 
+  const ahead: Artwork[] = [];
+  for (let d = 2; d < 2 + AHEAD; d++) {
+    for (const w of [works[i + d], works[i - d]]) if (w) ahead.push(w);
+  }
+
   return {
     status: "ok",
     window: {
       prev: works[i - 1] ?? null,
       current: works[i],
       next: works[i + 1] ?? null,
+      ahead,
     },
   };
 }

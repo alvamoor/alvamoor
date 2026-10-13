@@ -112,6 +112,7 @@ export default async function WorkPage({
         prev={win.prev}
         current={win.current}
         next={win.next}
+        ahead={win.ahead}
         locale={locale}
         medium={medium}
         labels={{
