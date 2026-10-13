@@ -109,10 +109,9 @@ export default async function WorkPage({
       <WorksHeading locale={locale} medium={medium} />
 
       <WorkScroller
-        prev={win.prev}
-        current={win.current}
-        next={win.next}
-        ahead={win.ahead}
+        entries={win.entries}
+        base={win.current.base}
+        titleSuffix={t(medium).toLowerCase()}
         locale={locale}
         medium={medium}
         labels={{

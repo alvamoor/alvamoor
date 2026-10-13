@@ -68,6 +68,15 @@ nicety: rendering all 94 paper works did not fit in the Worker's CPU budget, so 
 ISR re-render after a manifest change failed and the page froze on its last
 successful render. Keep that view at three works.
 
+Once the page is live, `WorkScroller` widens to five works and swipes between them
+client-side: it is handed the whole medium as a bare list of entries (the manifest, a few
+dozen KB serialised, never rendered), changes state on swipe, and rewrites the URL
+and `document.title` with `history.replaceState`. No server render per swipe — that
+round-trip was what made fast swiping stall. The consequence is that after a swipe
+the page's canonical, JSON-LD and Open Graph tags still describe the work the visit
+started on; crawlers and link previews only ever see the server render, which is
+correct for the URL they requested.
+
 ## Auditing R2 (orphans and missing images)
 
 `scripts/reap-orphans.mjs` compares each manifest against what is actually in the

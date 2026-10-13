@@ -99,8 +99,14 @@ export function validateEntry(e: unknown): string | null {
   return null;
 }
 
+/** Derives the fields an Artwork has beyond its manifest entry. Pure, so the client can do it too. */
+export function toArtwork(medium: Medium, entry: ManifestEntry): Artwork {
+  return { ...entry, id: entry.base, medium, ...srcFor(medium, entry.base) };
+}
+
 type ManifestRead =
-  { ok: true; works: Artwork[] } | { ok: false; reason: string };
+  | { ok: true; works: Artwork[]; entries: ManifestEntry[] }
+  | { ok: false; reason: string };
 
 async function loadManifest(medium: Medium): Promise<ManifestRead> {
   let res: Response;
@@ -141,12 +147,8 @@ async function loadManifest(medium: Medium): Promise<ManifestRead> {
 
   return {
     ok: true,
-    works: entries.map((entry) => ({
-      ...entry,
-      id: entry.base,
-      medium,
-      ...srcFor(medium, entry.base),
-    })),
+    works: entries.map((entry) => toArtwork(medium, entry)),
+    entries,
   };
 }
 
@@ -191,15 +193,13 @@ export type WorkWindow = {
   current: Artwork;
   next: Artwork | null;
   /**
-   * The one work just beyond each of prev and next, for the client to warm
-   * the image cache with. Data only: they are never rendered, so the view stays
-   * three works wide.
+   * Every work in the medium, in display order, as bare manifest entries (no
+   * derived image URLs). This is data for the client to swipe through without
+   * asking the server for each step — see WorkScroller. It is serialised, never
+   * rendered, so the server-rendered view stays three works wide.
    */
-  ahead: Artwork[];
+  entries: ManifestEntry[];
 };
-
-/** How many works beyond each neighbour `ahead` reaches. */
-const AHEAD = 1;
 
 export type WorkLookup =
   | { status: "ok"; window: WorkWindow }
@@ -225,18 +225,13 @@ export async function getWindow(
   const i = works.findIndex((w) => w.base === base);
   if (i === -1) return { status: "missing" };
 
-  const ahead: Artwork[] = [];
-  for (let d = 2; d < 2 + AHEAD; d++) {
-    for (const w of [works[i + d], works[i - d]]) if (w) ahead.push(w);
-  }
-
   return {
     status: "ok",
     window: {
       prev: works[i - 1] ?? null,
       current: works[i],
       next: works[i + 1] ?? null,
-      ahead,
+      entries: read.entries,
     },
   };
 }

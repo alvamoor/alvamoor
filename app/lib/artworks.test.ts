@@ -130,23 +130,16 @@ describe("getByMedium", () => {
       expect(found.window.next?.base).toBe("c");
     });
 
-    it("reaches one work past each neighbour", async () => {
+    it("carries every entry of the medium, in order", async () => {
       const nine = "abcdefghi".split("").map((base) => ({ ...entry, base }));
       stubFetch(() => ({ ok: true, json: async () => nine }));
 
       const found = await getWindow("paper", "e");
       assert(found.status === "ok");
-      expect(found.window.ahead.map((w) => w.base)).toEqual(["g", "c"]);
-    });
-
-    it("stops `ahead` at the ends of the medium", async () => {
-      stubFetch(() => ({ ok: true, json: async () => three }));
-
-      const first = await getWindow("paper", "a");
-      const middle = await getWindow("paper", "b");
-      assert(first.status === "ok" && middle.status === "ok");
-      expect(first.window.ahead.map((w) => w.base)).toEqual(["c"]);
-      expect(middle.window.ahead).toEqual([]);
+      expect(found.window.entries.map((w) => w.base)).toEqual(
+        "abcdefghi".split(""),
+      );
+      expect(found.window.entries[0]).not.toHaveProperty("webpSrcSet");
     });
 
     // The bulk-reorder case, which is what positional URLs got wrong: after a

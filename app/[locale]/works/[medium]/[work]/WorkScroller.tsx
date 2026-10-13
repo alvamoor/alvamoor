@@ -1,8 +1,14 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
-import { type Artwork, altFor, tileId } from "@/app/lib/artworks";
+import {
+  type ManifestEntry,
+  type Medium,
+  altFor,
+  tileId,
+  toArtwork,
+} from "@/app/lib/artworks";
 import { Link, useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
@@ -15,32 +21,70 @@ type Labels = {
 };
 
 type Props = {
-  prev: Artwork | null;
-  current: Artwork;
-  next: Artwork | null;
-  ahead: Artwork[];
+  entries: ManifestEntry[];
+  /** The work the URL names. */
+  base: string;
   locale: Locale;
   labels: Labels;
-  medium: string;
+  medium: Medium;
+  /** What follows the work's title in the tab title, e.g. "paper". */
+  titleSuffix: string;
 };
 
-/** How long the scroller has to be still before a swipe counts as landed. */
-const SETTLE_MS = 120;
+/** Debounce delay: how long the scroller has to be still before a swipe counts as landed. */
+const SCROLL_DEBOUNCE_MS = 120;
+
+/** Works rendered on each side of the current one once the page is live. */
+const RADIUS = 2;
 
 export default function WorkScroller({
-  prev,
-  current,
-  next,
-  ahead,
+  entries,
+  base,
   locale,
   labels,
   medium,
+  titleSuffix,
 }: Props) {
   const router = useRouter();
 
-  // Two slides at the ends of the medium, three everywhere else.
-  const slides = [prev, current, next].filter((w): w is Artwork => w !== null);
-  const startIndex = prev ? 1 : 0;
+  const works = useMemo(
+    () => entries.map((entry) => toArtwork(medium, entry)),
+    [entries, medium],
+  );
+
+  // Which work is showing. It starts at the one the URL names and from then on
+  // the scroller owns it: a swipe changes this state and rewrites the address bar
+  // in place, with no request to the server. That is what keeps a quick run of
+  // swipes from waiting on a render per step.
+  const [index, setIndex] = useState(() =>
+    Math.max(
+      0,
+      entries.findIndex((e) => e.base === base),
+    ),
+  );
+  const [seenBase, setSeenBase] = useState(base);
+  if (seenBase !== base) {
+    // The page was handed a different work (a real navigation, not a swipe).
+    setSeenBase(base);
+    setIndex(
+      Math.max(
+        0,
+        entries.findIndex((e) => e.base === base),
+      ),
+    );
+  }
+
+  // The server renders three works (see AGENTS.md); the rest of the window only
+  // appears once the page is live, so the render cost stays what it was.
+  const [radius, setRadius] = useState(1);
+  useEffect(() => setRadius(RADIUS), []);
+
+  const lo = Math.max(0, index - radius);
+  const hi = Math.min(works.length - 1, index + radius);
+  const slides = works.slice(lo, hi + 1);
+  const current = works[index];
+  const prev = works[index - 1] ?? null;
+  const next = works[index + 1] ?? null;
 
   const [openId, setOpenId] = useState<string | null>(null);
   const [imageBox, setImageBox] = useState<{ w: number; h: number } | null>(
@@ -48,54 +92,55 @@ export default function WorkScroller({
   );
   const openImgRef = useRef<HTMLImageElement | null>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
-  // Set the moment a swipe has decided where it is going, and cleared once the
-  // work it went to has arrived. Without it the scroll that carries the old
-  // slides off screen reads as another swipe and pushes a second navigation.
-  const navigating = useRef(false);
 
-  // Land on the current work. Only three works are rendered, so this is a short
-  // distance — but it must not be an animated one: assigning scrollLeft honours
-  // `scroll-behavior: smooth`, and arriving from a swipe that would animate back
-  // across the slide just left. Instant here, smooth left in place for the arrows.
+  // Land on the current work whenever the window moves. Slides come and go at the
+  // edges of the window, so the offset of the current one changes; this runs
+  // before paint, so the swap is invisible. It must not be an animated move:
+  // assigning scrollLeft honours `scroll-behavior: smooth`, which would animate
+  // back across the slide just left. Instant here, smooth left in place for the
+  // arrows.
   useLayoutEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
 
     const behavior = el.style.scrollBehavior;
     el.style.scrollBehavior = "auto";
-    el.scrollLeft = startIndex * el.clientWidth;
+    el.scrollLeft = (index - lo) * el.clientWidth;
     el.style.scrollBehavior = behavior;
+  }, [index, lo]);
 
-    navigating.current = false;
-    setOpenId(null);
-    setImageBox(null);
-  }, [current.id, startIndex]);
-
-  // Swiping to a neighbour is a navigation, because the neighbour is the last
-  // slide there is: the URL becomes that work and the server sends a fresh window
-  // around it. That is what lets a swipe still cross the whole gallery while the
-  // page stays three images wide.
+  // Swiping to a neighbour changes the state and the address bar, nothing more.
+  // replaceState rather than a push: a swipe is not a place to come back to, so
+  // Back leaves the work for the overview instead of stepping through every
+  // painting looked at. Next picks the change up, so usePathname and the language
+  // switch follow along.
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
 
-    const order = [prev, current, next].filter((w): w is Artwork => w !== null);
     let timer: ReturnType<typeof setTimeout>;
 
     const settle = () => {
-      if (navigating.current || !el.clientWidth) return;
-      const target = order[Math.round(el.scrollLeft / el.clientWidth)];
-      if (!target || target.id === current.id) return;
+      if (!el.clientWidth) return;
+      const landed = works[lo + Math.round(el.scrollLeft / el.clientWidth)];
+      if (!landed || landed.id === works[index].id) return;
 
-      navigating.current = true;
-      router.push(`/works/${medium}/${target.base}`, { scroll: false });
+      setIndex(works.indexOf(landed));
+      setOpenId(null);
+      setImageBox(null);
+      window.history.replaceState(
+        null,
+        "",
+        `/${locale}/works/${medium}/${landed.base}`,
+      );
+      document.title = `${landed.title[locale]} — ${titleSuffix}`;
     };
 
     // Scroll end rather than scroll: a swipe fires dozens of these on the way,
     // and only where it stops is a work.
     const onScroll = () => {
       clearTimeout(timer);
-      timer = setTimeout(settle, SETTLE_MS);
+      timer = setTimeout(settle, SCROLL_DEBOUNCE_MS);
     };
 
     el.addEventListener("scroll", onScroll, { passive: true });
@@ -103,25 +148,20 @@ export default function WorkScroller({
       clearTimeout(timer);
       el.removeEventListener("scroll", onScroll);
     };
-  }, [prev, current, next, medium, router]);
+  }, [works, index, lo, locale, medium, titleSuffix]);
 
-  // Warm the cache for the works a swipe will land on next. The slide for a work
-  // two steps away is only rendered after the navigation to its neighbour, so
-  // without this its image starts downloading at that point and a quick second
-  // swipe arrives at a blank frame. The same srcset and sizes as the slide, so the
-  // browser picks the same file and the slide finds it cached.
-  const aheadKey = ahead.map((w) => w.id).join("|");
-  useEffect(() => {
-    for (const w of ahead) {
-      const img = new Image();
-      img.fetchPriority = "low";
-      img.sizes = "100vw";
-      img.srcset = w.webpSrcSet;
-      img.src = w.src;
-    }
-    // aheadKey stands in for `ahead`, whose identity changes on every render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aheadKey]);
+  // The arrows stay real links, so they middle-click and right-click like any
+  // other, but a plain click scrolls to the neighbour instead of loading it.
+  function step(direction: -1 | 1) {
+    return (e: React.MouseEvent) => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0)
+        return;
+      const el = scrollerRef.current;
+      if (!el) return;
+      e.preventDefault();
+      el.scrollTo({ left: el.scrollLeft + direction * el.clientWidth });
+    };
+  }
 
   const backHref = `/works/${medium}#${tileId(current.base)}`;
 
@@ -164,15 +204,13 @@ export default function WorkScroller({
       </Link>
 
       <div className={styles.scrollerWrap} data-view="scroller">
-        {/* Links rather than scroll buttons now that a neighbour is a URL: the
-            arrows middle-click and right-click like anything else, and they lead
-            to the same place a swipe does. */}
         {prev && (
           <Link
             href={`/works/${medium}/${prev.base}`}
             className={`${styles.navArrow} ${styles.navArrowLeft}`}
             aria-label={labels.prev}
-            scroll={false}
+            prefetch={false}
+            onClick={step(-1)}
           >
             ‹
           </Link>
@@ -196,9 +234,9 @@ export default function WorkScroller({
                   srcSet={a.webpSrcSet}
                   sizes="100vw"
                   alt={altFor(a, locale)}
-                  // All three eagerly: the neighbours are here to be swiped to,
-                  // and one of them decoded in advance is the whole point of
-                  // rendering them at all.
+                  // All eagerly: the works either side are here to be swiped
+                  // to, and having them downloaded in advance is the whole point
+                  // of rendering them at all.
                   loading="eager"
                   fetchPriority={a.id === current.id ? "high" : "auto"}
                   decoding="async"
@@ -237,7 +275,8 @@ export default function WorkScroller({
             href={`/works/${medium}/${next.base}`}
             className={`${styles.navArrow} ${styles.navArrowRight}`}
             aria-label={labels.next}
-            scroll={false}
+            prefetch={false}
+            onClick={step(1)}
           >
             ›
           </Link>
