@@ -114,6 +114,26 @@ reuses your `wrangler login` session, refreshing the token itself when the
 short-lived OAuth one has expired. Set `CLOUDFLARE_API_TOKEN` (Account → R2 →
 Read) to skip that.
 
+## Inquiries (buying a work)
+
+An "inquire" button on every `available` work opens `InquiryDialog`, which POSTs
+to `app/api/inquiry/route.ts`; that sends an email to the artist through the
+`EMAIL` Workers binding, with the visitor as `Reply-To`. The route looks the work
+up in the manifest itself, so the email content never comes from the request.
+The email text and the `mailto:` fallback live in `app/lib/inquiry.ts`.
+
+- The binding in `wrangler.jsonc` is locked to `INBOX` (`destination_address`), so
+  the Worker cannot send anywhere else whatever the route does.
+- Needs the domain onboarded under **Email Service → Email Sending**, with
+  `SENDER` (`inquiries@alvamoor.com`) on it.
+- Spam: a honeypot always; Turnstile once configured. Set the site key at build
+  time (`NEXT_PUBLIC_TURNSTILE_SITE_KEY`) and the secret on the Worker
+  (`wrangler secret put TURNSTILE_SECRET`). The route enforces the check as soon
+  as the secret exists.
+- Locally, `wrangler`'s simulator writes the email to `.wrangler/tmp/email/`
+  instead of sending it. The route reads the manifest from local R2, so seed
+  `canvas/index.json` there first.
+
 ## Other notes
 
 - Mobile layout is only verified on the **deployed** site (after pushing to

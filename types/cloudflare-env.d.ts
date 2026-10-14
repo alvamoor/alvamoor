@@ -18,4 +18,5 @@ interface CloudflareEnv {
   CF_ACCESS_TEAM_DOMAIN?: string;
   /** The Access application's Audience (AUD) tag. */
   CF_ACCESS_AUD?: string;
+  TURNSTILE_SECRET?: string;
 }
