@@ -204,7 +204,7 @@ export default function WorkScroller({
         <Link href={backHref} className={styles.back}>
           {labels.back}
         </Link>
-        {current.status === "available" && !openId && (
+        {current.status === "available" && (
           <InquiryDialog work={current} locale={locale} />
         )}
       </div>
