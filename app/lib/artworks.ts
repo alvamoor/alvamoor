@@ -1,11 +1,11 @@
 // Artwork data is stored as JSON manifests in Cloudflare R2, one per medium:
-//   <IMAGE_BASE>/paper/index.json, <IMAGE_BASE>/canvas/index.json
+//   <IMAGE_BASE>/paper/index.json, canvas/index.json and other/index.json
 // Each manifest is an array of ManifestEntry. Images live alongside in the same
 // folder as <base>-<width>.webp. Works are added through /admin, which writes
 // both the image variants and the manifest entry — no code change.
 // See docs/r2-image-migration.md.
 
-export const MEDIA = ["paper", "canvas"] as const;
+export const MEDIA = ["paper", "canvas", "other"] as const;
 
 export type Medium = (typeof MEDIA)[number];
 

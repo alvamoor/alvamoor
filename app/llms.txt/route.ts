@@ -64,8 +64,20 @@ function summarise(medium: Medium, works: Artwork[]): Summary {
   };
 }
 
+const LABELS: Record<Medium, string> = {
+  canvas: "Works on canvas",
+  paper: "Works on paper",
+  other: "Other works",
+};
+
+const LABELS_DE: Record<Medium, string> = {
+  canvas: "Werke auf Leinwand",
+  paper: "Werke auf Papier",
+  other: "Weitere Arbeiten",
+};
+
 function describe(s: Summary): string {
-  const label = s.medium === "canvas" ? "canvas" : "paper";
+  const label = LABELS[s.medium];
   const parts = [`${s.count} works`];
   if (s.years) parts.push(s.years);
   parts.push(s.labels.join(", ").toLowerCase());
@@ -73,8 +85,8 @@ function describe(s: Summary): string {
   if (s.sold > 0) parts.push(`${s.sold} sold`);
 
   return [
-    `- [Works on ${label} (EN)](${SITE}/en/works/${s.medium}) — ${parts.join(". ")}.`,
-    `- [Werke auf ${s.medium === "canvas" ? "Leinwand" : "Papier"} (DE)](${SITE}/de/works/${s.medium})`,
+    `- [${label} (EN)](${SITE}/en/works/${s.medium}) — ${parts.join(". ")}.`,
+    `- [${LABELS_DE[s.medium]} (DE)](${SITE}/de/works/${s.medium})`,
   ].join("\n");
 }
 
@@ -97,10 +109,9 @@ export async function GET() {
       // Omitted rather than guessed at.
     }
   }
-  // canvas before paper, matching the nav and the works redirect.
-  summaries.sort((a, b) =>
-    a.medium === "canvas" ? -1 : b.medium === "canvas" ? 1 : 0,
-  );
+  // Canvas, paper, other: matching the nav and the works redirect.
+  const ORDER: Medium[] = ["canvas", "paper", "other"];
+  summaries.sort((a, b) => ORDER.indexOf(a.medium) - ORDER.indexOf(b.medium));
 
   const body = `# ${t("name")}
 

@@ -7,7 +7,7 @@ import { Link } from "@/i18n/navigation";
 import styles from "./works.module.css";
 
 // Canvas first: /works redirects here, so it is the section a visitor lands on.
-const SECTIONS = ["canvas", "paper"] as const;
+const SECTIONS = ["canvas", "paper", "other"] as const;
 
 type Section = (typeof SECTIONS)[number];
 

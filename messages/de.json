@@ -31,8 +31,10 @@
   "Gallery": {
     "paper": "papier",
     "canvas": "leinwand",
+    "other": "anderes",
     "sections": "Bereiche",
     "heading": "Arbeiten auf {medium}",
+    "headingOther": "Weitere Arbeiten",
     "back": "zurück",
     "available": "Verfügbar",
     "sold": "Verkauft",

@@ -17,8 +17,8 @@ import MediumGrid from "./MediumGrid";
 // same way.)
 export const revalidate = 60;
 
-// The two media are compile-time constants. This runs once per locale the parent
-// layout generates, so it yields four pages.
+// The media are compile-time constants. This runs once per locale the parent
+// layout generates, so it yields one page per medium per locale.
 export function generateStaticParams() {
   return MEDIA.map((medium) => ({ medium }));
 }
@@ -32,7 +32,10 @@ export async function generateMetadata({
   if (!isMedium(medium)) return {};
 
   const t = await getTranslations({ locale, namespace: "Gallery" });
-  const title = t("heading", { medium: t(medium).toLowerCase() });
+  const title =
+    medium === "other"
+      ? t("headingOther")
+      : t("heading", { medium: t(medium).toLowerCase() });
   const path = `/works/${medium}`;
 
   return {

@@ -21,7 +21,9 @@ export async function WorksHeading({
     <>
       {/* The design shows no page title, but the page still needs a heading. */}
       <h1 className={pageStyles.srOnly}>
-        {t("heading", { medium: t(medium).toLowerCase() })}
+        {medium === "other"
+          ? t("headingOther")
+          : t("heading", { medium: t(medium).toLowerCase() })}
       </h1>
 
       {/* Marks the works pages for the shell: they carry the subnav, so the

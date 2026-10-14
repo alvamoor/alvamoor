@@ -10,8 +10,8 @@ uploads the webp variants to R2, and writes the manifest, so there is no script
 to run and no redeploy. See `docs/r2-image-migration.md` for the full
 background.
 
-Both galleries are fed the same way — one JSON manifest per medium, live in R2
-at `<medium>/index.json` (`paper` or `canvas`), read by `app/lib/artworks.ts`
+All galleries are fed the same way — one JSON manifest per medium, live in R2
+at `<medium>/index.json` (`paper`, `canvas` or `other`), read by `app/lib/artworks.ts`
 with a 60s revalidate window. Array order is display order (front = shown
 first); `base` is the R2 object-key stem, with variants at
 `<base>-<width>.webp`. Manifest entry shape:
@@ -29,7 +29,7 @@ first); `base` is the R2 object-key stem, with variants at
 }
 ```
 
-Canvas works are **always "Pigments on canvas"**. `status` is
+`other` is for anything that is neither (its `/admin` default label is "Mixed media" / "Mischtechnik"; edit it per work). Canvas works are **always "Pigments on canvas"**. `status` is
 `available` | `sold`. `addedAt` (ISO 8601) drives `<pubDate>` and sort order in
 `/feed.xml` — `/admin` sets it automatically on every new work, so it's only
 ever missing on works added before this field existed.
