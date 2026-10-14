@@ -27,25 +27,27 @@ pnpm dev        # http://localhost:3000
 Default-locale (English) pages are unprefixed (`/works/paper`); German is under
 `/de` (`/de/works/paper`). Routes worth knowing:
 
-| Route           | What it is                                              |
-| --------------- | ------------------------------------------------------- |
-| `/`             | Landing — wordmark, menu, nothing else                  |
-| `/about`        | The artist statement                                    |
-| `/contact`      | Email, Instagram, studio line                           |
-| `/works`        | Redirects to `/works/canvas`                            |
-| `/works/canvas` | Works on canvas (data from R2)                          |
-| `/works/paper`  | Works on paper (data from R2)                           |
-| `/admin`        | Works admin — add/edit/reorder works (see below)        |
+| Route           | What it is                                       |
+| --------------- | ------------------------------------------------ |
+| `/`             | Landing — wordmark, menu, nothing else           |
+| `/about`        | The artist statement                             |
+| `/contact`      | Email, Instagram, studio line                    |
+| `/works`        | Redirects to `/works/canvas`                     |
+| `/works/canvas` | Works on canvas (data from R2)                   |
+| `/works/paper`  | Works on paper (data from R2)                    |
+| `/admin`        | Works admin — add/edit/reorder works (see below) |
 
 ## Environment variables & secrets
 
 The app runs with zero config locally. Two different mechanisms, easy to confuse:
 
-| Variable                     | Kind                   | Set where                                   | Purpose                                                                       |
-| ---------------------------- | ---------------------- | ------------------------------------------- | ----------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_IMAGE_BASE_URL` | Build-time, **public** | shell env at build time, or `.env.local`    | Point image/manifest fetches somewhere other than `https://img.alvamoor.com`. |
-| `CF_ACCESS_TEAM_DOMAIN`      | **Worker secret**      | `wrangler secret put` (`.dev.vars` locally) | Cloudflare Access team domain, e.g. `loerk.cloudflareaccess.com`.             |
-| `CF_ACCESS_AUD`              | **Worker secret**      | `wrangler secret put` (`.dev.vars` locally) | Access application Audience (AUD) tag.                                        |
+| Variable                         | Kind                   | Set where                                   | Purpose                                                                                                                                       |
+| -------------------------------- | ---------------------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_IMAGE_BASE_URL`     | Build-time, **public** | shell env at build time, or `.env.local`    | Point image/manifest fetches somewhere other than `https://img.alvamoor.com`.                                                                 |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Build-time, **public** | committed in `.env.production`              | Turnstile site key for the inquiry form. Without it the form renders no widget.                                                               |
+| `TURNSTILE_SECRET`               | **Worker secret**      | `wrangler secret put`                       | Turnstile secret key. Once set, `/api/inquiry` rejects requests without a valid token — set it only after a build that includes the site key. |
+| `CF_ACCESS_TEAM_DOMAIN`          | **Worker secret**      | `wrangler secret put` (`.dev.vars` locally) | Cloudflare Access team domain, e.g. `loerk.cloudflareaccess.com`.                                                                             |
+| `CF_ACCESS_AUD`                  | **Worker secret**      | `wrangler secret put` (`.dev.vars` locally) | Access application Audience (AUD) tag.                                                                                                        |
 
 `NEXT_PUBLIC_*` is inlined into the client bundle and is therefore public by
 definition — never put anything sensitive behind that prefix.
