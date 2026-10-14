@@ -5,9 +5,11 @@
 import type { ManifestEntry, Medium } from "@/app/lib/artworks";
 import type { Locale } from "@/i18n/routing";
 
-// The binding in wrangler.jsonc is locked to this address, so changing it here
-// alone makes every send fail rather than go somewhere unintended.
-export const INBOX = "alvamoor@posteo.net";
+// The address visitors see and the form's email goes to. Cloudflare Email Routing
+// forwards it to the real mailbox, which is never published. The binding in
+// wrangler.jsonc is locked to this address, so changing it here alone makes every
+// send fail rather than go somewhere unintended.
+export const INBOX = "contact@alvamoor.com";
 
 // Must be on a domain onboarded to Email Service → Email Sending.
 export const SENDER = "inquiries@alvamoor.com";

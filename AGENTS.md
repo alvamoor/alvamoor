@@ -123,7 +123,11 @@ up in the manifest itself, so the email content never comes from the request.
 The email text and the `mailto:` fallback live in `app/lib/inquiry.ts`.
 
 - The binding in `wrangler.jsonc` is locked to `INBOX` (`destination_address`), so
-  the Worker cannot send anywhere else whatever the route does.
+  the Worker cannot send anywhere else whatever the route does. `INBOX` is
+  `contact@alvamoor.com`, the same address the contact page shows; Cloudflare
+  **Email Routing** forwards it to the artist's real mailbox, which is why no
+  personal address appears in the repo. The forwarding rule lives in the
+  dashboard only.
 - Needs the domain onboarded under **Email Service → Email Sending**, with
   `SENDER` (`inquiries@alvamoor.com`) on it.
 - Spam: a honeypot always; Turnstile once configured. Set the site key at build

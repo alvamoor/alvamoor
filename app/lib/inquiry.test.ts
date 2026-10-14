@@ -81,7 +81,7 @@ describe("inquiryEmail", () => {
 describe("mailtoHref", () => {
   it("addresses the artist with the work's details prefilled", () => {
     const href = mailtoHref({ work, medium: "canvas", locale: "en" });
-    expect(href.startsWith("mailto:alvamoor@posteo.net?subject=")).toBe(true);
+    expect(href.startsWith("mailto:contact@alvamoor.com?subject=")).toBe(true);
     const body = decodeURIComponent(href.split("&body=")[1]);
     expect(body).toContain('"Untitled"');
     expect(body).toContain("130 × 170 cm");
