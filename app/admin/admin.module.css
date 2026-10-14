@@ -309,3 +309,92 @@
   border-radius: 5px;
   font: inherit;
 }
+
+/* Phones. With the keyboard up an iPhone SE has about 300px of page left, so
+   nothing may sit pinned above the field being typed in, and the fields must be
+   full width rather than squeezed beside the thumbnail and the buttons. */
+@media (max-width: 40rem) {
+  .root {
+    padding: 1rem 0.75rem;
+    /* Room to scroll the last field up above the keyboard. */
+    padding-bottom: 60svh;
+  }
+
+  /* Static, not sticky: pinned, the title, tabs, Save and note fill the visible
+     space above the keyboard. */
+  .head {
+    position: static;
+    gap: 0.5rem;
+  }
+
+  .note {
+    display: none;
+  }
+
+  /* Title and Save on one line, the tabs below. */
+  .h1 {
+    font-size: 1.1rem;
+  }
+
+  .tabs {
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  .card {
+    padding: 0.75rem;
+  }
+
+  /* Thumbnail and controls share the top line; the fields get the full width
+     underneath. */
+  .row {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .rowMain {
+    order: 3;
+    flex: 1 1 100%;
+  }
+
+  .rowControls {
+    flex: 1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .thumb {
+    width: 64px;
+    height: 64px;
+  }
+
+  /* English above German, so each gets the whole line. */
+  .pair {
+    flex-direction: column;
+  }
+
+  /* Year, width, height and status as two by two. */
+  .nums {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .nums .field {
+    width: auto;
+    min-width: 0;
+  }
+
+  .fields .nums input,
+  .fields .nums select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* 16px is the floor below which iOS zooms the page in on focus. */
+  .fields input,
+  .fields select {
+    font-size: max(1rem, 16px);
+  }
+}
