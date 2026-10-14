@@ -14,6 +14,9 @@
   },
   // R2 bucket the /admin routes write to (images + manifests).
   "r2_buckets": [{ "binding": "IMAGES_BUCKET", "bucket_name": "images" }],
+  "send_email": [
+    { "name": "EMAIL", "destination_address": "alvamoor@posteo.net" },
+  ],
   // Backing store for OpenNext's incremental cache (see open-next.config.ts) —
   // both the manifest fetches and the prerendered pages. Nothing in app/ touches
   // this binding; the name is the one the kv-incremental-cache override looks up,

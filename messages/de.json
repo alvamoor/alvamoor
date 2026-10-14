@@ -23,6 +23,21 @@
     "instagram": "instagram",
     "studio": "leipzig, berlin"
   },
+  "Inquiry": {
+    "button": "anfragen",
+    "intro": "Hinterlasse deine E-Mail-Adresse, dann meldet sich die Künstlerin mit dem Preis und weiteren Bildern. {size}",
+    "email": "Deine E-Mail",
+    "note": "Nachricht (optional)",
+    "send": "anfrage senden",
+    "sending": "wird gesendet…",
+    "cancel": "abbrechen",
+    "close": "schließen",
+    "or": "Lieber mit dem eigenen Mailprogramm?",
+    "mailInstead": "E-Mail schreiben",
+    "sentTitle": "Danke",
+    "sentBody": "Deine Anfrage ist unterwegs. Die Antwort kommt per E-Mail.",
+    "error": "Das hat nicht geklappt. Bitte versuche es noch einmal oder schreibe eine E-Mail."
+  },
   "LocaleSwitcher": {
     "label": "Sprache",
     "en": "EN",

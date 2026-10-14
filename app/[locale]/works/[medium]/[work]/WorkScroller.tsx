@@ -13,6 +13,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
 import styles from "../../works.module.css";
+import InquiryDialog from "./InquiryDialog";
 
 type Labels = {
   prev: string;
@@ -269,6 +270,10 @@ export default function WorkScroller({
             </button>
           ))}
         </div>
+
+        {current.status === "available" && !openId && (
+          <InquiryDialog work={current} locale={locale} />
+        )}
 
         {next && (
           <Link

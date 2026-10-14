@@ -12,6 +12,8 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 
+import { isSameOrigin } from "./same-origin";
+
 const ACCESS_JWT_HEADER = "cf-access-jwt-assertion";
 
 // Cache one JWKS fetcher per team domain (module scope survives across requests).
@@ -26,23 +28,6 @@ function jwksFor(teamDomain: string) {
     jwksCache.set(teamDomain, jwks);
   }
   return jwks;
-}
-
-// CSRF defense: Access auth rides on a cookie, so the browser would attach it
-// to cross-site requests too. Require state-changing requests to be same-origin.
-// (multipart uploads are "simple" requests with no CORS preflight, so this is
-// the guard that stops a malicious page from POSTing as the logged-in artist.)
-function isSameOrigin(req: Request): boolean {
-  const site = req.headers.get("sec-fetch-site");
-  if (site) return site === "same-origin";
-  // Fallback for clients without Fetch Metadata: compare Origin to Host.
-  const origin = req.headers.get("origin");
-  if (!origin) return false;
-  try {
-    return new URL(origin).host === req.headers.get("host");
-  } catch {
-    return false;
-  }
 }
 
 export type AuthResult = { ok: true } | { ok: false; reason: string };
