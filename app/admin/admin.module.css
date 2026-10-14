@@ -398,3 +398,18 @@
     font-size: max(1rem, 16px);
   }
 }
+
+.moveTo {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+.moveTo select {
+  padding: 0.3rem 0.4rem;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  background: #fff;
+  font: inherit;
+}

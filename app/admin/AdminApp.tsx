@@ -23,6 +23,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+import { MAX_PER_MOVE } from "@/app/lib/admin-r2";
 import type { ManifestEntry, Medium } from "@/app/lib/artworks";
 
 import styles from "./admin.module.css";
@@ -327,6 +328,68 @@ export default function AdminApp() {
     reorder((es) => moveBlock(es, block, target));
   }
 
+  /**
+   * Take the selected works to another medium.
+   *
+   * Done by the server straight away rather than as an unsaved edit: the images have
+   * to be copied between folders, and a move that only lived in this page could be
+   * lost by closing it with the copies already made. That also means it works from the
+   * saved lists, so unsaved changes have to be saved first — otherwise the reload
+   * afterwards would throw them away.
+   */
+  async function moveSelection(to: Medium) {
+    if (dirty)
+      return setMsg({
+        kind: "err",
+        text: "Save your changes first — moving works reloads the list.",
+      });
+    if (selected.size > MAX_PER_MOVE)
+      return setMsg({
+        kind: "err",
+        text: `Move at most ${MAX_PER_MOVE} works at a time — ${selected.size} are selected.`,
+      });
+    if (
+      !confirm(
+        `Move ${selected.size} ${selected.size === 1 ? "work" : "works"} from ${medium} to ${to}? They go to the front of ${to} and are live there within a minute.`,
+      )
+    )
+      return;
+
+    setBusy(true);
+    setMsg({ kind: "", text: "" });
+    try {
+      const res = await apiFetch("/api/admin/move", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          from: medium,
+          to,
+          bases: selectedIndices.map((i) => entries[i].base),
+        }),
+      });
+      const out = (await res.json()) as {
+        moved: number;
+        failed: { base: string; reason: string }[];
+      };
+      await load(medium);
+      setMsg(
+        out.failed.length > 0
+          ? {
+              kind: "err",
+              text: `Moved ${out.moved}, but ${out.failed.length} could not be moved and stayed in ${medium}: ${out.failed[0].reason}`,
+            }
+          : {
+              kind: "ok",
+              text: `Moved ${out.moved} ${out.moved === 1 ? "work" : "works"} to ${to}.`,
+            },
+      );
+    } catch (e) {
+      setMsg({ kind: "err", text: msgOf(e) });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function save() {
     setBusy(true);
     setMsg({ kind: "", text: "" });
@@ -436,6 +499,25 @@ export default function AdminApp() {
           <button type="button" onClick={clearSelection}>
             clear
           </button>
+          <label className={styles.moveTo}>
+            <span>move to</span>
+            <select
+              value=""
+              disabled={busy}
+              onChange={(e) => {
+                const to = e.target.value as Medium;
+                e.target.value = "";
+                if (to) void moveSelection(to);
+              }}
+            >
+              <option value="">choose…</option>
+              {MEDIA.filter((m) => m !== medium).map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          </label>
           <span className={styles.selectHint}>
             or click a line between works to place them there
           </span>
