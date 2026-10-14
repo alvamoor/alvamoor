@@ -200,9 +200,14 @@ export default function WorkScroller({
           in the page, because next-intl's Link reads a header when rendered on
           the server — see MediumNav. Still a sibling of the scroller, so the
           flex chain the locked view depends on is unchanged. */}
-      <Link href={backHref} className={styles.back}>
-        {labels.back}
-      </Link>
+      <div className={styles.topRow}>
+        <Link href={backHref} className={styles.back}>
+          {labels.back}
+        </Link>
+        {current.status === "available" && !openId && (
+          <InquiryDialog work={current} locale={locale} />
+        )}
+      </div>
 
       <div className={styles.scrollerWrap} data-view="scroller">
         {prev && (
@@ -270,10 +275,6 @@ export default function WorkScroller({
             </button>
           ))}
         </div>
-
-        {current.status === "available" && !openId && (
-          <InquiryDialog work={current} locale={locale} />
-        )}
 
         {next && (
           <Link

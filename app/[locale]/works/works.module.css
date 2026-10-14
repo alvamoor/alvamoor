@@ -62,10 +62,16 @@ html[data-scroll="down"] .mediumNav {
   border-bottom-color: var(--v2-fg);
 }
 
+.topRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
 /* Single-work view: a plain back link stands in for the section nav. Same row,
    same size, so it takes the same tone as .mediumNavLink above. */
-.back {
-  align-self: flex-start;
+.back,
+.inquire {
   padding: 0.25rem var(--pad-x) clamp(0.75rem, 2vw, 1.25rem);
   font-size: clamp(0.9375rem, 2vw, 1rem);
   letter-spacing: 0.02em;
@@ -74,7 +80,8 @@ html[data-scroll="down"] .mediumNav {
   transition: color 200ms ease;
 }
 
-.back:hover {
+.back:hover,
+.inquire:hover {
   color: var(--v2-fg);
 }
 
@@ -84,13 +91,20 @@ html[data-scroll="down"] .mediumNav {
    the same place it did in flow; it just no longer costs the artwork a band.
    Restored from the gallery layout this replaced. */
 @media (min-width: 768px) {
-  .back {
+  .topRow {
     position: absolute;
     top: var(--header-h, 0px);
     left: 0;
+    right: 0;
     z-index: 2;
+    pointer-events: none;
+  }
+
+  .back,
+  .inquire {
     padding: 0.25rem var(--pad-x) 0;
     font-size: 1.0625rem;
+    pointer-events: auto;
   }
 }
 
@@ -174,7 +188,6 @@ html[data-scroll="down"] .mediumNav {
   flex: 1;
   min-height: 0;
   display: flex;
-  padding-bottom: 3.5rem;
 }
 
 .navArrow {
@@ -336,35 +349,23 @@ html[data-scroll="down"] .mediumNav {
 
 /* ── Inquiry ────────────────────────────────────────────────────── */
 
-/* A quiet text button under the picture. Over the scroller, not in the flow, so
-   the locked single-work layout is unchanged. */
+/* A text button in the back link's row, set in the same type so it reads as
+   part of the same menu. Shares its padding and hover with .back above. */
 .inquire {
-  position: absolute;
-  left: 50%;
-  bottom: max(0.5rem, env(safe-area-inset-bottom));
-  transform: translateX(-50%);
-  z-index: 2;
-  padding: 0.5rem 1.1rem;
   appearance: none;
-  border: 1px solid var(--v2-line);
-  border-radius: 999px;
-  background: color-mix(in srgb, #ffffff 72%, transparent);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  color: var(--v2-fg);
-  font: inherit;
-  font-size: 0.9375rem;
-  letter-spacing: 0.02em;
-  text-transform: lowercase;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  line-height: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
   cursor: pointer;
-  transition: background 180ms ease;
-}
-
-.inquire:hover {
-  background: #ffffff;
+  transition: color 200ms ease;
 }
 
 .inquiryDialog {
+  pointer-events: auto;
   width: min(26rem, calc(100vw - 2rem));
   max-height: calc(100dvh - 2rem);
   margin: auto;

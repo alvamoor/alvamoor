@@ -168,16 +168,9 @@ export default function InquiryDialog({
           ) : (
             <form onSubmit={submit}>
               <p id="inquiry-title" className={styles.inquiryHeading}>
-                {work.title[locale]}
+                {t("heading", { title: work.title[locale] })}
               </p>
-              <p className={styles.inquiryText}>
-                {t("intro", {
-                  size:
-                    work.widthCm > 0 && work.heightCm > 0
-                      ? `${work.widthCm} × ${work.heightCm} cm`
-                      : "",
-                })}
-              </p>
+              <p className={styles.inquiryText}>{t("intro")}</p>
 
               <label className={styles.inquiryField}>
                 <span>{t("email")}</span>
