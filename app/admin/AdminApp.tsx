@@ -32,11 +32,12 @@ import { resizeToWebp } from "./resize";
 const IMAGE_BASE =
   process.env.NEXT_PUBLIC_IMAGE_BASE_URL ?? "https://img.alvamoor.com";
 
-const MEDIA: Medium[] = ["paper", "canvas"];
+const MEDIA: Medium[] = ["paper", "canvas", "other"];
 
 const DEFAULT_MEDIUM_LABEL: Record<Medium, { en: string; de: string }> = {
   paper: { en: "Acrylics on paper", de: "Acryl auf Papier" },
   canvas: { en: "Pigments on canvas", de: "Pigmente auf Leinwand" },
+  other: { en: "Mixed media", de: "Mischtechnik" },
 };
 
 type Draft = Omit<ManifestEntry, "base">;

@@ -61,7 +61,7 @@ export async function GET() {
     <title>alva moor — new works</title>
     <link>${SITE}/${LOCALE}/works</link>
     <atom:link href="${SITE}/feed.xml" rel="self" type="application/rss+xml" />
-    <description>New paintings as they're added to alva moor's paper and canvas galleries.</description>
+    <description>New paintings as they're added to alva moor's galleries.</description>
     <language>en</language>
     <lastBuildDate>${lastBuildDate}</lastBuildDate>
 ${works.map(itemFor).join("\n")}

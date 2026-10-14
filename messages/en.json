@@ -31,8 +31,10 @@
   "Gallery": {
     "paper": "Paper",
     "canvas": "Canvas",
+    "other": "Other",
     "sections": "Sections",
     "heading": "Works on {medium}",
+    "headingOther": "Other works",
     "back": "back",
     "available": "Available",
     "sold": "Sold",
