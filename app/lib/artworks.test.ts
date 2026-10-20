@@ -8,7 +8,13 @@ import {
   vi,
 } from "vitest";
 
-import { type ManifestEntry, altFor, getByMedium, getWindow } from "./artworks";
+import {
+  type ManifestEntry,
+  altFor,
+  getByMedium,
+  getByMediumOrThrow,
+  getWindow,
+} from "./artworks";
 
 describe("getByMedium", () => {
   afterEach(() => vi.unstubAllGlobals());
@@ -59,6 +65,13 @@ describe("getByMedium", () => {
   it("returns an empty list when the manifest is missing", async () => {
     stubFetch(() => ({ ok: false, json: async () => [] }));
     expect(await getByMedium("canvas")).toEqual([]);
+  });
+
+  it("getByMediumOrThrow throws when the manifest cannot be read", async () => {
+    stubFetch(() => ({ ok: false, status: 403, json: async () => [] }));
+    await expect(getByMediumOrThrow("other")).rejects.toThrow(
+      "other manifest unavailable: HTTP 403",
+    );
   });
 
   // The manifest is hand-editable and published by three paths, so a malformed

@@ -162,6 +162,13 @@ export async function getByMedium(medium: Medium): Promise<Artwork[]> {
   return read.works;
 }
 
+export async function getByMediumOrThrow(medium: Medium): Promise<Artwork[]> {
+  const read = await loadManifest(medium);
+  if (!read.ok)
+    throw new Error(`${medium} manifest unavailable: ${read.reason}`);
+  return read.works;
+}
+
 export function isMedium(value: string | undefined): value is Medium {
   return MEDIA.some((m) => m === value);
 }

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
-import { MEDIA, getByMedium, isMedium } from "@/app/lib/artworks";
+import { MEDIA, getByMediumOrThrow, isMedium } from "@/app/lib/artworks";
 import type { Locale } from "@/i18n/routing";
 import { routing } from "@/i18n/routing";
 
@@ -61,7 +61,10 @@ export default async function MediumPage({
   const { locale, medium } = await params;
   if (!isMedium(medium)) notFound();
 
-  const works = await getByMedium(medium);
+  // Throws when the manifest is unreadable, like ../[work]: the render is then
+  // not cached, so one blocked fetch costs one request instead of an empty
+  // gallery for the rest of the revalidate window. Lands on ../error.tsx.
+  const works = await getByMediumOrThrow(medium);
 
   return (
     <>
