@@ -162,15 +162,10 @@
   --veil-fade: 1px;
 
   height: calc(var(--header-h, 0px) + var(--subnav-h, 0px));
-  /* Clear at rest, and deliberately so: the frost belongs to scrolling, and this
-     base state is what shows whenever frostIn is not driving things. That is not
-     only the moment before hydration — a scroll timeline is *inactive* while its
-     scroller cannot scroll at all, so on a page short enough to fit (about or
-     contact on a desktop) the animation never applies and the base is the whole
-     story. Frosted here meant a band sitting over unscrolled ground with nothing
-     underneath to hide. The dials above remain the single source of the frosted
-     end; only frostIn's `to` spends them. */
+  /* Clear at rest, and deliberately so: the frost belongs to scrolling, and a band
+     over unscrolled ground would have nothing underneath to hide. */
   background: transparent;
+  backdrop-filter: blur(0px);
   mask-image: linear-gradient(
     to bottom,
     #000 calc(100% - var(--veil-fade)),
@@ -179,23 +174,28 @@
   pointer-events: none;
   /* Same asymmetry as the subnav it backs (works.module.css): the band must arrive
      with the labels, or they land on unfrosted artwork for a moment. */
-  transition: transform 140ms ease;
-  animation-name: frostIn;
-  animation-duration: auto;
-  animation-timing-function: linear;
-  animation-fill-mode: both;
-  animation-timeline: scroll(root block);
-  animation-range: 0 3rem;
+  transition:
+    transform 140ms ease,
+    background-color 240ms ease,
+    backdrop-filter 240ms ease;
 }
 
 /* Wherever the header is sticky, it needs the band behind it — same scoping. On
    the pages that carry no subnav --subnav-h is absent (ScrollChrome clears it when
    the element is gone), so the band is exactly header-high and the translateY that
    shrinks it on the works overview resolves to 0: nothing to shrink, no movement.
-   The frost still fades in over the first 3rem of scroll, so at rest the header
-   sits on bare ground here as it always did. */
+   The frost fades in once the page has scrolled, so at rest the header sits on
+   bare ground here as it always did. */
 .page:not(:has([data-page="landing"])):not(:has([data-view="scroller"])) .veil {
   display: block;
+}
+
+/* Set by ScrollChrome once the page has scrolled at all. A timed fade rather than
+   a scroll-driven one: it takes the same 240ms whether the page scrolls 9px or
+   9000px, and it cannot freeze on a page too short to scroll. */
+html[data-scrolled] .veil {
+  background: var(--veil-tint);
+  backdrop-filter: blur(var(--veil-blur));
 }
 
 /* Reading downward, the subnav steps aside, so the band shrinks back to the
@@ -203,18 +203,10 @@
    path. */
 html[data-scroll="down"] .veil {
   transform: translateY(calc(-1 * var(--subnav-h, 0px)));
-  transition: transform 260ms ease;
-}
-
-@keyframes frostIn {
-  from {
-    background: rgb(255 255 255 / 0%);
-    backdrop-filter: blur(0);
-  }
-  to {
-    background: var(--veil-tint);
-    backdrop-filter: blur(var(--veil-blur));
-  }
+  transition:
+    transform 260ms ease,
+    background-color 240ms ease,
+    backdrop-filter 240ms ease;
 }
 
 .headerTop {

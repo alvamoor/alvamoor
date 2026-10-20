@@ -24,9 +24,11 @@ import { usePathname } from "@/i18n/navigation";
 const FLIP = 3;
 
 // Within this much of the top the page counts as "at the top": the subnav sits in
-// its natural place and the veil is clear. Matches the range over which the frost
-// fades in (3rem), so the two agree about when scrolling has begun.
+// its natural place.
 const TOP = 48;
+
+// Past this much scroll the veil frosts over.
+const SCROLLED = 4;
 
 export function ScrollChrome() {
   const pathname = usePathname();
@@ -40,6 +42,10 @@ export function ScrollChrome() {
     const read = () => {
       frame = 0;
       const y = window.scrollY;
+
+      // Drives the veil's frost as a timed fade (shell.module.css .veil). A few px
+      // of slack so rubber-banding at the top does not flicker it.
+      root.toggleAttribute("data-scrolled", y > SCROLLED);
 
       if (y <= TOP) {
         root.dataset.scroll = "top";
@@ -67,6 +73,7 @@ export function ScrollChrome() {
       window.removeEventListener("scroll", onScroll);
       if (frame) cancelAnimationFrame(frame);
       delete root.dataset.scroll;
+      root.removeAttribute("data-scrolled");
     };
   }, []);
 
