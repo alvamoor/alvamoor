@@ -4,7 +4,9 @@
     "description": "abstract paintings.\natmospheric, layered, and intuitive.",
     "jobTitle": "Visual Artist",
     "year": "© {year}",
-    "feed": "rss"
+    "feed": "rss",
+    "impressum": "legal notice",
+    "privacy": "privacy"
   },
   "Nav": {
     "label": "Main",

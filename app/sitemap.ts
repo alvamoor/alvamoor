@@ -5,7 +5,14 @@ import { routing } from "@/i18n/routing";
 
 const SITE = "https://alvamoor.com";
 
-const PATHS = ["", "/about", "/contact", ...MEDIA.map((m) => `/works/${m}`)];
+const PATHS = [
+  "",
+  "/about",
+  "/contact",
+  "/impressum",
+  "/datenschutz",
+  ...MEDIA.map((m) => `/works/${m}`),
+];
 
 function urlFor(locale: string, path: string) {
   return `${SITE}/${locale}${path}`;

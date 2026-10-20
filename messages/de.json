@@ -4,7 +4,9 @@
     "description": "abstrakte malerei.\natmosphärisch, geschichtet, intuitiv.",
     "jobTitle": "Bildende Künstlerin",
     "year": "© {year}",
-    "feed": "rss"
+    "feed": "rss",
+    "impressum": "impressum",
+    "privacy": "datenschutz"
   },
   "Nav": {
     "label": "Hauptmenü",

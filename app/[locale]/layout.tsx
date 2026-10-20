@@ -158,9 +158,23 @@ export default async function LocaleLayout({
 
               <footer className={styles.footer}>
                 <span className={styles.year}>{t("year", { year })}</span>
-                <a href="/feed.xml" className={styles.feedLink}>
-                  {t("feed")}
-                </a>
+                <div className={styles.footerLinks}>
+                  <a href="/feed.xml" className={styles.footerLink}>
+                    {t("feed")}
+                  </a>
+                  <a
+                    href={`/${locale}/impressum`}
+                    className={styles.footerLink}
+                  >
+                    {t("impressum")}
+                  </a>
+                  <a
+                    href={`/${locale}/datenschutz`}
+                    className={styles.footerLink}
+                  >
+                    {t("privacy")}
+                  </a>
+                </div>
               </footer>
             </div>
           </div>
