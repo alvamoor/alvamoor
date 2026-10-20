@@ -57,5 +57,10 @@
   // Until both are set, the admin API fails closed (401) in production.
   "observability": {
     "enabled": true,
+    // Groups uncaught exceptions, 5xx and console.error into dashboard Issues.
+    // Needs wrangler 4.134.0 or later.
+    "issues": {
+      "enabled": true,
+    },
   },
 }
