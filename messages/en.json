@@ -39,7 +39,9 @@
     "mailInstead": "write an email",
     "sentTitle": "Thank you",
     "sentBody": "Your inquiry is on its way. You will hear back by email.",
-    "error": "That did not go through. Please try again, or write an email instead."
+    "error": "That did not go through. Please try again, or write an email instead.",
+    "dataNote": "Your email address is not stored on this website. It is used only to answer this inquiry.",
+    "privacy": "Privacy notice"
   },
   "LocaleSwitcher": {
     "label": "Language",

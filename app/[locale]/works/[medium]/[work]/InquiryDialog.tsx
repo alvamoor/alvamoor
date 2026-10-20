@@ -196,7 +196,7 @@ export default function InquiryDialog({
                 />
               </label>
 
-              {/* Honeypot: people never see or reach it. */}
+              {/* Honeypot: if bots fill it, the server drops those. invisible to users. */}
               <input
                 type="text"
                 name="website"
@@ -232,6 +232,16 @@ export default function InquiryDialog({
                   {t("cancel")}
                 </button>
               </div>
+
+              <p className={styles.inquiryAlt}>
+                <a
+                  href={`/${locale}/datenschutz`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {t("privacy")}
+                </a>
+              </p>
 
               <p className={styles.inquiryAlt}>
                 {t("or")} <a href={mailto}>{t("mailInstead")}</a>

@@ -39,7 +39,9 @@
     "mailInstead": "E-Mail schreiben",
     "sentTitle": "Danke",
     "sentBody": "Deine Anfrage ist unterwegs. Die Antwort kommt per E-Mail.",
-    "error": "Das hat nicht geklappt. Bitte versuche es noch einmal oder schreibe eine E-Mail."
+    "error": "Das hat nicht geklappt. Bitte versuche es noch einmal oder schreibe eine E-Mail.",
+    "dataNote": "Deine E-Mail-Adresse wird auf dieser Website nicht gespeichert. Sie wird nur verwendet, um diese Anfrage zu beantworten.",
+    "privacy": "Datenschutzerklärung"
   },
   "LocaleSwitcher": {
     "label": "Sprache",
