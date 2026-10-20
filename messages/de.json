@@ -70,6 +70,11 @@
     "retry": "nochmal versuchen",
     "back": "zurück zu den Arbeiten"
   },
+  "WorksError": {
+    "heading": "die Arbeiten konnten nicht geladen werden",
+    "body": "Bitte lade die Seite neu. Meist ist es nur kurz.",
+    "reload": "neu laden"
+  },
   "NotFound": {
     "heading": "hier ist nichts",
     "body": "Diese Seite gibt es nicht — oder es gab sie einmal und jetzt nicht mehr. Es ist nichts kaputt; die Adresse führt nur nirgendwohin.",

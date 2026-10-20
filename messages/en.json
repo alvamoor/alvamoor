@@ -70,6 +70,11 @@
     "retry": "try again",
     "back": "back to the works"
   },
+  "WorksError": {
+    "heading": "the works could not be loaded",
+    "body": "Please reload the page. It is usually brief.",
+    "reload": "reload"
+  },
   "NotFound": {
     "heading": "nothing here",
     "body": "This page does not exist — or it did once and no longer does. Nothing is broken; the address just does not lead anywhere.",
